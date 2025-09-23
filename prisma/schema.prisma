@@ -48,6 +48,11 @@ model User {
   followers Follow[] @relation("UserFollows")
   following Follow[] @relation("UserFollowing")
 
+  // Chat relationships
+  conversations        ConversationParticipant[]
+  messages             Message[]
+  messageReceipts      MessageReceipt[]
+
   @@map("user")
 }
 
@@ -480,13 +485,14 @@ model AuditLog {
 }
 
 model Notification {
-  id       String           @id @default(cuid())
-  userId   String
-  type     NotificationType
-  title    String
-  content  String
-  isRead   Boolean          @default(false)
-  metadata Json?
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  content    String
+  isRead     Boolean          @default(false)
+  isArchived Boolean          @default(false)
+  metadata   Json?
 
   createdAt DateTime  @default(now())
   readAt    DateTime?
@@ -644,4 +650,104 @@ enum NotificationType {
   FRAUD_ALERT
   REVIEW_RECEIVED
   SYSTEM_ANNOUNCEMENT
+  NEW_MESSAGE
+  MESSAGE_READ
+}
+
+// Chat Models
+model Conversation {
+  id            String                    @id @default(cuid())
+  type          ConversationType          @default(DIRECT)
+  title         String?
+  lastMessageId String?
+  lastMessageAt DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  participants  ConversationParticipant[]
+  messages      Message[]
+
+  @@map("conversation")
+}
+
+model ConversationParticipant {
+  id                  String       @id @default(cuid())
+  conversationId      String
+  userId              String
+  role                String       @default("member")
+  joinedAt            DateTime     @default(now())
+  lastReadAt          DateTime?
+  lastReadMessageId   String?
+  unreadCount         Int          @default(0)
+  notificationsEnabled Boolean     @default(true)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([conversationId, userId])
+  @@index([userId, conversationId])
+  @@map("conversation_participant")
+}
+
+model Message {
+  id             String            @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType       @default(TEXT)
+  metadata       Json?             // For attachments, links, etc.
+  status         MessageStatus     @default(SENT)
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime          @default(now())
+
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User              @relation(fields: [senderId], references: [id])
+  receipts       MessageReceipt[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("message")
+}
+
+model MessageReceipt {
+  id        String      @id @default(cuid())
+  messageId String
+  userId    String
+  status    ReceiptStatus @default(DELIVERED)
+  readAt    DateTime?
+  createdAt DateTime    @default(now())
+
+  message   Message     @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId])
+  @@index([userId, messageId])
+  @@map("message_receipt")
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  SUPPORT
+  ORDER
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+  ORDER_UPDATE
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  FAILED
+}
+
+enum ReceiptStatus {
+  DELIVERED
+  READ
 }

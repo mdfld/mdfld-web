@@ -4,18 +4,9 @@ import "@/styles/globals.css";
 import clsx from "clsx";
 import { fontSans } from "@/config/fonts";
 export default function DashboardLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return (
-		<body
-			className={clsx(
-				"min-h-screen text-foreground bg-background font-sans antialiased",
-				fontSans.variable,
-			)}
-		>
-			<div className="">{children}</div>
-		</body>
-	);
+  return <div className="h-screen overflow-hidden">{children}</div>;
 }

@@ -12,40 +12,38 @@ import InboxLayout from "@/components/dashboard/inbox/app";
 export const dynamic = "force-dynamic";
 
 export default function Dashboard() {
-	const { data: session, isPending } = useSession();
-	const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
 
-	useEffect(() => {
-		if (!isPending && !session) {
-			router.push("/auth/login");
-		}
-	}, [session, isPending, router]);
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/auth/login");
+    }
+  }, [session, isPending, router]);
 
-	if (typeof window === "undefined" || isPending) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<Spinner size="lg" />
-			</div>
-		);
-	}
+  if (typeof window === "undefined" || isPending) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
-	if (!session) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<div className="text-center">
-					<p className="text-gray-600">Redirecting to login...</p>
-				</div>
-			</div>
-		);
-	}
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
-	return (
-		<div className="flex h-full">
-			<SidebarWrapper>
-				<div className="flex-1">
-					<InboxLayout />
-				</div>
-			</SidebarWrapper>
-		</div>
-	);
+  return (
+    <div className="h-full">
+      <SidebarWrapper>
+        <InboxLayout />
+      </SidebarWrapper>
+    </div>
+  );
 }

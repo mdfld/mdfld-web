@@ -7,6 +7,8 @@ import { HeroUIProvider } from "@heroui/system";
 import { ToastProvider } from "@heroui/toast";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { TRPCProvider } from "@/lib/trpc-provider";
+import { Toaster } from "sonner";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -25,11 +27,24 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
 
   return (
-    <HeroUIProvider navigate={router.push}>
-      <NextThemesProvider {...themeProps}>
-        {children}
-        <ToastProvider placement="bottom-right" />
-      </NextThemesProvider>
-    </HeroUIProvider>
+    <TRPCProvider>
+      <HeroUIProvider navigate={router.push}>
+        <NextThemesProvider {...themeProps}>
+          {children}
+          <ToastProvider placement="bottom-right" />
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "heroui-toast",
+              style: {
+                background: "hsl(var(--heroui-content1))",
+                color: "hsl(var(--heroui-foreground))",
+                border: "1px solid hsl(var(--heroui-divider))",
+              },
+            }}
+          />
+        </NextThemesProvider>
+      </HeroUIProvider>
+    </TRPCProvider>
   );
 }

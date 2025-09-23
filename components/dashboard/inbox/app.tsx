@@ -1,32 +1,32 @@
 "use client";
 
 import React from "react";
-import { Avatar, Button, Spacer, useDisclosure, Tooltip } from "@heroui/react";
+import { Button, useDisclosure } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useMediaQuery } from "usehooks-ts";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
-import { cn } from "@heroui/react";
 
 import MessagingChatInbox from "./messaging-chat-inbox";
 import MessagingChatWindow from "./messaging-chat-window";
 import MessagingChatProfile from "./messaging-chat-profile";
 import MessagingChatHeader from "./messaging-chat-header";
+import NewChatModal from "./new-chat-modal";
 
 const variants = {
-	enter: (direction: number) => ({
-		x: direction > 0 ? 20 : -20,
-		opacity: 0,
-	}),
-	center: {
-		zIndex: 1,
-		x: 0,
-		opacity: 1,
-	},
-	exit: (direction: number) => ({
-		zIndex: 0,
-		x: direction < 0 ? 20 : -20,
-		opacity: 0,
-	}),
+  enter: (direction: number) => ({
+    x: direction > 0 ? 20 : -20,
+    opacity: 0,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 20 : -20,
+    opacity: 0,
+  }),
 };
 
 /**
@@ -48,111 +48,124 @@ const variants = {
  * ```
  */
 export default function Component() {
-	const [[page, direction], setPage] = React.useState([0, 0]);
-	const { isOpen, onOpen, onOpenChange } = useDisclosure();
-	const [isCollapsed, setIsCollapsed] = React.useState(false);
-	const {
-		isOpen: isProfileSidebarOpen,
-		onOpenChange: onProfileSidebarOpenChange,
-	} = useDisclosure();
+  const [[page, direction], setPage] = React.useState([0, 0]);
 
-	const isCompact = useMediaQuery("(max-width: 1024px)");
-	const isMobile = useMediaQuery("(max-width: 768px)");
+  const {
+    isOpen: isProfileSidebarOpen,
+    onOpenChange: onProfileSidebarOpenChange,
+  } = useDisclosure();
 
-	const onToggle = React.useCallback(() => {
-		setIsCollapsed((prev) => !prev);
-	}, []);
+  const {
+    isOpen: isNewChatOpen,
+    onOpen: onNewChatOpen,
+    onOpenChange: onNewChatOpenChange,
+  } = useDisclosure();
 
-	const paginate = React.useCallback(
-		(newDirection: number) => {
-			setPage((prev) => {
-				if (!isCompact) return prev;
+  const isCompact = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
-				const currentPage = prev[0];
+  const paginate = React.useCallback(
+    (newDirection: number) => {
+      setPage((prev) => {
+        if (!isCompact) return prev;
 
-				if (currentPage < 0 || currentPage > 2) return [currentPage, prev[1]];
+        const currentPage = prev[0];
 
-				return [currentPage + newDirection, newDirection];
-			});
-		},
-		[isCompact],
-	);
+        if (currentPage < 0 || currentPage > 2) return [currentPage, prev[1]];
 
-	const content = React.useMemo(() => {
-		let component = <MessagingChatInbox page={page} paginate={paginate} />;
+        return [currentPage + newDirection, newDirection];
+      });
+    },
+    [isCompact],
+  );
 
-		if (isCompact) {
-			switch (page) {
-				case 1:
-					component = <MessagingChatWindow paginate={paginate} />;
-					break;
-				case 2:
-					component = <MessagingChatProfile paginate={paginate} />;
-					break;
-			}
+  const content = React.useMemo(() => {
+    let component = (
+      <MessagingChatInbox
+        page={page}
+        paginate={paginate}
+        onOpen={onNewChatOpen}
+      />
+    );
 
-			return (
-				<LazyMotion features={domAnimation}>
-					<m.div
-						key={page}
-						animate="center"
-						className="col-span-12"
-						custom={direction}
-						exit="exit"
-						initial="enter"
-						transition={{
-							x: { type: "spring", stiffness: 300, damping: 30 },
-							opacity: { duration: 0.2 },
-						}}
-						variants={variants}
-					>
-						{component}
-					</m.div>
-				</LazyMotion>
-			);
-		}
+    if (isCompact) {
+      switch (page) {
+        case 1:
+          component = <MessagingChatWindow paginate={paginate} />;
+          break;
+        case 2:
+          component = <MessagingChatProfile paginate={paginate} />;
+          break;
+      }
 
-		return (
-			<>
-				<MessagingChatInbox className="lg:col-span-6 xl:col-span-4" />
-				<MessagingChatWindow
-					className="lg:col-span-6 xl:col-span-5"
-					toggleMessagingProfileSidebar={onProfileSidebarOpenChange}
-				/>
-				<div className="hidden xl:col-span-3 xl:block">
-					<MessagingChatProfile />
-				</div>
-			</>
-		);
-	}, [
-		isCompact,
-		page,
-		paginate,
-		direction,
-		isProfileSidebarOpen,
-		onProfileSidebarOpenChange,
-	]);
+      return (
+        <LazyMotion features={domAnimation}>
+          <m.div
+            key={page}
+            animate="center"
+            className="col-span-12"
+            custom={direction}
+            exit="exit"
+            initial="enter"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+            }}
+            variants={variants}
+          >
+            {component}
+          </m.div>
+        </LazyMotion>
+      );
+    }
 
-	return (
-		<div className="flex h-dvh w-full gap-x-3">
-			<main className="w-full">
-				<div className="sm:rounded-large grid grid-cols-12 gap-0 overflow-y-hidden p-0 pb-2">
-					<MessagingChatHeader
-						aria-hidden={!isMobile}
-						className="col-span-12 sm:hidden"
-						page={page}
-						paginate={paginate}
-						onOpen={onOpen}
-					/>
-					{isCompact ? (
-						<AnimatePresence custom={direction} initial={false} mode="wait">
-							{content}
-						</AnimatePresence>
-					) : (
-						content
-					)}
-				</div>
-			</main>
-		</div>
-	);
+    return (
+      <>
+        <MessagingChatInbox
+          className="lg:col-span-6 xl:col-span-4"
+          onOpen={onNewChatOpen}
+        />
+        <MessagingChatWindow
+          className="lg:col-span-6 xl:col-span-5"
+          toggleMessagingProfileSidebar={onProfileSidebarOpenChange}
+        />
+        <div className="hidden xl:col-span-3 xl:block">
+          <MessagingChatProfile />
+        </div>
+      </>
+    );
+  }, [
+    isCompact,
+    page,
+    paginate,
+    direction,
+    isProfileSidebarOpen,
+    onProfileSidebarOpenChange,
+  ]);
+
+  return (
+    <>
+      <div className="flex h-full w-full gap-x-3">
+        <main className="w-full h-full">
+          <div className="sm:rounded-large grid grid-cols-12 gap-0 overflow-hidden h-full">
+            <MessagingChatHeader
+              aria-hidden={!isMobile}
+              className="col-span-12 sm:hidden"
+              page={page}
+              paginate={paginate}
+              onOpen={onNewChatOpen}
+            />
+            {isCompact ? (
+              <AnimatePresence custom={direction} initial={false} mode="wait">
+                {content}
+              </AnimatePresence>
+            ) : (
+              content
+            )}
+          </div>
+        </main>
+      </div>
+      <NewChatModal isOpen={isNewChatOpen} onOpenChange={onNewChatOpenChange} />
+    </>
+  );
 }
