@@ -18,6 +18,16 @@ const nextConfig = {
 				hostname: "*.ufs.sh",
 				pathname: "/**", // specific path only
 			},
+			{
+				protocol: "https",
+				hostname: "*.utfs.sh",
+				pathname: "/**", // specific path only
+			},
+			{
+				protocol: "https",
+				hostname: "*.uploadthing.com",
+				pathname: "/**", // specific path only
+			},
 		],
 	},
 };

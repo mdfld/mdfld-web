@@ -17,6 +17,7 @@ export const authClient = createAuthClient({
         bio: { type: "string", required: false },
         website: { type: "string", required: false },
         location: { type: "string", required: false },
+        banner: { type: "string", required: false },
         trustScore: { type: "number", required: false },
         isVerifiedSeller: { type: "boolean", required: false },
         phoneNumber: { type: "string", required: false },

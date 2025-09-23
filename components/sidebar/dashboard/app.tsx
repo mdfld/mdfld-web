@@ -1,15 +1,17 @@
 "use client";
 
 import React from "react";
-import { Avatar, Button, ScrollShadow, Spacer, Tooltip } from "@heroui/react";
+import { Button, ScrollShadow, Spacer, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useMediaQuery } from "usehooks-ts";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@heroui/react";
 import Image from "next/image";
 import Sidebar from "./sidebar";
 import { useSession } from "@/lib/auth-client";
 
 import { sectionItemsWithTeams } from "./sidebar-items";
+import UserSwitcher from "@/components/dashboard/user-switcher";
 
 /**
  *  This example requires installing the `usehooks-ts` package:
@@ -29,14 +31,78 @@ import { sectionItemsWithTeams } from "./sidebar-items";
  * <Sidebar defaultSelectedKey="home" selectedKeys={[currentPath]} />
  * ```
  */
+// Helper function to find the active key based on current path
+const findActiveKey = (items: any[], pathname: string): string => {
+	for (const item of items) {
+		// Check if current item matches
+		if (item.href && pathname === item.href) {
+			return item.key;
+		}
+
+		// Check nested items
+		if (item.items && item.items.length > 0) {
+			const nestedMatch = findActiveKey(item.items, pathname);
+			if (nestedMatch) {
+				return nestedMatch;
+			}
+		}
+	}
+
+	// Fallback logic for partial matches
+	for (const item of items) {
+		if (item.href && item.href !== "#" && pathname.startsWith(item.href)) {
+			return item.key;
+		}
+
+		if (item.items && item.items.length > 0) {
+			const nestedMatch = findActiveKey(item.items, pathname);
+			if (nestedMatch) {
+				return nestedMatch;
+			}
+		}
+	}
+
+	return "home"; // Default fallback
+};
+
 export default function SidebarWrapper({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
 	const isCompact = useMediaQuery("(max-width: 768px)");
+	const pathname = usePathname();
+	const router = useRouter();
+	const { isPending } = useSession();
 
-	const { data: session, isPending } = useSession();
+	// Find the active key based on current pathname
+	const activeKey = React.useMemo(() => {
+		return findActiveKey(sectionItemsWithTeams, pathname);
+	}, [pathname]);
+
+	// Handle navigation
+	const handleSelect = React.useCallback(
+		(key: string) => {
+			const findItemByKey = (items: any[], targetKey: string): any => {
+				for (const item of items) {
+					if (item.key === targetKey) {
+						return item;
+					}
+					if (item.items && item.items.length > 0) {
+						const found = findItemByKey(item.items, targetKey);
+						if (found) return found;
+					}
+				}
+				return null;
+			};
+
+			const selectedItem = findItemByKey(sectionItemsWithTeams, key);
+			if (selectedItem?.href && selectedItem.href !== "#") {
+				router.push(selectedItem.href);
+			}
+		},
+		[router],
+	);
 
 	if (isPending) return null;
 
@@ -60,29 +126,13 @@ export default function SidebarWrapper({
 					></Image>
 				</div>
 				<Spacer y={8} />
-				<div className="flex items-center gap-3 px-3">
-					<Avatar
-						isBordered
-						className="flex-none"
-						size="sm"
-						src="https://i.pravatar.cc/150?u=a04258114e29026708c"
-					/>
-					<div
-						className={cn("flex max-w-full flex-col", { hidden: isCompact })}
-					>
-						<p className="text-small text-default-600 truncate font-medium">
-							John Doe
-						</p>
-						<p className="text-tiny text-default-400 truncate">
-							Product Designer
-						</p>
-					</div>
-				</div>
+				<UserSwitcher isCompact={isCompact} />
 				<ScrollShadow className="-mr-6 h-full max-h-full py-6 pr-6">
 					<Sidebar
-						defaultSelectedKey="home"
+						defaultSelectedKey={activeKey}
 						isCompact={isCompact}
 						items={sectionItemsWithTeams}
+						onSelect={handleSelect}
 					/>
 				</ScrollShadow>
 				<Spacer y={2} />
@@ -197,7 +247,7 @@ export default function SidebarWrapper({
 				</div>
 			</div>
 			<div className="w-full flex-1 flex-col p-4">
-				<main className="border-small border-divider flex flex-col rounded-medium h-full w-full overflow-visible">
+				<main className="border-small border-divider flex flex-col rounded-medium h-full w-full overflow-hidden">
 					{children}
 				</main>
 			</div>

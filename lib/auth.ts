@@ -5,18 +5,18 @@ import { resend } from "./resend";
 import { betterAuth } from "better-auth";
 
 export const auth = betterAuth({
-	database: prismaAdapter(prisma, {
-		provider: "postgresql",
-	}),
-	emailAndPassword: {
-		enabled: true,
-		requireEmailVerification: true,
-		sendResetPassword: async ({ user, url, token }, request) => {
-			await resend.emails.send({
-				from: "Midfield Co <no-reply@balon.ai>",
-				to: user.email,
-				subject: "Reset your password",
-				html: `
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url, token }, request) => {
+      await resend.emails.send({
+        from: "Midfield Co <no-reply@balon.ai>",
+        to: user.email,
+        subject: "Reset your password",
+        html: `
 					<!DOCTYPE html>
 					<html>
 					<head>
@@ -46,18 +46,18 @@ export const auth = betterAuth({
 					</body>
 					</html>
 				`,
-			});
-		},
-	},
-	emailVerification: {
-		sendOnSignUp: true,
-		autoSignInAfterVerification: true,
-		sendVerificationEmail: async ({ user, url }) => {
-			await resend.emails.send({
-				from: "Midfield Co <no-reply@balon.ai>",
-				to: user.email,
-				subject: "Welcome aboard! | Verify your email address",
-				html: `
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await resend.emails.send({
+        from: "Midfield Co <no-reply@balon.ai>",
+        to: user.email,
+        subject: "Welcome aboard! | Verify your email address",
+        html: `
 					<!DOCTYPE html>
 					<html>
 					<head>
@@ -87,58 +87,62 @@ export const auth = betterAuth({
 					</body>
 					</html>
 				`,
-			});
-		},
-	},
-	socialProviders: {
-		// google: {
-		// 	clientId: process.env.GOOGLE_CLIENT_ID!,
-		// 	clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-		// },
-	},
-	session: {
-		expiresIn: 60 * 60 * 24 * 7, // 7 days
-		updateAge: 60 * 60 * 24, // 1 day
-	},
-	plugins: [username()],
-	user: {
-		additionalFields: {
-			bio: {
-				type: "string",
-				required: false,
-			},
-			website: {
-				type: "string",
-				required: false,
-			},
-			location: {
-				type: "string",
-				required: false,
-			},
-			trustScore: {
-				type: "number",
-				defaultValue: 0.0,
-				input: false,
-			},
-			isVerifiedSeller: {
-				type: "boolean",
-				defaultValue: false,
-				input: false,
-			},
-			phoneNumber: {
-				type: "string",
-				required: false,
-			},
-		},
-	},
-	logger: {
-		disabled: false,
-		level: "info",
-		log: (level, message, ...args) => {
-			// Custom logging implementation
-			console.log(`[${level}] ${message}`, ...args);
-		},
-	},
+      });
+    },
+  },
+  socialProviders: {
+    // google: {
+    // 	clientId: process.env.GOOGLE_CLIENT_ID!,
+    // 	clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    // },
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+  plugins: [username()],
+  user: {
+    additionalFields: {
+      bio: {
+        type: "string",
+        required: false,
+      },
+      website: {
+        type: "string",
+        required: false,
+      },
+      location: {
+        type: "string",
+        required: false,
+      },
+      banner: {
+        type: "string",
+        required: false,
+      },
+      trustScore: {
+        type: "number",
+        defaultValue: 0.0,
+        input: false,
+      },
+      isVerifiedSeller: {
+        type: "boolean",
+        defaultValue: false,
+        input: false,
+      },
+      phoneNumber: {
+        type: "string",
+        required: false,
+      },
+    },
+  },
+  logger: {
+    disabled: false,
+    level: "info",
+    log: (level, message, ...args) => {
+      // Custom logging implementation
+      console.log(`[${level}] ${message}`, ...args);
+    },
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

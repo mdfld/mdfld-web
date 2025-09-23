@@ -17,16 +17,9 @@ export const items: SidebarItem[] = [
 	},
 	{
 		key: "settings",
-		href: "#",
+		href: "/dashboard/settings",
 		icon: "solar:add-circle-line-duotone",
 		title: "settings",
-		endContent: (
-			<Icon
-				className="text-default-400"
-				icon="solar:settings-outline"
-				width={24}
-			/>
-		),
 	},
 	{
 		key: "team",
@@ -89,7 +82,7 @@ export const sectionItems: SidebarItem[] = [
 			},
 			{
 				key: "settings",
-				href: "#",
+				href: "/dashboard/settings",
 				icon: "solar:settings-outline",
 				title: "Settings",
 				endContent: (
@@ -102,7 +95,7 @@ export const sectionItems: SidebarItem[] = [
 			},
 			{
 				key: "orders",
-				href: "#",
+				href: "/dashboard/orders",
 				icon: "solar:checklist-minimalistic-outline",
 				title: "Orders",
 				endContent: (
@@ -139,36 +132,36 @@ export const sectionItems: SidebarItem[] = [
 		items: [
 			{
 				key: "listings",
-				href: "/listings",
+				href: "/dashboard/listings",
 				title: "My Listings",
 				icon: "solar:pie-chart-2-outline",
 				items: [
 					{
 						key: "shareholders",
-						href: "#",
+						href: "/dashboard/listings/shareholders",
 						title: "Shareholders",
 					},
 					{
 						key: "note_holders",
-						href: "#",
+						href: "/dashboard/listings/note-holders",
 						title: "Note Holders",
 					},
 					{
 						key: "transactions_log",
-						href: "#",
+						href: "/dashboard/listings/transactions",
 						title: "Transactions Log",
 					},
 				],
 			},
 			{
-				key: "orders",
-				href: "#",
+				key: "org-orders",
+				href: "/dashboard/organization/orders",
 				icon: "solar:chart-outline",
 				title: "Orders",
 			},
 			{
 				key: "team",
-				href: "/perks",
+				href: "/dashboard/team",
 				icon: "solar:gift-linear",
 				title: "Team",
 			},
@@ -185,19 +178,19 @@ export const sectionItems: SidebarItem[] = [
 			},
 			{
 				key: "connect",
-				href: "/connect",
+				href: "/dashboard/connect",
 				icon: "solar:settings-outline",
 				title: "Stripe",
 			},
 			{
 				key: "reports",
-				href: "/reports",
+				href: "/dashboard/reports",
 				icon: "solar:settings-outline",
 				title: "Reports",
 			},
 			{
-				key: "settings",
-				href: "/org-settings",
+				key: "org-settings",
+				href: "/dashboard/organization/settings",
 				icon: "solar:settings-outline",
 				title: "Settings",
 			},

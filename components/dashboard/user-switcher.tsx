@@ -8,10 +8,16 @@ import {
 	DropdownItem,
 	User,
 	Button,
+	Avatar,
+	Tooltip,
 } from "@heroui/react";
 import { useSession } from "@/lib/auth-client";
 
-export default function UserSwitcher() {
+interface UserSwitcherProps {
+	isCompact?: boolean;
+}
+
+export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
 	const { data: session, isPending } = useSession();
 
 	if (isPending) return null;
@@ -20,19 +26,31 @@ export default function UserSwitcher() {
 		<div className="flex items-center gap-4">
 			<Dropdown placement="bottom-start">
 				<DropdownTrigger>
-					<User
-						as="button"
-						avatarProps={{
-							isBordered: true,
-							src: session?.user.image || undefined,
-							name: session?.user.image ? undefined : "MD",
-							radius: "lg",
-							className: "mx-1",
-						}}
-						className="transition-transform"
-						description={`@${session?.user.username || "user"}`}
-						name={session?.user.name || "User"}
-					/>
+					{isCompact ? (
+						<Avatar
+							as="button"
+							isBordered
+							src={session?.user.image || undefined}
+							name={session?.user.image ? undefined : "MD"}
+							radius="lg"
+							className="mx-1 transition-transform"
+							size="md"
+						/>
+					) : (
+						<User
+							as="button"
+							avatarProps={{
+								isBordered: true,
+								src: session?.user.image || undefined,
+								name: session?.user.image ? undefined : "MD",
+								radius: "lg",
+								className: "mx-1",
+							}}
+							className="transition-transform"
+							description={`@${session?.user.username || "user"}`}
+							name={session?.user.name || "User"}
+						/>
+					)}
 				</DropdownTrigger>
 				<DropdownMenu aria-label="User Actions" variant="flat">
 					<DropdownSection showDivider>

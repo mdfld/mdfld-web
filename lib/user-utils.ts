@@ -24,12 +24,21 @@ export async function getUserWithCounts(userId: string) {
 
 export async function getUserByUsername(username: string) {
   return await prisma.user.findUnique({
-    where: { username },
+    where: { username: username.toLowerCase() },
     include: {
       _count: {
         select: {
           followers: true,
           following: true,
+        },
+      },
+      sellerProfile: {
+        select: {
+          storeName: true,
+          storeDescription: true,
+          averageRating: true,
+          totalSales: true,
+          isActive: true,
         },
       },
     },

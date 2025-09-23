@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
 		"/auth/verify-email",
 		"/",
 		"/api/auth",
+		"/api/uploadthing",
 	];
 
 	// Check if the current path is a public route or API route

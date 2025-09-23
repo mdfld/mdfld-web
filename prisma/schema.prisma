@@ -23,6 +23,7 @@ model User {
   bio      String?
   website  String?
   location String?
+  banner   String?
 
   // Custom marketplace fields
   isVerifiedSeller Boolean   @default(false)
@@ -105,6 +106,7 @@ model Organization {
   name        String
   slug        String       @unique
   logo        String?
+  banner      String?
   description String?
   website     String?
   industry    String?
