@@ -379,65 +379,6 @@ export function UserProfileContent({ user }: UserProfileProps) {
 							}
 						}}
 					>
-						<Tab key="meta" title="Meta">
-							<div className="p-8">
-								<Card className="">
-									<CardBody>
-										<div className="flex px-10 py-6 flex-col gap-4">
-											<div className="flex items-center gap-4">
-												<div className="flex items-center">
-													<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-500">
-														<Icon
-															icon="iconamoon:profile-thin"
-															width={20}
-															className="text-background"
-														/>
-													</span>
-												</div>
-												<p className="">{user.name}</p>
-											</div>
-											<div className="flex items-center gap-4">
-												<div className="flex items-center">
-													<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-500">
-														<Icon
-															icon="iconamoon:profile-thin"
-															width={20}
-															className="text-background"
-														/>
-													</span>
-												</div>
-												<p className="">{user.website}</p>
-											</div>
-											<div className="flex items-center gap-4">
-												<div className="flex items-center">
-													<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-500">
-														<Icon
-															icon="iconamoon:profile-thin"
-															width={20}
-															className="text-background"
-														/>
-													</span>
-												</div>
-												<p className="">{user.email}</p>
-											</div>
-											<div className="flex items-center gap-4">
-												<div className="flex items-center">
-													<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-500">
-														<Icon
-															icon="iconamoon:profile-thin"
-															width={20}
-															className="text-background"
-														/>
-													</span>
-												</div>
-												<JoinDate createdAt={user.createdAt}></JoinDate>
-											</div>
-										</div>
-									</CardBody>
-									<Divider />
-								</Card>
-							</div>
-						</Tab>
 						<Tab key="Stores" title={`Stores`}>
 							<div className="p-8">
 								<Card>

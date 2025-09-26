@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Button, useDisclosure } from "@heroui/react";
-import { Icon } from "@iconify/react";
+import { useDisclosure } from "@heroui/react";
 import { useMediaQuery } from "usehooks-ts";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
+import { trpc } from "@/lib/trpc-client";
 
 import MessagingChatInbox from "./messaging-chat-inbox";
 import MessagingChatWindow from "./messaging-chat-window";
@@ -61,8 +61,11 @@ export default function Component() {
     onOpenChange: onNewChatOpenChange,
   } = useDisclosure();
 
-  const isCompact = useMediaQuery("(max-width: 1024px)");
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isCompact = useMediaQuery("(max-width: 1023px)"); // Changed to show compact on md and below
+  const isMobile = useMediaQuery("(max-width: 639px)"); // Keep mobile at sm breakpoint
+
+  // Fetch conversations to get the count
+  const { data: conversations } = trpc.chat.conversations.useQuery();
 
   const paginate = React.useCallback(
     (newDirection: number) => {
@@ -154,6 +157,7 @@ export default function Component() {
               page={page}
               paginate={paginate}
               onOpen={onNewChatOpen}
+              chatCount={conversations?.length || 0}
             />
             {isCompact ? (
               <AnimatePresence custom={direction} initial={false} mode="wait">

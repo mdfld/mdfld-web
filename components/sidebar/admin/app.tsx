@@ -21,7 +21,7 @@ import { useSession } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { useNotificationSubscription } from "@/hooks/useNotifications";
 
-import { sectionItems } from "./sidebar-items";
+import { adminSectionItems } from "./sidebar-items";
 import UserSwitcher from "@/components/dashboard/user-switcher";
 import NotificationsTray from "@/components/dashboard/notifications-tray";
 
@@ -77,7 +77,7 @@ const findActiveKey = (items: any[], pathname: string): string => {
 	return "home"; // Default fallback
 };
 
-export default function SidebarWrapper({
+export default function AdminSidebarWrapper({
 	children,
 }: {
 	children: React.ReactNode;
@@ -100,7 +100,7 @@ export default function SidebarWrapper({
 
 	// Find the active key based on current pathname
 	const activeKey = React.useMemo(() => {
-		return findActiveKey(sectionItems, pathname);
+		return findActiveKey(adminSectionItems, pathname);
 	}, [pathname]);
 
 	// Handle navigation
@@ -119,7 +119,7 @@ export default function SidebarWrapper({
 				return null;
 			};
 
-			const selectedItem = findItemByKey(sectionItems, key);
+			const selectedItem = findItemByKey(adminSectionItems, key);
 			if (selectedItem?.href && selectedItem.href !== "#") {
 				router.push(selectedItem.href);
 			}
@@ -188,7 +188,7 @@ export default function SidebarWrapper({
 						defaultSelectedKey={activeKey}
 						selectedKeys={[activeKey]}
 						isCompact={isCompact}
-						items={sectionItems}
+						items={adminSectionItems}
 						onSelect={handleSelect}
 					/>
 				</ScrollShadow>
@@ -216,7 +216,7 @@ export default function SidebarWrapper({
 								isCompact ? null : (
 									<Icon
 										className="text-default-600 flex-none"
-										icon="solar:info-circle-line-duotone"
+										icon="solar:shield-keyhole-bold-duotone"
 										width={24}
 									/>
 								)

@@ -1,23 +1,13 @@
 "use client";
 
 import React from "react";
-import {
-  Avatar,
-  Tabs,
-  Tab,
-  Link,
-  Card,
-  CardBody,
-  ScrollShadow,
-  Textarea,
-} from "@heroui/react";
+import { Avatar, Image, ScrollShadow, Textarea, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { cn } from "@heroui/react";
 import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import { useSession } from "@/lib/auth-client";
-
-import MessagingChatHeader from "./messaging-chat-header";
+import { useRouter } from "next/navigation";
 
 export type MessagingChatProfileProps = React.HTMLAttributes<HTMLDivElement> & {
   paginate?: (direction: number) => void;
@@ -44,6 +34,7 @@ const MessagingChatProfile = React.forwardRef<
 
   // For group chats, this would need different handling
   const displayUser = otherParticipant?.user;
+  const otherUser = otherParticipant?.user.username;
 
   // Get messages with attachments
   const { data: messagesData } = trpc.chat.messages.useQuery(
@@ -82,152 +73,148 @@ const MessagingChatProfile = React.forwardRef<
     }
   };
 
+  const router = useRouter();
+
   return (
     <div ref={ref} className={cn("h-full flex flex-col", props.className)}>
       <div className="h-full w-full flex flex-col">
-        <MessagingChatHeader
-          className="hidden sm:flex lg:hidden flex-shrink-0"
-          paginate={paginate}
-        />
-        <div className="border-t-small border-default-200 flex-1 min-h-0 overflow-hidden lg:border-none">
+        {/* Mobile/Tablet header with back button */}
+        <div className="lg:hidden border-b-small border-default-200 flex h-16 items-center gap-2 px-3 sm:px-6 flex-shrink-0">
+          <Button
+            isIconOnly
+            className="text-default-500 min-w-8 h-8"
+            variant="light"
+            onPress={() => paginate?.(-1)}
+          >
+            <Icon icon="solar:arrow-left-linear" width={16} />
+          </Button>
+          <h2 className="text-large font-semibold">Profile</h2>
+        </div>
+        <div className="border-t-small border-default-200 flex-1 min-h-0 overflow-hidden lg:border-t-0 lg:border-none">
           <ScrollShadow className="h-full overflow-y-auto p-2">
-            <div className="flex flex-col gap-4">
-              {/* Profile Info */}
-              <div className="flex flex-col items-center px-4 pt-2 text-center">
-                <Avatar
-                  className="h-20 w-20"
-                  src={
-                    displayUser?.image ||
-                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayUser?.id || "default"}`
-                  }
-                />
-                <h3 className="text-small text-foreground mt-2 font-semibold">
-                  {displayUser?.name || "Unknown User"}
-                </h3>
-                <span className="text-small text-default-400 font-medium">
-                  @{displayUser?.username || "unknown"}
-                </span>
-                <div className="mt-2 flex gap-2">
-                  <Link href="#">
-                    <Icon
-                      className="text-default-400"
-                      icon="solar:user-rounded-linear"
-                      width={23}
-                    />
-                  </Link>
-                  <Link href="#">
-                    <Icon
-                      className="text-default-400"
-                      icon="solar:map-point-linear"
-                      width={22}
-                    />
-                  </Link>
-                  <Link href="#">
-                    <Icon
-                      className="text-default-400"
-                      icon="solar:phone-rounded-linear"
-                      width={24}
-                    />
-                  </Link>
+            <div className="flex h-dvh items-center justify-between py-20 flex-col">
+              <div className="flex w-full flex-col gap-10">
+                {/* Profile Info */}
+                <div className="flex flex-col items-center px-4 pt-2 text-center">
+                  <Avatar
+                    className="h-20 w-20"
+                    size="lg"
+                    radius="lg"
+                    src={
+                      displayUser?.image ||
+                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayUser?.id || "default"}`
+                    }
+                  />
+                  <h3 className="text-small text-foreground mt-2 font-semibold">
+                    {displayUser?.name || "Unknown User"}
+                  </h3>
+                  <span className="text-small text-default-400 font-medium">
+                    @{displayUser?.username || "unknown"}
+                  </span>
+                  <div className="mt-2 py-5 flex gap-2">
+                    <Button
+                      variant="shadow"
+                      size="md"
+                      color="primary"
+                      onPress={() => router.push(`/users/${otherUser}`)}
+                      startContent={<Icon icon="iconamoon:profile-thin"></Icon>}
+                      className="uppercase tracking-widest text-xs"
+                    >
+                      Profile
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Notes */}
-              <div className="px-2">
-                <div className="text-small text-foreground font-semibold mb-2">
-                  Notes
+                {/* Notes */}
+                <div className="px-2">
+                  <div className="text-small text-foreground font-semibold mb-2">
+                    Notes
+                  </div>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => handleNotesChange(e.target.value)}
+                    placeholder="Add notes about this conversation..."
+                    minRows={3}
+                    variant="flat"
+                    radius="sm"
+                    maxRows={8}
+                    classNames={{
+                      input: "min-h-[80px]",
+                      inputWrapper: "bg-zinc-950",
+                    }}
+                  />
                 </div>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => handleNotesChange(e.target.value)}
-                  placeholder="Add notes about this conversation..."
-                  minRows={3}
-                  maxRows={8}
-                  classNames={{
-                    input: "min-h-[80px]",
-                    inputWrapper: "bg-content2",
-                  }}
-                />
-              </div>
 
-              {/* Media / Links Tabs */}
-              <div className="mb-4 px-2">
-                <Tabs
-                  fullWidth
-                  classNames={{
-                    cursor: "group-data-[selected=true]:bg-content1",
-                  }}
-                >
-                  <Tab key="media" title="Media" />
-                  <Tab key="files" title="Files" />
-                </Tabs>
-              </div>
-            </div>
-
-            {/* Media */}
-            <div className="rounded-large bg-content1 mx-2 p-4">
-              <div className="overflow-y-hidden">
-                {mediaMessages.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-3">
-                    {mediaMessages.map((message) => (
-                      <Card
-                        key={message.id}
-                        isPressable
-                        radius="sm"
-                        shadow="sm"
-                        onPress={() => {
-                          const metadata = message.metadata as any;
-                          if (metadata?.imageUrl) {
-                            window.open(metadata.imageUrl, "_blank");
-                          } else if (message.type === "IMAGE") {
-                            window.open(
-                              metadata?.url || message.content,
-                              "_blank",
-                            );
-                          }
-                        }}
-                      >
-                        <CardBody className="p-0 aspect-square">
-                          {(message.metadata as any)?.imageUrl ? (
-                            <img
-                              alt="Shared image"
-                              className="w-full h-full object-cover rounded-sm"
-                              src={(message.metadata as any).imageUrl}
-                            />
-                          ) : message.type === "IMAGE" ? (
-                            <img
-                              alt="Shared image"
-                              className="w-full h-full object-cover rounded-sm"
-                              src={
-                                (message.metadata as any)?.url ||
-                                message.content
-                              }
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center bg-content2">
-                              <Icon
-                                icon="solar:file-bold"
-                                width={32}
-                                className="text-default-400"
+                {/* Media */}
+                <div className="px-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-small text-foreground font-semibold">
+                      Media
+                    </div>
+                    <span className="text-tiny text-default-400">
+                      {mediaMessages.length} files
+                    </span>
+                  </div>
+                  <div className="rounded-large bg-zinc-950 p-4 overflow-visible">
+                    <ScrollShadow
+                      className="h-[400px] overflow-y-auto overflow-x-visible w-full"
+                      hideScrollBar={false}
+                    >
+                      {mediaMessages.length > 0 ? (
+                        <div className="columns-2 sm:columns-3 gap-3 space-y-3 w-full px-1 overflow-visible">
+                          {mediaMessages.map((message) => (
+                            <div
+                              key={message.id}
+                              className="break-inside-avoid mb-3 overflow-visible"
+                            >
+                              <Image
+                                isZoomed
+                                alt="Shared image"
+                                className="w-full object-cover rounded-lg cursor-pointer overflow-visible"
+                                classNames={{
+                                  wrapper: "overflow-visible",
+                                  blurredImg: "scale-110",
+                                }}
+                                style={{
+                                  height: `${Math.floor(Math.random() * 150) + 150}px`,
+                                }}
+                                src={
+                                  (message.metadata as any)?.imageUrl ||
+                                  (message.metadata as any)?.url ||
+                                  message.content ||
+                                  "/placeholder.jpg"
+                                }
+                                onClick={() => {
+                                  const metadata = message.metadata as any;
+                                  if (metadata?.imageUrl) {
+                                    window.open(metadata.imageUrl, "_blank");
+                                  } else if (message.type === "IMAGE") {
+                                    window.open(
+                                      metadata?.url || message.content,
+                                      "_blank",
+                                    );
+                                  }
+                                }}
+                                fallbackSrc="/placeholder.jpg"
                               />
                             </div>
-                          )}
-                        </CardBody>
-                      </Card>
-                    ))}
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <Icon
+                            icon="solar:gallery-minimalistic-linear"
+                            width={48}
+                            className="text-default-300 mb-2"
+                          />
+                          <p className="text-small text-default-400">
+                            No media shared yet
+                          </p>
+                        </div>
+                      )}
+                    </ScrollShadow>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Icon
-                      icon="solar:gallery-minimalistic-linear"
-                      width={48}
-                      className="text-default-300 mb-2"
-                    />
-                    <p className="text-small text-default-400">
-                      No media shared yet
-                    </p>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </ScrollShadow>

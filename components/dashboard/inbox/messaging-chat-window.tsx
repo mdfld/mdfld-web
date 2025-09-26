@@ -57,14 +57,14 @@ const MessagingChatWindow = React.forwardRef<
   });
 
   // Get conversation details
-  const { data: conversation } = trpc.chat.conversations.useQuery(undefined, {
+  const { data: conversations } = trpc.chat.conversations.useQuery(undefined, {
     enabled: !!conversationId,
   });
 
   // Find the current conversation
-  const currentConversation = conversation?.find(
-    (c) => c.id === conversationId,
-  );
+  const currentConversation = Array.isArray(conversations)
+    ? conversations.find((c) => c.id === conversationId)
+    : null;
   const otherParticipants = currentConversation?.participants.filter(
     (p) => p.user.id !== currentUserId,
   );
@@ -117,12 +117,21 @@ const MessagingChatWindow = React.forwardRef<
 
   return (
     <div ref={ref} {...props}>
-      <div className="sm:border-default-200 lg:border-l-small h-full lg:max-h-[calc(100vh-30px)] xl:border-r-small w-full flex flex-col">
+      <div className="sm:border-default-200 lg:border-l-small h-full max-h-[100dvh] lg:max-h-[calc(100vh-30px)] xl:border-r-small w-full flex flex-col">
         <MessagingChatHeader
           className="hidden sm:flex lg:hidden"
           paginate={paginate}
         />
         <div className="border-y-small border-default-200 flex h-17 items-center gap-2 p-3 sm:p-4 lg:border-t-0 flex-shrink-0">
+          {/* Back button for mobile and tablet */}
+          <Button
+            isIconOnly
+            className="lg:hidden text-default-500 min-w-8 h-8"
+            variant="light"
+            onPress={() => paginate?.(-1)}
+          >
+            <Icon icon="solar:arrow-left-linear" width={20} />
+          </Button>
           <div className="w-full">
             <div className="text-small font-semibold">
               {displayUser?.name || "Unknown User"}
@@ -166,10 +175,10 @@ const MessagingChatWindow = React.forwardRef<
             </Dropdown>
           </div>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollShadow
             ref={scrollRef}
-            className="flex flex-col gap-4 px-6 py-4 overflow-y-auto h-full"
+            className="flex flex-col gap-4 px-6 py-4 overflow-y-auto h-full max-h-full"
           >
             {isLoading ? (
               <div className="flex justify-center items-center h-32">

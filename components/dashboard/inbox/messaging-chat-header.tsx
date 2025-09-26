@@ -10,12 +10,13 @@ export interface MessagingChatHeaderProps
   page?: number;
   onOpen?: () => void;
   paginate?: (direction: number) => void;
+  chatCount?: number;
 }
 
 const MessagingChatHeader = React.forwardRef<
   HTMLInputElement,
   MessagingChatHeaderProps
->(({ page, paginate, onOpen, className, ...props }, ref) => {
+>(({ page, paginate, onOpen, className, chatCount = 0, ...props }, ref) => {
   return (
     <header
       className={cn(
@@ -42,7 +43,7 @@ const MessagingChatHeader = React.forwardRef<
           size="sm"
           variant="flat"
         >
-          24
+          {chatCount}
         </Chip>
       </div>
 

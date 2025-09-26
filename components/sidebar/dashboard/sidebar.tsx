@@ -70,9 +70,13 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       group: cn(sectionClassesProp?.group, {
         "flex flex-col gap-1": isCompact,
       }),
-      heading: cn(sectionClassesProp?.heading, {
-        hidden: isCompact,
-      }),
+      heading: cn(
+        sectionClassesProp?.heading,
+        "text-xs font-semibold text-default-400 uppercase tracking-wider antialiased",
+        {
+          hidden: isCompact,
+        },
+      ),
     };
 
     const itemClasses = {
@@ -170,7 +174,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                           icon={item.icon}
                           width={24}
                         />
-                        <span className="text-small text-default-500 group-data-[selected=true]:text-primary-foreground group-hover:text-background font-medium">
+                        <span className="text-sm text-default-600 group-data-[selected=true]:text-primary-foreground group-hover:text-background font-medium antialiased subpixel-antialiased">
                           {item.title}
                         </span>
                       </div>
@@ -283,7 +287,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
             itemClasses?.base,
           ),
           title: cn(
-            "text-xs font-medium text-default-500 group-data-[selected=true]:text-primary-foreground group-hover:text-background",
+            "text-sm font-medium text-default-600 group-data-[selected=true]:text-primary-foreground group-hover:text-background antialiased subpixel-antialiased",
             itemClasses?.title,
           ),
           wrapper: cn(

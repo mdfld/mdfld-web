@@ -58,6 +58,16 @@ export class AES256E2EE {
     encrypted: EncryptedMessage,
     sharedKey: Buffer,
   ): string {
+    // Validate encrypted message structure
+    if (
+      !encrypted ||
+      !encrypted.nonce ||
+      !encrypted.tag ||
+      !encrypted.content
+    ) {
+      throw new Error("Invalid encrypted message structure");
+    }
+
     const nonce = Buffer.from(encrypted.nonce, "base64");
     const tag = Buffer.from(encrypted.tag, "base64");
     const content = Buffer.from(encrypted.content, "base64");
@@ -127,6 +137,13 @@ export class AES256E2EE {
 
       // Parse and decrypt
       const encrypted = JSON.parse(userVersion) as EncryptedMessage;
+
+      // Validate encrypted message structure
+      if (!encrypted || typeof encrypted !== "object") {
+        console.error("Invalid encrypted message format");
+        return null;
+      }
+
       const sharedKey = this.deriveSharedKey(userId, senderId);
       return this.decryptMessage(encrypted, sharedKey);
     } catch (error) {
