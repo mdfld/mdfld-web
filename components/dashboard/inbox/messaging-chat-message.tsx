@@ -2,10 +2,11 @@
 import type { MessagingChatMessageProps } from "./data";
 
 import React, { useCallback, useMemo, useState } from "react";
-import { Avatar, Button, Image, Card, CardFooter } from "@heroui/react";
+import { Button, Image, Card, CardFooter } from "@heroui/react";
 import { cn } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { toast } from "sonner";
+import UserAvatar from "@/components/common/user-avatar";
 
 const MemoizedImage = React.memo(
   ({ src, message }: { src: string; message?: string }) => (
@@ -80,7 +81,7 @@ const MessagingChatMessage = React.forwardRef<
     const MessageAvatar = useCallback(
       () => (
         <div className="relative flex-none">
-          <Avatar src={avatar} size="sm" radius="md" className="w-8 h-8" />
+          <UserAvatar src={avatar} size="sm" radius="md" className="w-8 h-8" />
         </div>
       ),
       [avatar],

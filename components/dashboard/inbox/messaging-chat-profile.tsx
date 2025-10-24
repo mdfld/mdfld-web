@@ -3,6 +3,7 @@
 import React from "react";
 import { Avatar, Image, ScrollShadow, Textarea, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import UserAvatar from "@/components/common/user-avatar";
 import { cn } from "@heroui/react";
 import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
@@ -29,7 +30,9 @@ const MessagingChatProfile = React.forwardRef<
   // For DMs, show the other participant's info
   const otherParticipant =
     conversation && conversation.type === "DIRECT"
-      ? conversation.participants.find((p) => p.userId !== session?.user?.id)
+      ? conversation.participants.find(
+          (p: any) => p.userId !== session?.user?.id,
+        )
       : null;
 
   // For group chats, this would need different handling
@@ -96,14 +99,11 @@ const MessagingChatProfile = React.forwardRef<
               <div className="flex w-full flex-col gap-10">
                 {/* Profile Info */}
                 <div className="flex flex-col items-center px-4 pt-2 text-center">
-                  <Avatar
+                  <UserAvatar
                     className="h-20 w-20"
                     size="lg"
                     radius="lg"
-                    src={
-                      displayUser?.image ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayUser?.id || "default"}`
-                    }
+                    src={displayUser?.image}
                   />
                   <h3 className="text-small text-foreground mt-2 font-semibold">
                     {displayUser?.name || "Unknown User"}
@@ -161,22 +161,19 @@ const MessagingChatProfile = React.forwardRef<
                       hideScrollBar={false}
                     >
                       {mediaMessages.length > 0 ? (
-                        <div className="columns-2 sm:columns-3 gap-3 space-y-3 w-full px-1 overflow-visible">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full px-1 overflow-visible">
                           {mediaMessages.map((message) => (
-                            <div
-                              key={message.id}
-                              className="break-inside-avoid mb-3 overflow-visible"
-                            >
+                            <div key={message.id} className="overflow-visible">
                               <Image
                                 isZoomed
                                 alt="Shared image"
-                                className="w-full object-cover rounded-lg cursor-pointer overflow-visible"
+                                className="w-full h-full object-cover rounded-lg cursor-pointer overflow-visible"
                                 classNames={{
                                   wrapper: "overflow-visible",
                                   blurredImg: "scale-110",
                                 }}
                                 style={{
-                                  height: `${Math.floor(Math.random() * 150) + 150}px`,
+                                  aspectRatio: "1/1",
                                 }}
                                 src={
                                   (message.metadata as any)?.imageUrl ||

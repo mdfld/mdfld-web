@@ -1,0 +1,70 @@
+"use client";
+
+import React from "react";
+import { Button, Chip } from "@heroui/react";
+import { Icon } from "@iconify/react";
+import { cn } from "@heroui/react";
+
+export interface OrganizationChatHeaderProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  page?: number;
+  onOpen?: () => void;
+  paginate?: (direction: number) => void;
+  chatCount?: number;
+}
+
+const OrganizationChatHeader = React.forwardRef<
+  HTMLInputElement,
+  OrganizationChatHeaderProps
+>(({ page, paginate, onOpen, className, chatCount = 0, ...props }, ref) => {
+  return (
+    <header
+      className={cn(
+        "flex w-full items-center justify-between px-3 py-3 sm:px-6",
+        className,
+      )}
+      {...props}
+      ref={ref}
+    >
+      <div
+        className={cn(
+          "text-large text-foreground flex w-full items-center justify-center font-bold lg:justify-start",
+          {
+            "sm:justify-start": page === 0,
+          },
+        )}
+      >
+        <h2 className="text-large text-foreground font-bold">
+          Organization Inbox
+        </h2>
+        <Chip
+          classNames={{
+            base: "h-[18px] ml-2 ",
+            content: "text-default-600 text-[10px] font-medium",
+          }}
+          size="sm"
+          variant="bordered"
+        >
+          {chatCount}
+        </Chip>
+      </div>
+
+      <Button
+        isIconOnly
+        className="border-default-200 text-default-400 ml-auto h-[28px] w-[28px] min-w-[28px] rounded-[6px] border-1 p-0"
+        variant="bordered"
+        onPress={onOpen}
+      >
+        <Icon
+          className="text-default-400 [&>g]:stroke-[2px]"
+          icon="solar:pen-new-square-linear"
+          width={15}
+        />
+      </Button>
+    </header>
+  );
+});
+
+OrganizationChatHeader.displayName = "OrganizationChatHeader";
+
+export default OrganizationChatHeader;

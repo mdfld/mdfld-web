@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import type { OrganizationFormData } from "./organization-onboarding";
 
 export type OrganizationReviewFormProps = {
@@ -21,109 +20,95 @@ const OrganizationReviewForm = React.forwardRef<
 
   return (
     <div ref={ref} {...props} className={className}>
-      <div className="text-default-foreground text-3xl leading-9 font-bold">
-        Review Your Organization
-      </div>
-      <div className="text-default-500 py-4">
-        Please review the information before creating your organization
-      </div>
+      <div className="text-2xl font-medium mb-1">Review & Confirm</div>
+      <div className="text-sm text-gray-500 mb-8">Verify your details</div>
 
-      <div className="space-y-4 py-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Basic Information</h3>
-          </CardHeader>
-          <CardBody className="space-y-2">
-            <div>
-              <span className="text-small text-default-500">
-                Organization Name:
-              </span>
-              <p className="font-medium">{data.name || "Not provided"}</p>
-            </div>
-            <div>
-              <span className="text-small text-default-500">
-                Organization Slug:
-              </span>
-              <p className="font-medium">{data.slug || "Not provided"}</p>
-            </div>
-            {data.description && (
-              <div>
-                <span className="text-small text-default-500">
-                  Description:
-                </span>
-                <p className="font-medium">{data.description}</p>
-              </div>
-            )}
-          </CardBody>
-        </Card>
+      <div className="space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-medium">
+            {data.name || "Organization Name"}
+          </h1>
+          <p className="text-sm text-gray-500">
+            @{data.slug || "organization-slug"}
+          </p>
+          {data.description && (
+            <p className="text-sm text-gray-400 mt-2">{data.description}</p>
+          )}
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Organization Details</h3>
-          </CardHeader>
-          <CardBody className="space-y-2">
-            <div className="flex flex-wrap gap-2">
+        {/* Details */}
+        <div className="space-y-6">
+          {/* Business Info */}
+          {(data.businessType || data.size || data.industry) && (
+            <div className="space-y-2">
               {data.businessType && (
-                <Chip size="sm" variant="flat">
-                  Business Type: {data.businessType}
-                </Chip>
+                <div className="text-sm">
+                  <span className="text-gray-500">Type:</span>{" "}
+                  <span className="text-gray-300">
+                    {data.businessType.replace(/_/g, " ")}
+                  </span>
+                </div>
               )}
               {data.size && (
-                <Chip size="sm" variant="flat">
-                  Size: {data.size}
-                </Chip>
+                <div className="text-sm">
+                  <span className="text-gray-500">Size:</span>{" "}
+                  <span className="text-gray-300">{data.size}</span>
+                </div>
               )}
               {data.industry && (
-                <Chip size="sm" variant="flat">
-                  Industry: {data.industry}
-                </Chip>
+                <div className="text-sm">
+                  <span className="text-gray-500">Industry:</span>{" "}
+                  <span className="text-gray-300">{data.industry}</span>
+                </div>
               )}
             </div>
-            {data.website && (
-              <div>
-                <span className="text-small text-default-500">Website:</span>
-                <p className="font-medium">{data.website}</p>
-              </div>
-            )}
-            {data.taxId && (
-              <div>
-                <span className="text-small text-default-500">Tax ID:</span>
-                <p className="font-medium">{data.taxId}</p>
-              </div>
-            )}
-            {data.businessLicense && (
-              <div>
-                <span className="text-small text-default-500">
-                  Business License:
-                </span>
-                <p className="font-medium">{data.businessLicense}</p>
-              </div>
-            )}
-          </CardBody>
-        </Card>
+          )}
 
-        {hasAddress && (
-          <Card>
-            <CardHeader className="pb-2">
-              <h3 className="text-lg font-semibold">Business Address</h3>
-            </CardHeader>
-            <CardBody>
-              <div className="space-y-1">
-                {data.address?.street && <p>{data.address.street}</p>}
+          {/* Legal Info */}
+          {(data.taxId || data.businessLicense || data.website) && (
+            <div className="space-y-2">
+              {data.taxId && (
+                <div className="text-sm">
+                  <span className="text-gray-500">Tax ID:</span>{" "}
+                  <span className="text-gray-300">{data.taxId}</span>
+                </div>
+              )}
+              {data.businessLicense && (
+                <div className="text-sm">
+                  <span className="text-gray-500">License:</span>{" "}
+                  <span className="text-gray-300">{data.businessLicense}</span>
+                </div>
+              )}
+              {data.website && (
+                <div className="text-sm">
+                  <span className="text-gray-500">Website:</span>{" "}
+                  <span className="text-gray-300">{data.website}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Address */}
+          {hasAddress && (
+            <div className="space-y-2">
+              <div className="text-sm text-gray-500">Address</div>
+              <div className="text-sm text-gray-300">
+                {data.address?.street && <div>{data.address.street}</div>}
                 {(data.address?.city ||
                   data.address?.state ||
                   data.address?.postalCode) && (
-                  <p>
+                  <div>
                     {data.address?.city}
                     {data.address?.city && data.address?.state && ", "}
                     {data.address?.state} {data.address?.postalCode}
-                  </p>
+                  </div>
                 )}
-                {data.address?.country && <p>{data.address.country}</p>}
+                {data.address?.country && <div>{data.address.country}</div>}
               </div>
-            </CardBody>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

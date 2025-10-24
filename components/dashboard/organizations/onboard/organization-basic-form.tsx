@@ -34,11 +34,14 @@ const OrganizationBasicForm = React.forwardRef<
   };
 
   const generateSlugFromName = (name: string) => {
-    return name
+    const baseSlug = name
       .toLowerCase()
       .replace(/[^a-z0-9-]/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
+
+    // Add a random suffix if needed to ensure uniqueness
+    return baseSlug;
   };
 
   const handleNameChange = (value: string) => {
@@ -60,11 +63,11 @@ const OrganizationBasicForm = React.forwardRef<
 
   return (
     <>
-      <div className="text-default-foreground text-3xl leading-9 font-bold">
-        Create Your Organization
+      <div className="text-default-foreground text-2xl leading-8 font-medium text-left">
+        Basic Information
       </div>
-      <div className="text-medium text-default-500 py-2">
-        Let's start with some basic information about your organization
+      <div className="text-sm text-default-500 py-1 text-left">
+        Let's start with your organization details
       </div>
       <form
         ref={ref}

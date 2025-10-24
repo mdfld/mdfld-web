@@ -5,24 +5,20 @@ export type CompanyTypeProps = {
 
 const companyTypes: CompanyTypeProps[] = [
   {
-    title: "Sole Proprietor",
-    value: "sole-proprietor",
+    title: "Individual / Sole Proprietor",
+    value: "INDIVIDUAL",
   },
   {
-    title: "Partnership",
-    value: "partnership",
+    title: "Small Business (LLC, Partnership)",
+    value: "SMALL_BUSINESS",
   },
   {
-    title: "C Corporation",
-    value: "c-corporation",
+    title: "Corporation (C-Corp, S-Corp)",
+    value: "CORPORATION",
   },
   {
-    title: "S Corporation",
-    value: "s-corporation",
-  },
-  {
-    title: "LLC (Limited Liability Company)",
-    value: "llc",
+    title: "Non-Profit Organization",
+    value: "NON_PROFIT",
   },
 ];
 

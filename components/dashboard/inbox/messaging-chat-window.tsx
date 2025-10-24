@@ -66,7 +66,7 @@ const MessagingChatWindow = React.forwardRef<
     ? conversations.find((c) => c.id === conversationId)
     : null;
   const otherParticipants = currentConversation?.participants.filter(
-    (p) => p.user.id !== currentUserId,
+    (p: any) => p.user.id !== currentUserId,
   );
   const displayUser = otherParticipants?.[0]?.user;
 

@@ -32,6 +32,9 @@ model User {
   dateOfBirth      DateTime?
   kycStatus        KycStatus @default(PENDING)
 
+  // Stripe customer fields
+  stripeCustomerId String? @unique
+
   // Relationships
   sessions      Session[]
   accounts      Account[]
@@ -127,12 +130,22 @@ model Organization {
   isVerified      Boolean      @default(false)
   trustScore      Float        @default(0.0)
 
+  // Address fields
+  addressStreet   String?
+  addressCity     String?
+  addressState    String?
+  addressZip      String?
+  addressCountry  String?
+
   members       OrganizationMember[]
   invitations   OrganizationInvitation[]
   sellerProfile SellerProfile?
   products      Product[]
   orders        Order[]
   auditLogs     AuditLog[]
+  
+  // Messaging
+  orgConversations OrgConversation[]
 
   @@map("organization")
 }
@@ -184,6 +197,20 @@ model SellerProfile {
   totalSales       Int     @default(0)
   isActive         Boolean @default(true)
 
+  // Stripe Connect fields
+  stripeAccountId         String?   @unique
+  stripeAccountStatus     String?   // e.g., "active", "pending", "restricted"
+  stripeOnboardingComplete Boolean  @default(false)
+  stripeChargesEnabled    Boolean   @default(false)
+  stripePayoutsEnabled    Boolean   @default(false)
+  stripeRequirements      Json?     // Store any outstanding requirements
+  stripeCapabilities      Json?     // Store capabilities like card_payments, transfers
+  stripeDetailsSubmitted  Boolean   @default(false)
+  stripeDefaultCurrency   String    @default("usd")
+  
+  // Commission settings
+  commissionRate          Float     @default(0.10) // 10% default commission
+
   // Fraud detection metrics
   fraudScore              Float     @default(0.0)
   suspiciousActivityCount Int       @default(0)
@@ -230,8 +257,8 @@ model Product {
   description     String
   price           Decimal
   compareAtPrice  Decimal?
-  category        String
-  subcategory     String?
+  category        ProductCategory
+  subcategory     ProductSubcategory?
   brand           String?
   sku             String?  @unique
   inventory       Int      @default(0)
@@ -241,6 +268,25 @@ model Product {
   tags            String[]
   isActive        Boolean  @default(true)
   featured        Boolean  @default(false)
+
+  // Variant support
+  hasVariants      Boolean  @default(false)
+  variantType      VariantType?
+  
+  // Product attributes - condition applies to all products
+  condition        ProductCondition @default(BRAND_NEW)
+  
+  // Conditional fields based on category
+  tier             ProductTier?
+  year             Int?
+  season           String?
+  material         String?
+  soleplateType    SoleplateType?
+  playerVersion    PlayerVersion?
+  
+  // Stripe fields
+  stripePriceId   String?  // Stripe Price object ID for this product
+  stripeProductId String?  // Stripe Product object ID
 
   // Fraud detection fields
   priceChangeFrequency Int       @default(0)
@@ -257,8 +303,60 @@ model Product {
   reviews      Review[]
   cartItems    CartItem[]
   fraudReports FraudReport[]
+  variants     ProductVariant[]
+  sizeChart    SizeChart?
 
   @@map("product")
+}
+
+model ProductVariant {
+  id               String   @id @default(cuid())
+  productId        String
+  
+  // Size fields (support multiple systems)
+  sizeValue        String   // The actual size value (e.g., "9", "M", "28.5")
+  sizeSystem       SizeSystem // UK, US, EU, etc.
+  sizeDisplay      String   // Display value like "UK 9 / US 10 / EU 43"
+  
+  // Other variant attributes
+  color            String?
+  colorHex         String?
+  sku              String?  @unique
+  barcode          String?
+  
+  // Pricing and inventory per variant
+  price            Decimal
+  compareAtPrice   Decimal?
+  inventory        Int      @default(0)
+  lowStockAlert    Int?     @default(5)
+  
+  // Images specific to this variant
+  images           String[]
+  
+  // Stripe integration
+  stripePriceId    String?
+  
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems       OrderItem[]
+  cartItems        CartItem[]
+  
+  @@unique([productId, sizeValue, sizeSystem, color])
+  @@map("product_variant")
+}
+
+model SizeChart {
+  id              String   @id @default(cuid())
+  productId       String   @unique
+  chartType       SizeChartType
+  conversions     Json     // Store size conversion data
+  
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("size_chart")
 }
 
 model Order {
@@ -275,6 +373,13 @@ model Order {
   paymentMethod   PaymentMethod
   paymentStatus   PaymentStatus @default(PENDING)
 
+  // Stripe fields
+  stripePaymentIntentId String?   @unique
+  stripeChargeId        String?
+  stripeTransferId      String?   // For transfers to connected accounts
+  applicationFeeAmount  Decimal?  // Platform commission amount
+  stripeFeeAmount       Decimal?  // Stripe's processing fee
+  
   // Fraud detection fields
   ipAddress            String?
   deviceFingerprint    String?
@@ -301,14 +406,20 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Decimal
+  id              String  @id @default(cuid())
+  orderId         String
+  productId       String
+  variantId       String? // Optional for backward compatibility
+  quantity        Int
+  price           Decimal
+  
+  // Store variant details at time of order
+  sizeDisplay     String?
+  color           String?
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  order           Order           @relation(fields: [orderId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id])
+  variant         ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("order_item")
 }
@@ -323,6 +434,12 @@ model Transaction {
   status          TransactionStatus @default(PENDING)
   paymentMethod   PaymentMethod
   gatewayResponse Json?
+
+  // Stripe fields
+  stripeTransactionId String?  // Could be charge ID, refund ID, transfer ID, etc.
+  stripePaymentMethod String?  // Payment method ID used
+  stripeFeeAmount     Decimal? // Stripe's processing fee
+  netAmount           Decimal? // Amount after fees
 
   // Fraud detection fields
   ipAddress  String?
@@ -449,18 +566,20 @@ model Review {
 }
 
 model CartItem {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   buyerProfileId String
   productId      String
+  variantId      String? // Optional for backward compatibility
   quantity       Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  buyer   BuyerProfile @relation(fields: [buyerProfileId], references: [id])
-  product Product      @relation(fields: [productId], references: [id])
+  buyer   BuyerProfile    @relation(fields: [buyerProfileId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
-  @@unique([buyerProfileId, productId])
+  @@unique([buyerProfileId, productId, variantId])
   @@map("cart_item")
 }
 
@@ -664,8 +783,9 @@ model Conversation {
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
 
-  participants  ConversationParticipant[]
-  messages      Message[]
+  participants    ConversationParticipant[]
+  messages        Message[]
+  orgConversation OrgConversation?
 
   @@map("conversation")
 }
@@ -731,6 +851,7 @@ enum ConversationType {
   GROUP
   SUPPORT
   ORDER
+  ORGANIZATION
 }
 
 enum MessageType {
@@ -750,4 +871,157 @@ enum MessageStatus {
 enum ReceiptStatus {
   DELIVERED
   READ
+}
+
+enum ProductCategory {
+  // Football/Soccer specific categories
+  JERSEYS
+  BOOTS
+  FOOTBALLS
+  TRADING_CARDS
+  GOALKEEPER_GLOVES
+  SHIN_GUARDS
+  TRAINING_EQUIPMENT
+  ACCESSORIES
+}
+
+enum ProductSubcategory {
+  // Jerseys
+  GAME_JERSEYS
+  PRACTICE_JERSEYS
+  RETRO_JERSEYS
+  CUSTOM_JERSEYS
+  
+  // Cleats
+  SOCCER_CLEATS
+  FOOTBALL_CLEATS
+  BASEBALL_CLEATS
+  MULTI_SPORT_CLEATS
+  
+  // Training Gear
+  COMPRESSION_WEAR
+  TRAINING_SHIRTS
+  SHORTS_PANTS
+  BASE_LAYERS
+  
+  // Sports Equipment
+  BALLS
+  GOALS_NETS
+  TRAINING_CONES
+  AGILITY_EQUIPMENT
+  
+  // Team Merchandise
+  SCARVES
+  FLAGS_BANNERS
+  POSTERS
+  STICKERS_DECALS
+  
+  // Casual Wear
+  T_SHIRTS
+  HOODIES
+  SWEATSHIRTS
+  POLO_SHIRTS
+  
+  // Accessories
+  HATS_CAPS
+  GLOVES
+  SOCKS
+  WRISTBANDS
+  
+  // Equipment
+  WATER_BOTTLES
+  EQUIPMENT_BAGS
+  FIRST_AID
+  COACHING_EQUIPMENT
+}
+
+enum VariantType {
+  SIZE_COLOR
+  SIZE_ONLY
+  COLOR_ONLY
+  CUSTOM
+}
+
+enum SizeSystem {
+  UK
+  US
+  EU
+  JP
+  CM
+  STANDARD // For S, M, L, XL, etc.
+  ONE_SIZE
+}
+
+enum SizeChartType {
+  FOOTWEAR
+  APPAREL
+  ACCESSORIES
+}
+
+enum ProductCondition {
+  BRAND_NEW
+  NEW_WITH_TAGS
+  NEW_WITHOUT_TAGS
+  USED_LIKE_NEW
+  USED_GOOD
+  USED_FAIR
+}
+
+enum ProductTier {
+  ELITE
+  PRO
+  ACADEMY
+  CLUB
+}
+
+enum SoleplateType {
+  FG  // Firm Ground
+  AG  // Artificial Ground
+  SG  // Soft Ground
+  HG  // Hard Ground
+  TF  // Turf
+  IC  // Indoor Court
+  MG  // Multi Ground
+}
+
+enum PlayerVersion {
+  AUTHENTIC
+  REPLICA
+  STADIUM
+  MATCH
+}
+
+// Organization Messaging Models
+model OrgConversation {
+  id               String                @id @default(cuid())
+  organizationId   String
+  conversationId   String                @unique
+  handledBy        String?               // Member ID handling the conversation
+  category         String?               // Support category
+  priority         ConversationPriority  @default(NORMAL)
+  status           OrgConversationStatus @default(OPEN)
+  notes            String?               // Internal notes
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  
+  organization     Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversation     Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@map("org_conversation")
+}
+
+enum ConversationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum OrgConversationStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  WAITING_ON_ORG
+  RESOLVED
+  CLOSED
 }

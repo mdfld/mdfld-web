@@ -1,6 +1,4 @@
-import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { TRPCError } from "@trpc/server";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
@@ -8,16 +6,16 @@ export const adminRouter = createTRPCRouter({
     // For now, allow all authenticated users
 
     // Get total user count
-    const userCount = await ctx.db.user.count();
+    const userCount = await ctx.prisma.user.count();
 
     // Get total organization count
-    const organizationCount = await ctx.db.organization.count();
+    const organizationCount = await ctx.prisma.organization.count();
 
     // Get users created in last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentUserCount = await ctx.db.user.count({
+    const recentUserCount = await ctx.prisma.user.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo,
@@ -26,7 +24,7 @@ export const adminRouter = createTRPCRouter({
     });
 
     // Get organizations created in last 30 days
-    const recentOrganizationCount = await ctx.db.organization.count({
+    const recentOrganizationCount = await ctx.prisma.organization.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo,
@@ -35,18 +33,18 @@ export const adminRouter = createTRPCRouter({
     });
 
     // Get total conversation count
-    const conversationCount = await ctx.db.conversation.count();
+    const conversationCount = await ctx.prisma.conversation.count();
 
     // Get total message count
-    const messageCount = await ctx.db.message.count();
+    const messageCount = await ctx.prisma.message.count();
 
     // Get active users (users who sent messages in last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const activeUsers = await ctx.db.user.count({
+    const activeUsers = await ctx.prisma.user.count({
       where: {
-        sentMessages: {
+        messages: {
           some: {
             createdAt: {
               gte: sevenDaysAgo,
@@ -66,7 +64,7 @@ export const adminRouter = createTRPCRouter({
         const nextDate = new Date(date);
         nextDate.setDate(nextDate.getDate() + 1);
 
-        const count = await ctx.db.user.count({
+        const count = await ctx.prisma.user.count({
           where: {
             createdAt: {
               gte: date,

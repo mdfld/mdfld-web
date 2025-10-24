@@ -65,11 +65,11 @@ const OrganizationDetailsForm = React.forwardRef<
 
   return (
     <>
-      <div className="text-default-foreground text-3xl leading-9 font-bold">
-        Organization Details
+      <div className="text-default-foreground text-2xl leading-8 font-medium text-left">
+        Company Details
       </div>
-      <div className="text-default-500 py-4">
-        Tell us more about your organization
+      <div className="text-sm text-default-500 py-1 text-left">
+        Business type and industry information
       </div>
       <form
         ref={ref}

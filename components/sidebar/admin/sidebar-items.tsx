@@ -62,26 +62,12 @@ export const adminSectionItems: AdminSidebarItem[] = [
 				href: "/admin/settings",
 				icon: "solar:settings-outline",
 				title: "Settings",
-				endContent: (
-					<Icon
-						className="text-default-400"
-						icon="solar:settings-outline"
-						width={24}
-					/>
-				),
 			},
 			{
 				key: "team",
 				href: "/admin/team",
 				icon: "solar:checklist-minimalistic-outline",
 				title: "Orders",
-				endContent: (
-					<Icon
-						className="text-default-400"
-						icon="solar:add-circle-line-duotone"
-						width={24}
-					/>
-				),
 			},
 		],
 	},
@@ -119,26 +105,12 @@ export const adminBrandItems: AdminSidebarItem[] = [
 				href: "#",
 				icon: "solar:widget-2-outline",
 				title: "Projects",
-				endContent: (
-					<Icon
-						className="text-primary-foreground/60"
-						icon="solar:add-circle-line-duotone"
-						width={24}
-					/>
-				),
 			},
 			{
 				key: "tasks",
 				href: "#",
 				icon: "solar:checklist-minimalistic-outline",
 				title: "Tasks",
-				endContent: (
-					<Icon
-						className="text-primary-foreground/60"
-						icon="solar:add-circle-line-duotone"
-						width={24}
-					/>
-				),
 			},
 			{
 				key: "team",

@@ -8,21 +8,15 @@ export const siteConfig = {
 			label: "Home",
 			href: "/",
 		},
-		{
-			label: "About Us",
-			href: "/docs",
-		},
+
 		{
 			label: "Products",
-			href: "/pricing",
+			href: "/products",
 		},
-		{
-			label: "Sale",
-			href: "/blog",
-		},
+
 		{
 			label: "Contact",
-			href: "/about",
+			href: "/contact",
 		},
 	],
 	navMenuItems: [
@@ -58,5 +52,5 @@ export const siteConfig = {
 			label: "Logout",
 			href: "/logout",
 		},
-	]
+	],
 };

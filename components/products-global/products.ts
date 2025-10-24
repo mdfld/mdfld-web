@@ -1,0 +1,151 @@
+import type { ProductItem } from "./product-list-item";
+
+const products: ProductItem[] = [
+  {
+    id: "1",
+    name: "Nike Air Jordan 1 Retro High",
+    href: "/products/nike-air-jordan-1",
+    price: 299.99,
+    color: "Chicago",
+    size: "US 10",
+    isNew: true,
+    rating: 4.8,
+    ratingCount: 245,
+    description: "Authenticated classic sneaker",
+    imageSrc:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+    availableColors: [
+      { name: "Chicago", hex: "#c8102e" },
+      { name: "Royal", hex: "#0051ba" },
+      { name: "Bred", hex: "#000000" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Supreme Box Logo Hoodie",
+    href: "/products/supreme-box-logo",
+    price: 899.99,
+    color: "Gray",
+    size: "L",
+    rating: 4.9,
+    ratingCount: 189,
+    description: "FW23 Collection - Authenticated",
+    imageSrc:
+      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop",
+  },
+  {
+    id: "3",
+    name: "Rolex Submariner Date",
+    href: "/products/rolex-submariner",
+    price: 12999.99,
+    color: "Black",
+    size: "41mm",
+    isNew: false,
+    rating: 5.0,
+    ratingCount: 67,
+    description: "Certified pre-owned luxury watch",
+    imageSrc:
+      "https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=400&h=400&fit=crop",
+  },
+  {
+    id: "4",
+    name: "Louis Vuitton Keepall 55",
+    href: "/products/lv-keepall-55",
+    price: 2199.99,
+    color: "Monogram",
+    size: "55cm",
+    rating: 4.7,
+    ratingCount: 134,
+    description: "Authenticated travel bag",
+    imageSrc:
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
+    availableColors: [
+      { name: "Monogram", hex: "#8b6331" },
+      { name: "Damier", hex: "#3c2415" },
+    ],
+  },
+  {
+    id: "5",
+    name: "Off-White Industrial Belt",
+    href: "/products/off-white-belt",
+    price: 199.99,
+    color: "Yellow",
+    size: "200cm",
+    isNew: true,
+    rating: 4.6,
+    ratingCount: 298,
+    description: "Iconic streetwear accessory",
+    imageSrc:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop",
+    availableColors: [
+      { name: "Yellow", hex: "#ffd700" },
+      { name: "Black", hex: "#000000" },
+      { name: "White", hex: "#ffffff" },
+    ],
+  },
+  {
+    id: "6",
+    name: "Yeezy Boost 350 V2",
+    href: "/products/yeezy-350-v2",
+    price: 349.99,
+    color: "Zebra",
+    size: "US 9.5",
+    rating: 4.8,
+    ratingCount: 432,
+    description: "Authenticated Adidas x Kanye West",
+    imageSrc:
+      "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400&h=400&fit=crop",
+  },
+  {
+    id: "7",
+    name: "Gucci GG Marmont Bag",
+    href: "/products/gucci-marmont",
+    price: 1599.99,
+    color: "Black",
+    size: "Small",
+    rating: 4.9,
+    ratingCount: 87,
+    description: "Luxury leather shoulder bag",
+    imageSrc:
+      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop",
+    availableColors: [
+      { name: "Black", hex: "#000000" },
+      { name: "Red", hex: "#cc0000" },
+      { name: "Pink", hex: "#ffc0cb" },
+    ],
+  },
+  {
+    id: "8",
+    name: "Travis Scott x Jordan 1",
+    href: "/products/travis-scott-jordan",
+    price: 1899.99,
+    color: "Mocha",
+    size: "US 11",
+    isNew: false,
+    rating: 5.0,
+    ratingCount: 156,
+    description: "Rare collaboration sneaker",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=400&h=400&fit=crop",
+  },
+  {
+    id: "9",
+    name: "Cartier Love Bracelet",
+    href: "/products/cartier-love",
+    price: 6999.99,
+    color: "Yellow Gold",
+    size: "Size 17",
+    rating: 5.0,
+    ratingCount: 42,
+    description: "18K gold luxury jewelry",
+    imageSrc:
+      "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400&h=400&fit=crop",
+    availableColors: [
+      { name: "Yellow Gold", hex: "#ffd700" },
+      { name: "White Gold", hex: "#e5e5e5" },
+      { name: "Rose Gold", hex: "#e0bba9" },
+    ],
+  },
+];
+
+export default products;

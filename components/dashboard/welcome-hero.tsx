@@ -2,8 +2,11 @@ import { useSession } from "@/lib/auth-client";
 import { Icon } from "@iconify/react";
 import { Button } from "@heroui/react";
 
+import { useRouter } from "next/navigation";
+
 export const WelcomeHero = () => {
   const { data: session, isPending } = useSession();
+  const router = useRouter();
 
   if (isPending) return null;
 
@@ -86,6 +89,7 @@ export const WelcomeHero = () => {
                   className="group-hover:scale-110 transition-transform"
                 />
               }
+              onPress={() => router.push("/dashboard/wishlist")}
             >
               Wishlist
             </Button>

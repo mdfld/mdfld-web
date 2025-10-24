@@ -92,4 +92,127 @@ export const userRouter = createTRPCRouter({
 
       return users;
     }),
+
+  // Get user's wishlist
+  getWishlist: protectedProcedure.query(async ({ ctx }) => {
+    const buyerProfile = await ctx.prisma.buyerProfile.findUnique({
+      where: { userId: ctx.user.id },
+      select: {
+        wishlist: true,
+      },
+    });
+
+    if (!buyerProfile || buyerProfile.wishlist.length === 0) return [];
+
+    // Get full product details for wishlist items
+    const products = await ctx.prisma.product.findMany({
+      where: {
+        id: { in: buyerProfile.wishlist },
+        isActive: true,
+      },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            storeName: true,
+            averageRating: true,
+          },
+        },
+      },
+    });
+
+    return products;
+  }),
+
+  // Add product to wishlist
+  addToWishlist: protectedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check if product exists and is active
+      const product = await ctx.prisma.product.findUnique({
+        where: { id: input.productId },
+        select: { id: true, isActive: true },
+      });
+
+      if (!product || !product.isActive) {
+        throw new Error("Product not found or unavailable");
+      }
+
+      // Create or update buyer profile
+      const buyerProfile = await ctx.prisma.buyerProfile.upsert({
+        where: { userId: ctx.user.id },
+        update: {
+          wishlist: {
+            push: input.productId,
+          },
+        },
+        create: {
+          userId: ctx.user.id,
+          wishlist: [input.productId],
+        },
+      });
+
+      return { success: true };
+    }),
+
+  // Remove product from wishlist
+  removeFromWishlist: protectedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get current wishlist
+      const buyerProfile = await ctx.prisma.buyerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { wishlist: true },
+      });
+
+      if (!buyerProfile) {
+        throw new Error("Buyer profile not found");
+      }
+
+      // Remove from wishlist
+      const updatedWishlist = buyerProfile.wishlist.filter(
+        (id: string) => id !== input.productId,
+      );
+
+      await ctx.prisma.buyerProfile.update({
+        where: { userId: ctx.user.id },
+        data: {
+          wishlist: updatedWishlist,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  // Check if products are in wishlist
+  checkWishlist: protectedProcedure
+    .input(
+      z.object({
+        productIds: z.array(z.string()),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const buyerProfile = await ctx.prisma.buyerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { wishlist: true },
+      });
+
+      if (!buyerProfile) return {};
+
+      // Create a map of productId -> isWishlisted
+      const wishlistMap: Record<string, boolean> = {};
+      input.productIds.forEach((id) => {
+        wishlistMap[id] = buyerProfile.wishlist.includes(id);
+      });
+
+      return wishlistMap;
+    }),
 });

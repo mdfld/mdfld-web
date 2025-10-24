@@ -21,8 +21,11 @@ const sendMessageSchema = z.object({
 
 const createConversationSchema = z.object({
   participantIds: z.array(z.string()).min(1).max(10),
-  type: z.enum(["DIRECT", "GROUP"]).default("DIRECT"),
+  type: z
+    .enum(["DIRECT", "GROUP", "SUPPORT", "ORDER", "ORGANIZATION"])
+    .default("DIRECT"),
   title: z.string().optional(),
+  organizationId: z.string().optional(),
 });
 
 const searchUsersSchema = z.object({
@@ -77,8 +80,39 @@ export const chatRouter = createTRPCRouter({
       orderBy: { lastMessageAt: "desc" },
     });
 
-    // Decrypt last messages for display
+    // Get organization conversations if any
+    const conversationIds = conversations.map((c) => c.id);
+    const orgConversations = await ctx.prisma.orgConversation.findMany({
+      where: {
+        conversationId: { in: conversationIds },
+      },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    // Create a map for quick lookup
+    const orgConvMap = new Map(
+      orgConversations.map((oc: any) => [oc.conversationId, oc]),
+    );
+
+    // Decrypt last messages for display and add org data
     const conversationsWithDecrypted = conversations.map((conversation) => {
+      let result: any = { ...conversation };
+
+      // Add organization data if exists
+      const orgConv = orgConvMap.get(conversation.id);
+      if (orgConv) {
+        result.orgConversation = orgConv;
+      }
+
       if (conversation.messages.length > 0) {
         const lastMessage = conversation.messages[0];
         const decryptedContent = AES256E2EE.decryptForUser(
@@ -87,17 +121,14 @@ export const chatRouter = createTRPCRouter({
           lastMessage.senderId,
         );
 
-        return {
-          ...conversation,
-          messages: [
-            {
-              ...lastMessage,
-              decryptedContent: decryptedContent || lastMessage.content,
-            },
-          ],
-        };
+        result.messages = [
+          {
+            ...lastMessage,
+            decryptedContent: decryptedContent || lastMessage.content,
+          },
+        ];
       }
-      return conversation;
+      return result;
     });
 
     return conversationsWithDecrypted;

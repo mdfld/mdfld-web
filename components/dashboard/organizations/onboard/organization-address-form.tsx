@@ -57,8 +57,11 @@ const OrganizationAddressForm = React.forwardRef<
 
   return (
     <>
-      <div className="text-default-foreground text-3xl leading-9 font-bold">
+      <div className="text-default-foreground text-2xl leading-8 font-medium text-left">
         Business Address
+      </div>
+      <div className="text-sm text-default-500 py-1 text-left">
+        Your organization's official location
       </div>
       <div className="text-default-500 py-4">
         Where is your organization located? (Optional)
