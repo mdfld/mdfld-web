@@ -14,7 +14,7 @@ export const resend = {
     send: async (options: any) => {
       const client = getResend();
       if (!client) {
-        console.error("Resend client not initialized - RESEND_API_KEY missing");
+        // Resend client not initialized - RESEND_API_KEY missing
         return { id: "mock-email-id", error: "Email service not configured" };
       }
       return client.emails.send(options);

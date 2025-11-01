@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { username: string } },
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -15,8 +15,9 @@ export async function GET(
   }
 
   try {
+    const { username } = await params;
     const targetUser = await prisma.user.findUnique({
-      where: { username: params.username },
+      where: { username },
       select: { id: true },
     });
 
@@ -35,7 +36,7 @@ export async function GET(
 
     return NextResponse.json({ isFollowing: !!follow });
   } catch (error) {
-    console.error("Error checking follow status:", error);
+    // Error checking follow status
     return NextResponse.json(
       { error: "Failed to check follow status" },
       { status: 500 },
@@ -45,7 +46,7 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { username: string } },
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -56,8 +57,9 @@ export async function POST(
   }
 
   try {
+    const { username } = await params;
     const targetUser = await prisma.user.findUnique({
-      where: { username: params.username },
+      where: { username },
       select: { id: true },
     });
 
@@ -97,7 +99,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, follow });
   } catch (error) {
-    console.error("Error following user:", error);
+    // Error following user
     return NextResponse.json(
       { error: "Failed to follow user" },
       { status: 500 },
@@ -107,7 +109,7 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { username: string } },
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -118,8 +120,9 @@ export async function DELETE(
   }
 
   try {
+    const { username } = await params;
     const targetUser = await prisma.user.findUnique({
-      where: { username: params.username },
+      where: { username },
       select: { id: true },
     });
 
@@ -151,7 +154,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error unfollowing user:", error);
+    // Error unfollowing user
     return NextResponse.json(
       { error: "Failed to unfollow user" },
       { status: 500 },

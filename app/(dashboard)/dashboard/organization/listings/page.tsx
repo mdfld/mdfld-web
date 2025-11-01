@@ -18,11 +18,11 @@ export default function OrganizationListings() {
     (state) => state.activeOrganization,
   );
 
-  const { data: organization, isLoading: orgPending } =
-    trpc.organization.get.useQuery(
-      { slug: activeOrganization?.slug || "" },
-      { enabled: !!activeOrganization?.slug && !!session },
-    );
+  const { data, isLoading: orgPending } = trpc.organization.get.useQuery(
+    { slug: activeOrganization?.slug || "" },
+    { enabled: !!activeOrganization?.slug && !!session },
+  );
+  const organization = data as any;
 
   useEffect(() => {
     if (!sessionPending && !session) {
@@ -74,7 +74,7 @@ export default function OrganizationListings() {
     );
   }
 
-  if (organization.role !== "owner" && organization.role !== "admin") {
+  if (organization?.role !== "owner" && organization?.role !== "admin") {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">

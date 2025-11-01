@@ -4,7 +4,7 @@ import fs from "fs/promises";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } },
+  { params }: { params: Promise<{ filename: string }> },
 ) {
   // Only handle local storage mode
   if (process.env.UPLOADTHING_STORAGE !== "local") {
@@ -12,7 +12,7 @@ export async function GET(
   }
 
   try {
-    const filename = params.filename;
+    const { filename } = await params;
     const filepath = path.join(
       process.cwd(),
       process.env.LOCAL_UPLOAD_DIR || "./public/uploads",
@@ -54,7 +54,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error serving file:", error);
+    // Error serving file
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 }

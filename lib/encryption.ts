@@ -75,7 +75,7 @@ export async function decryptMessage(encryptedData: string): Promise<string> {
     const { encrypted, iv, authTag } = JSON.parse(encryptedData);
     return await MessageEncryption.decrypt(encrypted, iv, authTag);
   } catch (error) {
-    console.error("Failed to decrypt message:", error);
+    // Failed to decrypt message
     return "[Encrypted message]";
   }
 }

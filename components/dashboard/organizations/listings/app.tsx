@@ -76,7 +76,7 @@ export default function OrganizationListingsLayout() {
   const rowsPerPage = 10;
 
   // Fetch seller profile
-  const { data: sellerProfileData, isLoading: sellerProfileLoading } =
+  const { data: sellerProfileData } =
     trpc.organization.getSellerProfile.useQuery(
       {
         organizationId: activeOrganization?.id || "",
@@ -85,9 +85,6 @@ export default function OrganizationListingsLayout() {
         enabled: !!activeOrganization?.id,
       },
     );
-
-  console.log("Seller profile data:", sellerProfileData);
-  console.log("Seller profile loading:", sellerProfileLoading);
 
   // Fetch products
   const {
@@ -140,9 +137,9 @@ export default function OrganizationListingsLayout() {
 
   const stats = {
     total: products.length,
-    active: products.filter((p) => p.isActive).length,
+    active: products.filter((p: any) => p.isActive).length,
     totalInventory: products.reduce(
-      (sum, product) => sum + product.inventory,
+      (sum: any, product: any) => sum + product.inventory,
       0,
     ),
     totalRevenue: 0, // Would need orders data
@@ -280,7 +277,7 @@ export default function OrganizationListingsLayout() {
             <TableColumn> </TableColumn>
           </TableHeader>
           <TableBody emptyContent="No products found">
-            {paginatedListings.map((product) => {
+            {paginatedListings.map((product: any) => {
               const categoryName =
                 categories.find((c) => c.key === product.category)?.label ||
                 product.category;

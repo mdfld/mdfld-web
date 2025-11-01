@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
-    console.error("Webhook signature verification failed:", err);
+    // Webhook signature verification failed
     return new Response(`Webhook Error: ${err}`, { status: 400 });
   }
 
@@ -32,8 +32,7 @@ export async function POST(request: NextRequest) {
       }
 
       case "account.application.authorized": {
-        const application = event.data.object as Stripe.Application;
-        console.log("Application authorized:", application.id);
+        // Application authorized
         break;
       }
 
@@ -56,14 +55,12 @@ export async function POST(request: NextRequest) {
       }
 
       case "transfer.created": {
-        const transfer = event.data.object as Stripe.Transfer;
-        console.log("Transfer created:", transfer.id);
+        // Transfer created
         break;
       }
 
       case "payout.created": {
-        const payout = event.data.object as Stripe.Payout;
-        console.log("Payout created:", payout.id);
+        // Payout created
         break;
       }
 
@@ -74,10 +71,10 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type ${event.type}`);
+      // Unhandled event type
     }
   } catch (error) {
-    console.error("Error handling webhook:", error);
+    // Error handling webhook
     return new Response("Webhook handler failed", { status: 500 });
   }
 
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
 
 // Handler functions
 async function handleAccountUpdated(account: Stripe.Account) {
-  console.log("Account updated:", account.id);
+  // Account updated
 
   // Find and update seller profile with account status
   const sellerProfile = await prisma.sellerProfile.findUnique({
@@ -115,7 +112,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
 async function handlePaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent,
 ) {
-  console.log("Payment succeeded:", paymentIntent.id);
+  // Payment succeeded
 
   // Update order status
   const order = await prisma.order.findUnique({
@@ -159,7 +156,7 @@ async function handlePaymentIntentSucceeded(
 }
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
-  console.log("Payment failed:", paymentIntent.id);
+  // Payment failed
 
   // Update order status
   const order = await prisma.order.findUnique({
@@ -178,7 +175,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 }
 
 async function handleChargeSucceeded(charge: Stripe.Charge) {
-  console.log("Charge succeeded:", charge.id);
+  // Charge succeeded
 
   // Update order with charge ID if needed
   if (charge.payment_intent && typeof charge.payment_intent === "string") {
@@ -190,7 +187,7 @@ async function handleChargeSucceeded(charge: Stripe.Charge) {
 }
 
 async function handleCustomerCreated(customer: Stripe.Customer) {
-  console.log("Customer created:", customer.id);
+  // Customer created
 
   // Update user with Stripe customer ID
   if (customer.email) {

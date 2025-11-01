@@ -49,23 +49,25 @@ export default function UserOrdersLayout() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  const { data: ordersData, isLoading } = trpc.order.getMyOrders.useQuery({
+  const { data: ordersData, isLoading } = (
+    trpc as any
+  ).order.getMyOrders.useQuery({
     limit: rowsPerPage,
     status: selectedStatus as any,
     cursor: undefined,
   });
 
-  const cancelOrderMutation = trpc.order.cancel.useMutation({
+  const cancelOrderMutation = (trpc as any).order.cancel.useMutation({
     onSuccess: () => {
       // Refetch orders
     },
   });
 
   const orders = ordersData?.items || [];
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = orders.filter((order: any) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.some((item) =>
+      order.items.some((item: any) =>
         item.product.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     return matchesSearch;
@@ -79,12 +81,20 @@ export default function UserOrdersLayout() {
 
   const stats = {
     total: orders.length,
-    pending: orders.filter((o) => o.status === "PENDING").length,
+    pending: orders.filter((o: any) => o.status === "PENDING").length,
     processing: orders.filter(
-      (o) => o.status === "PROCESSING" || o.status === "CONFIRMED",
+      (o: any) => o.status === "CONFIRMED" || o.status === "PROCESSING",
     ).length,
-    delivered: orders.filter((o) => o.status === "DELIVERED").length,
-    totalSpent: orders.reduce((sum, order) => sum + Number(order.total), 0),
+    delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
+    completed: orders.filter((o: any) => o.status === "DELIVERED").length,
+    totalSpent: orders.reduce(
+      (sum: any, order: any) => sum + Number(order.total),
+      0,
+    ),
+    totalRevenue: orders.reduce(
+      (sum: any, order: any) => sum + Number(order.total),
+      0,
+    ),
   };
 
   if (isLoading) {
@@ -180,8 +190,9 @@ export default function UserOrdersLayout() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {paginatedOrders.map((order) => {
-              const status = statusConfig[order.status];
+            {paginatedOrders.map((order: any) => {
+              const status =
+                statusConfig[order.status as keyof typeof statusConfig];
               return (
                 <Card key={order.id} className="p-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
@@ -251,7 +262,7 @@ export default function UserOrdersLayout() {
                   </div>
 
                   <div className="space-y-3">
-                    {order.items.map((item) => (
+                    {order.items.map((item: any) => (
                       <div
                         key={item.id}
                         className="flex items-center gap-4 py-2"

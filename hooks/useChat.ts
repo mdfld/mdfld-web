@@ -24,7 +24,9 @@ export function useChat(conversationId: string) {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch initial messages
-  const { data: initialMessages, isLoading } = trpc.chat.messages.useQuery(
+  const { data: initialMessages, isLoading } = (
+    trpc as any
+  ).chat.messages.useQuery(
     {
       conversationId,
       limit: 50,
@@ -35,18 +37,18 @@ export function useChat(conversationId: string) {
   );
 
   // Send message mutation
-  const sendMessageMutation = trpc.chat.sendMessage.useMutation({
-    onSuccess: (newMessage) => {
+  const sendMessageMutation = (trpc as any).chat.sendMessage.useMutation({
+    onSuccess: (newMessage: any) => {
       // Optimistically add message to local state
       setMessages((prev) => [...prev, newMessage as ChatMessage]);
     },
   });
 
   // Mark as read mutation
-  const markAsReadMutation = trpc.chat.markAsRead.useMutation();
+  const markAsReadMutation = (trpc as any).chat.markAsRead.useMutation();
 
   // Send typing indicator
-  const sendTypingMutation = trpc.chat.sendTyping.useMutation();
+  const sendTypingMutation = (trpc as any).chat.sendTyping.useMutation();
 
   // Initialize messages
   useEffect(() => {
@@ -203,9 +205,13 @@ export function useChat(conversationId: string) {
 
 // Hook for conversation list
 export function useConversations() {
-  const { data: conversations, isLoading } = trpc.chat.conversations.useQuery();
+  const { data: conversations, isLoading } = (
+    trpc as any
+  ).chat.conversations.useQuery();
 
-  const createConversationMutation = trpc.chat.createConversation.useMutation();
+  const createConversationMutation = (
+    trpc as any
+  ).chat.createConversation.useMutation();
 
   const createConversation = useCallback(
     async (participantIds: string[], type: "DIRECT" | "GROUP" = "DIRECT") => {
@@ -226,7 +232,9 @@ export function useConversations() {
 
 // Hook for user presence
 export function usePresence() {
-  const updatePresenceMutation = trpc.chat.updatePresence.useMutation();
+  const updatePresenceMutation = (
+    trpc as any
+  ).chat.updatePresence.useMutation();
 
   useEffect(() => {
     // Set online on mount

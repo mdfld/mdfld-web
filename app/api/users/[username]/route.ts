@@ -54,7 +54,7 @@ export async function GET(
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
+    // Error fetching user
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

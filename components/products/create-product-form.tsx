@@ -378,7 +378,7 @@ export default function CreateProductForm({
                     <Controller
                       name="category"
                       control={control}
-                      render={({ field }) => (
+                      render={({ field }: any) => (
                         <Select
                           {...field}
                           label="Category"
@@ -405,7 +405,7 @@ export default function CreateProductForm({
                     <Controller
                       name="condition"
                       control={control}
-                      render={({ field }) => (
+                      render={({ field }: any) => (
                         <Select
                           {...field}
                           label="Condition"
@@ -474,7 +474,7 @@ export default function CreateProductForm({
                         <Controller
                           name="playerVersion"
                           control={control}
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <Select
                               {...field}
                               label="Player Version"
@@ -502,7 +502,7 @@ export default function CreateProductForm({
                         <Controller
                           name="tier"
                           control={control}
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <Select
                               {...field}
                               label="Tier"
@@ -533,7 +533,7 @@ export default function CreateProductForm({
                         <Controller
                           name="solelateType"
                           control={control}
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <Select
                               {...field}
                               label="Soleplate Type"
@@ -680,7 +680,7 @@ export default function CreateProductForm({
                     <Controller
                       name="price"
                       control={control}
-                      render={({ field }) => (
+                      render={({ field }: any) => (
                         <Input
                           type="number"
                           step="0.01"
@@ -715,7 +715,7 @@ export default function CreateProductForm({
                       <Controller
                         name="hasVariants"
                         control={control}
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <Switch
                             isSelected={field.value}
                             onValueChange={field.onChange}
@@ -776,9 +776,9 @@ export default function CreateProductForm({
               <Button
                 type="submit"
                 color="primary"
-                isLoading={createProduct.isLoading}
+                isLoading={createProduct.isPending}
                 startContent={
-                  !createProduct.isLoading && <Sparkles className="h-4 w-4" />
+                  !createProduct.isPending && <Sparkles className="h-4 w-4" />
                 }
                 isDisabled={!isValid}
               >

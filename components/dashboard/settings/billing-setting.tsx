@@ -63,7 +63,7 @@ const BillingSetting = React.forwardRef<
           setStripeCustomerId(result.customerId);
           fetchPaymentMethods(result.customerId);
         } catch (error) {
-          console.error("Failed to get customer ID:", error);
+          // Failed to get customer ID
         }
       } else if (stripeCustomerId) {
         fetchPaymentMethods(stripeCustomerId);
@@ -84,7 +84,7 @@ const BillingSetting = React.forwardRef<
         setDefaultPaymentMethod(data.defaultPaymentMethod);
       }
     } catch (error) {
-      console.error("Failed to fetch payment methods:", error);
+      // Failed to fetch payment methods
     }
   };
 
@@ -119,7 +119,7 @@ const BillingSetting = React.forwardRef<
       window.location.href = url;
     } catch (error) {
       toast.error("Failed to add payment method");
-      console.error(error);
+      // Error adding payment method
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +144,7 @@ const BillingSetting = React.forwardRef<
       }
     } catch (error) {
       toast.error("Failed to remove payment method");
-      console.error(error);
+      // Error removing payment method
     }
   };
 
@@ -172,7 +172,7 @@ const BillingSetting = React.forwardRef<
       }
     } catch (error) {
       toast.error("Failed to update billing address");
-      console.error(error);
+      // Error updating billing address
     } finally {
       setIsLoading(false);
     }

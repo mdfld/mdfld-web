@@ -36,7 +36,7 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    console.log(`User ${userId} connected to conversation ${conversationId}`);
+    // User connected to conversation
 
     // Store connection
     if (!connections.has(conversationId)) {
@@ -50,7 +50,7 @@ wss.on("connection", (ws, req) => {
   } else if (connectionType === "notifications") {
     const notificationUserId = resourceId;
 
-    console.log(`User ${notificationUserId} connected for notifications`);
+    // User connected for notifications
 
     // Store notification connection
     const notificationKey = `notifications:${notificationUserId}`;
@@ -83,7 +83,7 @@ wss.on("connection", (ws, req) => {
         });
       }
     } catch (error) {
-      console.error("Error processing message:", error);
+      // Error processing message
     }
   });
 
@@ -91,9 +91,7 @@ wss.on("connection", (ws, req) => {
   ws.on("close", () => {
     if (connectionType === "chat") {
       const conversationId = resourceId;
-      console.log(
-        `User ${userId} disconnected from conversation ${conversationId}`,
-      );
+      // User disconnected from conversation
 
       const conversationConnections = connections.get(conversationId);
       if (conversationConnections) {
@@ -105,7 +103,7 @@ wss.on("connection", (ws, req) => {
       }
     } else if (connectionType === "notifications") {
       const notificationUserId = resourceId;
-      console.log(`User ${notificationUserId} disconnected from notifications`);
+      // User disconnected from notifications
 
       const notificationKey = `notifications:${notificationUserId}`;
       connections.delete(notificationKey);

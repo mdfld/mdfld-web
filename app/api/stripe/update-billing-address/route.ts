@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to update billing address:", error);
+    // Failed to update billing address
     return NextResponse.json(
       { error: "Failed to update billing address" },
       { status: 500 },

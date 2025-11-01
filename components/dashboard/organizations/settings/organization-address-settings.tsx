@@ -36,10 +36,11 @@ export default function OrganizationAddressSettings({
   });
 
   // Fetch organization data
-  const { data: organization, refetch } = trpc.organization.get.useQuery(
+  const { data, refetch } = trpc.organization.get.useQuery(
     { slug: organizationSlug },
     { enabled: !!organizationSlug },
   );
+  const organization = data as any;
 
   // Update mutation
   const updateOrganization = trpc.organization.update.useMutation({
@@ -47,7 +48,7 @@ export default function OrganizationAddressSettings({
       setSuccessMessage("Address updated successfully!");
       refetch();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setUpdateError(error.message || "Failed to update address");
     },
   });

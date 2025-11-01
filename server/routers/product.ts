@@ -69,6 +69,8 @@ const createProductSchema = z.object({
   variants: z.array(productVariantSchema).optional(),
 });
 
+export { PRODUCT_CATEGORIES };
+
 export const productRouter = createTRPCRouter({
   // Create a new product
   create: protectedProcedure
@@ -128,7 +130,7 @@ export const productRouter = createTRPCRouter({
 
           stripePriceId = stripePrice.id;
         } catch (error) {
-          console.error("Error creating Stripe product:", error);
+          // Error creating Stripe product
           // Continue without Stripe - can be added later
         }
       }
@@ -190,10 +192,7 @@ export const productRouter = createTRPCRouter({
                           });
                           variantStripePriceId = stripePrice.id;
                         } catch (error) {
-                          console.error(
-                            "Error creating Stripe price for variant:",
-                            error,
-                          );
+                          // Error creating Stripe price for variant
                         }
                       }
 
@@ -276,7 +275,7 @@ export const productRouter = createTRPCRouter({
             });
           }
         } catch (error) {
-          console.error("Error updating Stripe price:", error);
+          // Error updating Stripe price
         }
       }
 
@@ -331,7 +330,7 @@ export const productRouter = createTRPCRouter({
             active: false,
           });
         } catch (error) {
-          console.error("Error archiving Stripe product:", error);
+          // Error archiving Stripe product
         }
       }
 
@@ -599,7 +598,7 @@ export const productRouter = createTRPCRouter({
           });
           stripePriceId = stripePrice.id;
         } catch (error) {
-          console.error("Error creating Stripe price for variant:", error);
+          // Error creating Stripe price for variant
         }
       }
 
@@ -687,7 +686,7 @@ export const productRouter = createTRPCRouter({
             active: false,
           });
         } catch (error) {
-          console.error("Error updating Stripe price:", error);
+          // Error updating Stripe price
         }
       }
 
@@ -743,7 +742,7 @@ export const productRouter = createTRPCRouter({
             active: false,
           });
         } catch (error) {
-          console.error("Error archiving Stripe price:", error);
+          // Error archiving Stripe price
         }
       }
 

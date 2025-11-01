@@ -43,7 +43,7 @@ export function WishlistButton({
         setIsInWishlist(inWishlist);
       }
     } catch (error) {
-      console.error("Failed to check wishlist status:", error);
+      // Failed to check wishlist status
     }
   };
 
@@ -78,7 +78,7 @@ export function WishlistButton({
         }
       }
     } catch (error) {
-      console.error("Failed to toggle wishlist:", error);
+      // Failed to toggle wishlist
     } finally {
       setIsLoading(false);
     }

@@ -66,7 +66,7 @@ export default function WishlistPage() {
         setWishlistItems(transformedItems);
       }
     } catch (error) {
-      console.error("Failed to fetch wishlist items:", error);
+      // Failed to fetch wishlist items
     } finally {
       setIsLoading(false);
     }

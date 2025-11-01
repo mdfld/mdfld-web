@@ -76,7 +76,11 @@ export default function OrganizationSettings() {
   }
 
   // Check if user has permission to edit this organization
-  if (organization.role !== "owner" && organization.role !== "admin") {
+  // Check if user has permission to edit this organization
+  if (
+    (organization as any)?.role !== "owner" &&
+    (organization as any)?.role !== "admin"
+  ) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">

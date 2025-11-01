@@ -5,15 +5,16 @@ const ITEMS_PER_PAGE = 10;
 
 export async function GET(
   request: Request,
-  { params }: { params: { username: string } },
+  { params }: { params: Promise<{ username: string }> },
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
+    const { username } = await params;
     const user = await prisma.user.findUnique({
-      where: { username: params.username },
+      where: { username },
       select: { id: true },
     });
 
@@ -64,7 +65,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching following:", error);
+    // Error fetching following
     return NextResponse.json(
       { error: "Failed to fetch following" },
       { status: 500 },

@@ -119,7 +119,7 @@ const ProfileSetting = React.forwardRef<
       refetchSession();
       setSuccessMessage("Profile updated successfully!");
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      // Failed to update profile
       setUpdateError(
         error instanceof Error
           ? error.message

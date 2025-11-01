@@ -37,7 +37,7 @@ export const WishlistSpotlight = () => {
           setWishlistItems(data.items);
         }
       } catch (error) {
-        console.error("Failed to fetch wishlist:", error);
+        // Failed to fetch wishlist
       } finally {
         setIsLoading(false);
       }

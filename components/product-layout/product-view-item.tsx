@@ -105,7 +105,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
 
     // Check if this product is in the wishlist
     const isWishlisted = React.useMemo(() => {
-      return wishlistProducts?.some((p) => p.id === props.id) || false;
+      return wishlistProducts?.some((p: any) => p.id === props.id) || false;
     }, [wishlistProducts, props.id]);
 
     // Add to wishlist mutation

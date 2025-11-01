@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error("Failed to create setup session:", error);
+    // Failed to create setup session
     return NextResponse.json(
       { error: "Failed to create setup session" },
       { status: 500 },

@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import superjson from "superjson";
+const superjson = require("superjson");
 import { ZodError } from "zod";
 
 interface CreateContextOptions {

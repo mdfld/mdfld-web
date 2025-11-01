@@ -379,13 +379,6 @@ export const chatRouter = createTRPCRouter({
         ...new Set([ctx.user.id, ...input.participantIds]),
       ];
 
-      console.log("Creating conversation:", {
-        currentUserId: ctx.user.id,
-        inputParticipantIds: input.participantIds,
-        allParticipantIds,
-        type: input.type,
-      });
-
       // For direct messages, ensure only 2 participants
       if (input.type === "DIRECT" && allParticipantIds.length !== 2) {
         throw new TRPCError({

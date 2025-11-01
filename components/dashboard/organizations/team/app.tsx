@@ -45,10 +45,11 @@ export default function OrganizationTeamLayout({
   const [inviteRole, setInviteRole] = React.useState("member");
 
   // Fetch organization with members
-  const { data: organization, refetch } = trpc.organization.get.useQuery(
+  const { data, refetch } = trpc.organization.get.useQuery(
     { slug: organizationSlug },
     { enabled: !!organizationSlug },
   );
+  const organization = data as any;
 
   // Invite mutation
   const inviteMember = trpc.organization.inviteMember.useMutation({
@@ -101,7 +102,7 @@ export default function OrganizationTeamLayout({
 
     await updateMemberRole.mutateAsync({
       organizationId: organization.id,
-      userId,
+      memberId: userId,
       role: newRole as any,
     });
   };
@@ -111,7 +112,7 @@ export default function OrganizationTeamLayout({
 
     await removeMember.mutateAsync({
       organizationId: organization.id,
-      userId,
+      memberId: userId,
     });
   };
 
@@ -166,7 +167,7 @@ export default function OrganizationTeamLayout({
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Member actions">
-              {organization?.role === "owner" && member.role !== "owner" && (
+              {organization?.role === "owner" && member.role !== "owner" ? (
                 <DropdownItem
                   key="role"
                   startContent={<Icon icon="solar:user-id-bold" width={16} />}
@@ -178,8 +179,8 @@ export default function OrganizationTeamLayout({
                 >
                   Make {member.role === "admin" ? "Member" : "Admin"}
                 </DropdownItem>
-              )}
-              {member.role !== "owner" && (
+              ) : null}
+              {member.role !== "owner" ? (
                 <DropdownItem
                   key="remove"
                   className="text-danger"
@@ -191,7 +192,7 @@ export default function OrganizationTeamLayout({
                 >
                   Remove
                 </DropdownItem>
-              )}
+              ) : null}
             </DropdownMenu>
           </Dropdown>
         );
@@ -230,8 +231,8 @@ export default function OrganizationTeamLayout({
             <TableColumn key={column.key}>{column.label}</TableColumn>
           )}
         </TableHeader>
-        <TableBody items={organization?.members || []}>
-          {(member) => (
+        <TableBody items={(organization?.members || []) as any}>
+          {(member: any) => (
             <TableRow key={member.userId}>
               {(columnKey) => (
                 <TableCell>{renderCell(member, columnKey)}</TableCell>
@@ -266,9 +267,9 @@ export default function OrganizationTeamLayout({
                   }
                 >
                   <SelectItem key="member">Member</SelectItem>
-                  {organization?.role === "owner" && (
+                  {organization?.role === "owner" ? (
                     <SelectItem key="admin">Admin</SelectItem>
-                  )}
+                  ) : null}
                 </Select>
               </ModalBody>
               <ModalFooter>

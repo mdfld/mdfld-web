@@ -138,9 +138,8 @@ export const auth = betterAuth({
   logger: {
     disabled: false,
     level: "info",
-    log: (level, message, ...args) => {
-      // Custom logging implementation
-      console.log(`[${level}] ${message}`, ...args);
+    log: (_level, _message, ..._args) => {
+      // Custom logging implementation - implement proper logging service
     },
   },
 });

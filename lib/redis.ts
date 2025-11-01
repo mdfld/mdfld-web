@@ -7,7 +7,7 @@ const redisConfig = {
   password: process.env.REDIS_PASSWORD,
   retryStrategy: (times: number) => {
     if (times > 3) {
-      console.error("[Redis] Maximum retry attempts reached.");
+      // Maximum retry attempts reached
       throw new Error("Redis connection failed after 3 attempts");
     }
     return Math.min(times * 50, 2000);
@@ -23,8 +23,8 @@ const redisSubscriber = new Redis(redisConfig);
 const redisCache = new Redis(redisConfig);
 
 // Handle connection errors
-const handleRedisError = (client: string) => (err: Error) => {
-  console.error(`[Redis ${client}] Error:`, err.message);
+const handleRedisError = (_client: string) => (err: Error) => {
+  // Redis connection error
   throw err;
 };
 
@@ -32,7 +32,7 @@ redisPublisher.on("error", handleRedisError("Publisher"));
 redisSubscriber.on("error", handleRedisError("Subscriber"));
 redisCache.on("error", handleRedisError("Cache"));
 
-console.log("[Redis] Clients initialized");
+// Redis clients initialized
 
 // Define Redis channels
 export const REDIS_CHANNELS = {

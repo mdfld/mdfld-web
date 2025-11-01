@@ -5,7 +5,7 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 import { type AppRouter } from "@/server";
-import superjson from "superjson";
+const superjson = require("superjson");
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -22,7 +22,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 1000 * 60 * 5, // 5 minutes
-            cacheTime: 1000 * 60 * 10, // 10 minutes
+            gcTime: 1000 * 60 * 10, // 10 minutes
           },
         },
       }),

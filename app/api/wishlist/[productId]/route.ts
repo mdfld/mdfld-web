@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { productId: string } },
+  { params }: { params: Promise<{ productId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -15,7 +15,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { productId } = params;
+    const { productId } = await params;
 
     if (!productId) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to remove from wishlist:", error);
+    // Failed to remove from wishlist
     return NextResponse.json(
       { error: "Failed to remove item from wishlist" },
       { status: 500 },

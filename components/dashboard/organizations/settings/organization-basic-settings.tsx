@@ -86,10 +86,11 @@ export default function OrganizationBasicSettings({
   });
 
   // Fetch organization data
-  const { data: organization, refetch } = trpc.organization.get.useQuery(
+  const { data, refetch } = trpc.organization.get.useQuery(
     { slug: organizationSlug },
     { enabled: !!organizationSlug },
   );
+  const organization = data as any;
 
   // Update mutation
   const updateOrganization = trpc.organization.update.useMutation({
@@ -97,7 +98,7 @@ export default function OrganizationBasicSettings({
       setSuccessMessage("Organization updated successfully!");
       refetch();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setUpdateError(error.message || "Failed to update organization");
     },
   });

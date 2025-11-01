@@ -61,7 +61,7 @@ export default function BagPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cartData.items.map((item) => ({
+          items: cartData.items.map((item: any) => ({
             productId: item.product.id,
             variantId: item.variant?.id,
             quantity: item.quantity,
@@ -86,7 +86,7 @@ export default function BagPage() {
       // Redirect to Checkout
       window.location.href = `/checkout?session_id=${sessionId}`;
     } catch (error) {
-      console.error("Checkout error:", error);
+      // Checkout error
       toast.error("Failed to start checkout");
     } finally {
       setIsCheckingOut(false);
@@ -139,7 +139,7 @@ export default function BagPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartData.items.map((item) => (
+          {cartData.items.map((item: any) => (
             <Card key={item.id}>
               <CardBody className="p-4">
                 <div className="flex gap-4">

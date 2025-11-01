@@ -11,10 +11,11 @@ export default function OrganizationBillingSettings({
   organizationSlug: string;
 }) {
   // Fetch organization data
-  const { data: organization } = trpc.organization.get.useQuery(
+  const { data } = trpc.organization.get.useQuery(
     { slug: organizationSlug },
     { enabled: !!organizationSlug },
   );
+  const organization = data as any;
 
   const handleOpenStripeDashboard = () => {
     // In production, this would open the Stripe Connect dashboard for the specific account

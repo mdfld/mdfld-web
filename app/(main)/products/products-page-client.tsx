@@ -38,13 +38,13 @@ export default function ProductsPageClient() {
         maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
       },
       {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
+        getNextPageParam: (lastPage: any) => lastPage.nextCursor,
       },
-    );
+    ) as any;
 
   // Flatten all pages of products
   const products = React.useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) ?? [];
+    return (data?.pages as any[])?.flatMap((page: any) => page.items) ?? [];
   }, [data]);
 
   // Sort products based on selected option

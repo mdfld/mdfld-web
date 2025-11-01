@@ -140,14 +140,14 @@ export class AES256E2EE {
 
       // Validate encrypted message structure
       if (!encrypted || typeof encrypted !== "object") {
-        console.error("Invalid encrypted message format");
+        // Invalid encrypted message format
         return null;
       }
 
       const sharedKey = this.deriveSharedKey(userId, senderId);
       return this.decryptMessage(encrypted, sharedKey);
     } catch (error) {
-      console.error("Decryption error:", error);
+      // Decryption error
       return null;
     }
   }

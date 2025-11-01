@@ -3,20 +3,20 @@
 import { useEffect } from "react";
 
 export default function Error({
-	error,
-	reset,
+  error,
+  reset,
 }: {
-	error: Error;
-	reset: () => void;
+  error: Error;
+  reset: () => void;
 }) {
-	useEffect(() => {
-		console.error(error);
-	}, [error]);
+  useEffect(() => {
+    // Error boundary triggered
+  }, [error]);
 
-	return (
-		<div>
-			<h2>Something went wrong!</h2>
-			<button onClick={() => reset()}>Try again</button>
-		</div>
-	);
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>Try again</button>
+    </div>
+  );
 }

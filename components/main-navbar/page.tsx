@@ -268,7 +268,7 @@ export default function MainNavbar(props: NavbarProps) {
                   ) : (
                     <>
                       <div className="max-h-[280px] overflow-y-auto">
-                        {cartData?.items.slice(0, 4).map((item) => (
+                        {cartData?.items.slice(0, 4).map((item: any) => (
                           <div
                             key={item.id}
                             className="group hover:bg-default-50 transition-all"

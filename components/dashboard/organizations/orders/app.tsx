@@ -91,13 +91,13 @@ export default function OrganizationOrdersLayout() {
       toast.success("Order status updated");
       refetch();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to update order status");
     },
   });
 
   const orders = ordersData?.items || [];
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = orders.filter((order: any) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.buyer.user?.name
@@ -118,12 +118,15 @@ export default function OrganizationOrdersLayout() {
 
   const stats = {
     total: orders.length,
-    pending: orders.filter((o) => o.status === "PENDING").length,
+    pending: orders.filter((o: any) => o.status === "PENDING").length,
     processing: orders.filter(
-      (o) => o.status === "PROCESSING" || o.status === "CONFIRMED",
+      (o: any) => o.status === "PROCESSING" || o.status === "CONFIRMED",
     ).length,
-    delivered: orders.filter((o) => o.status === "DELIVERED").length,
-    revenue: orders.reduce((sum, order) => sum + Number(order.total), 0),
+    delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
+    revenue: orders.reduce(
+      (sum: any, order: any) => sum + Number(order.total),
+      0,
+    ),
   };
 
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
@@ -268,8 +271,9 @@ export default function OrganizationOrdersLayout() {
               <TableColumn> </TableColumn>
             </TableHeader>
             <TableBody emptyContent="No orders found">
-              {paginatedOrders.map((order) => {
-                const status = statusConfig[order.status];
+              {paginatedOrders.map((order: any) => {
+                const status =
+                  statusConfig[order.status as keyof typeof statusConfig];
                 return (
                   <TableRow
                     key={order.id}

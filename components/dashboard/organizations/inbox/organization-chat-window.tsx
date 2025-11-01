@@ -39,7 +39,9 @@ const OrganizationChatWindow = React.forwardRef<
   const organizationId = activeOrganization?.id;
 
   // Get conversations list to find current conversation
-  const { data: conversations } = trpc.organization.getConversations.useQuery(
+  const { data: conversations } = (
+    trpc as any
+  ).organization.getConversations.useQuery(
     {
       organizationId: organizationId!,
     },
@@ -54,7 +56,9 @@ const OrganizationChatWindow = React.forwardRef<
   );
 
   // Get messages
-  const { data: messagesData, isLoading } = trpc.chat.messages.useQuery(
+  const { data: messagesData, isLoading } = (
+    trpc as any
+  ).chat.messages.useQuery(
     {
       conversationId: conversationId!,
     },
@@ -82,11 +86,12 @@ const OrganizationChatWindow = React.forwardRef<
   const typingUsers: string[] = [];
 
   // Mutations
-  const sendMessageMutation =
-    trpc.organization.sendMessageAsOrganization.useMutation();
-  const deleteMessageMutation = trpc.chat.deleteMessage.useMutation();
-  const sendTypingMutation = trpc.chat.sendTyping.useMutation();
-  const markAsReadMutation = trpc.chat.markAsRead.useMutation();
+  const sendMessageMutation = (
+    trpc as any
+  ).organization.sendMessageAsOrganization.useMutation();
+  const deleteMessageMutation = (trpc as any).chat.deleteMessage.useMutation();
+  const sendTypingMutation = (trpc as any).chat.sendTyping.useMutation();
+  const markAsReadMutation = (trpc as any).chat.markAsRead.useMutation();
 
   // Reset read tracking when conversation changes
   useEffect(() => {
@@ -125,7 +130,7 @@ const OrganizationChatWindow = React.forwardRef<
         type: "TEXT",
       });
     } catch (error) {
-      console.error("Failed to send message:", error);
+      // Failed to send message
     }
   };
 
@@ -135,7 +140,7 @@ const OrganizationChatWindow = React.forwardRef<
         messageId,
       });
     } catch (error) {
-      console.error("Failed to delete message:", error);
+      // Failed to delete message
     }
   };
 
@@ -241,7 +246,7 @@ const OrganizationChatWindow = React.forwardRef<
                 No messages yet. Start the conversation!
               </div>
             ) : (
-              messages.map((message) => (
+              messages.map((message: any) => (
                 <OrganizationChatMessage
                   key={message.id}
                   messageId={message.id}

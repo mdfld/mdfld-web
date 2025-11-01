@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       defaultPaymentMethod,
     });
   } catch (error) {
-    console.error("Failed to fetch payment methods:", error);
+    // Failed to fetch payment methods
     return NextResponse.json(
       { error: "Failed to fetch payment methods" },
       { status: 500 },

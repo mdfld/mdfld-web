@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardBody>
           <div className="space-y-3">
-            {analytics.dailyRegistrations.map((day) => (
+            {analytics.dailyRegistrations.map((day: any) => (
               <div key={day.date} className="flex justify-between items-center">
                 <span className="text-default-600">{day.date}</span>
                 <span className="font-semibold">{day.count} new users</span>

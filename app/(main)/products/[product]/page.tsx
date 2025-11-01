@@ -35,29 +35,30 @@ export default function ProductPage() {
   }
 
   // Transform variants data
-  const sizes =
+  const sizes: string[] =
     product.hasVariants && product.variants
-      ? [...new Set(product.variants.map((v) => v.sizeDisplay))].sort()
+      ? (Array.from(
+          new Set(product.variants.map((v: any) => v.sizeDisplay)),
+        ).sort() as string[])
       : ["One Size"];
 
-  const colors =
-    product.hasVariants && product.variants
-      ? [
-          ...new Set(
-            product.variants
-              .filter((v) => v.color)
-              .map((v) => ({
-                name: v.color!,
-                hex: v.colorHex || "#808080",
-              })),
-          ),
-        ]
-      : [];
+  const uniqueColors = new Map<string, { name: string; hex: string }>();
+  if (product.hasVariants && product.variants) {
+    product.variants.forEach((v: any) => {
+      if (v.color && !uniqueColors.has(v.color)) {
+        uniqueColors.set(v.color, {
+          name: v.color,
+          hex: v.colorHex || "#808080",
+        });
+      }
+    });
+  }
+  const colors = Array.from(uniqueColors.values());
 
   // Get all variant images
   const allImages = Array.isArray(product.images) ? [...product.images] : [];
   if (product.hasVariants && product.variants) {
-    product.variants.forEach((variant) => {
+    product.variants.forEach((variant: any) => {
       if (variant.images && variant.images.length > 0) {
         allImages.push(...variant.images);
       }
@@ -81,7 +82,7 @@ export default function ProductPage() {
     price:
       product.hasVariants && product.variants.length > 0
         ? Math.min(
-            ...product.variants.map((v) => parseFloat(v.price.toString())),
+            ...product.variants.map((v: any) => parseFloat(v.price.toString())),
           )
         : parseFloat(product.price.toString()),
     rating: product.seller.averageRating || 4.5,
@@ -122,7 +123,7 @@ export default function ProductPage() {
         items: product.seller.shippingPolicy
           ? product.seller.shippingPolicy
               .split("\n")
-              .filter((line) => line.trim())
+              .filter((line: string) => line.trim())
           : ["Standard shipping available", "Contact seller for details"],
       },
       {
@@ -130,7 +131,7 @@ export default function ProductPage() {
         items: product.seller.returnPolicy
           ? product.seller.returnPolicy
               .split("\n")
-              .filter((line) => line.trim())
+              .filter((line: string) => line.trim())
           : ["Returns accepted within 30 days", "Contact seller for details"],
       },
     ],

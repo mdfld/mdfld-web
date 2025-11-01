@@ -48,7 +48,7 @@ export function ProductListing() {
       label: value
         .replace(/_/g, " ")
         .toLowerCase()
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
+        .replace(/\b\w/g, (l: any) => l.toUpperCase()),
     }),
   );
 
@@ -146,16 +146,17 @@ export function ProductListing() {
 
           {/* Category Filter */}
           <Select
-            label="Category"
+            aria-label="Filter by category"
             placeholder="All Categories"
             className="w-full md:w-[200px]"
             onChange={handleCategoryChange}
             selectedKeys={filters.category ? [filters.category] : []}
+            items={[
+              { key: "all", label: "All Categories" },
+              ...categoryOptions,
+            ]}
           >
-            <SelectItem key="all">All Categories</SelectItem>
-            {categoryOptions.map((cat) => (
-              <SelectItem key={cat.key}>{cat.label}</SelectItem>
-            ))}
+            {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
           </Select>
 
           {/* Price Range Buttons */}
@@ -250,7 +251,7 @@ export function ProductListing() {
       {data?.items && data.items.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.items.map((product) => (
+            {data.items.map((product: any) => (
               <Card
                 key={product.id}
                 isPressable

@@ -32,10 +32,11 @@ export default function OrganizationMembersSettings({
   organizationSlug: string;
 }) {
   // Fetch organization data with members
-  const { data: organization } = trpc.organization.get.useQuery(
+  const { data } = trpc.organization.get.useQuery(
     { slug: organizationSlug },
     { enabled: !!organizationSlug },
   );
+  const organization = data as any;
 
   const handleRoleChange = (userId: string, newRole: string) => {
     // TODO: Implement role change mutation

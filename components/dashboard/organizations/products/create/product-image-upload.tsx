@@ -41,7 +41,7 @@ export default function ProductImageUpload({
         toast.success(`${uploadedFiles.length} image(s) uploaded successfully`);
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      // Upload error
       toast.error("Failed to upload images");
     } finally {
       setIsUploading(false);

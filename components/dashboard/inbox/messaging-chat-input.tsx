@@ -58,7 +58,7 @@ const MessagingChatInput = React.forwardRef<
       try {
         await startUpload([file]);
       } catch (error) {
-        console.error("Upload error:", error);
+        // Upload error
         toast.error("Failed to upload image");
         setIsUploading(false);
       }

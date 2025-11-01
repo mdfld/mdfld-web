@@ -78,7 +78,7 @@ export default function ReturnsLayout() {
 
   const orders = ordersData?.items || [];
   const deliveredOrders = orders.filter(
-    (order) => order.status === "DELIVERED",
+    (order: any) => order.status === "DELIVERED",
   );
 
   // Mock returns data - in production, this would come from the API
@@ -306,7 +306,7 @@ export default function ReturnsLayout() {
               </div>
             ) : (
               <div className="space-y-3">
-                {deliveredOrders.map((order) => (
+                {deliveredOrders.map((order: any) => (
                   <Card key={order.id} className="p-4">
                     <div className="flex justify-between items-center">
                       <div>

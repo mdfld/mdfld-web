@@ -43,19 +43,21 @@ export default function NotificationsTray(props: CardProps) {
   const utils = trpc.useUtils();
 
   // Fetch notifications
-  const { data, isLoading } = trpc.notification.list.useQuery({
+  const { data, isLoading } = (trpc as any).notification.list.useQuery({
     filter: activeTab === "unread" ? "unread" : "all",
   });
 
   // Mutations
-  const markAsReadMutation = trpc.notification.markAsRead.useMutation({
+  const markAsReadMutation = (trpc as any).notification.markAsRead.useMutation({
     onSuccess: () => {
       utils.notification.list.invalidate();
       utils.notification.unreadCount.invalidate();
     },
   });
 
-  const markAllAsReadMutation = trpc.notification.markAllAsRead.useMutation({
+  const markAllAsReadMutation = (
+    trpc as any
+  ).notification.markAllAsRead.useMutation({
     onSuccess: () => {
       utils.notification.list.invalidate();
       utils.notification.unreadCount.invalidate();
@@ -74,7 +76,7 @@ export default function NotificationsTray(props: CardProps) {
   const notifications: Notification[] = React.useMemo(() => {
     if (!data?.notifications) return [];
 
-    return data.notifications.map((n) => {
+    return (data.notifications as any[]).map((n: any) => {
       // Parse metadata for additional info like sender details
       const metadata = n.metadata as any;
 
@@ -173,8 +175,8 @@ export default function NotificationsTray(props: CardProps) {
             </div>
           ) : notifications.length > 0 ? (
             notifications.map((notification) => {
-              const metadata = data?.notifications.find(
-                (n) => n.id === notification.id,
+              const metadata = (data?.notifications as any[])?.find(
+                (n: any) => n.id === notification.id,
               )?.metadata as any;
 
               return (

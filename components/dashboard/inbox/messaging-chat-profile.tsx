@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Avatar, Image, ScrollShadow, Textarea, Button } from "@heroui/react";
+import { Image, ScrollShadow, Textarea, Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import UserAvatar from "@/components/common/user-avatar";
 import { cn } from "@heroui/react";
@@ -25,7 +25,9 @@ const MessagingChatProfile = React.forwardRef<
   // Get current user session
   const { data: session } = useSession();
   const { data: conversationData } = trpc.chat.conversations.useQuery();
-  const conversation = conversationData?.find((c) => c.id === conversationId);
+  const conversation = conversationData?.find(
+    (c: any) => c.id === conversationId,
+  );
 
   // For DMs, show the other participant's info
   const otherParticipant =
@@ -53,7 +55,7 @@ const MessagingChatProfile = React.forwardRef<
   // Filter messages with images/files
   const mediaMessages = React.useMemo(() => {
     if (!messagesData?.messages) return [];
-    return messagesData.messages.filter((msg) => {
+    return (messagesData.messages as any[]).filter((msg: any) => {
       if (msg.deletedAt) return false;
       const metadata = msg.metadata as any;
       return metadata?.imageUrl || msg.type === "IMAGE" || msg.type === "FILE";
@@ -162,7 +164,7 @@ const MessagingChatProfile = React.forwardRef<
                     >
                       {mediaMessages.length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full px-1 overflow-visible">
-                          {mediaMessages.map((message) => (
+                          {mediaMessages.map((message: any) => (
                             <div key={message.id} className="overflow-visible">
                               <Image
                                 isZoomed

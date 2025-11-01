@@ -111,10 +111,7 @@ export function convertSize(
   // Get appropriate size chart
   let sizeChart: SizeConversion[] = [];
 
-  if (
-    category === ProductCategory.CLEATS ||
-    category === ProductCategory.FOOTWEAR
-  ) {
+  if (category === ProductCategory.BOOTS) {
     sizeChart =
       gender === "womens" ? WOMENS_FOOTWEAR_SIZES : MENS_FOOTWEAR_SIZES;
   } else {
@@ -129,7 +126,7 @@ export function convertSize(
 
   // Find the size in the chart
   const sizeEntry = sizeChart.find((entry) => {
-    const fromValue = entry[fromSystem];
+    const fromValue = (entry as any)[fromSystem];
     return fromValue?.toString() === value.toString();
   });
 
@@ -137,7 +134,7 @@ export function convertSize(
     return null;
   }
 
-  const toValue = sizeEntry[toSystem];
+  const toValue = (sizeEntry as any)[toSystem];
   return toValue?.toString() || null;
 }
 
@@ -153,10 +150,7 @@ export function getSizeDisplay(
   }
 
   // For footwear, show multiple conversions
-  if (
-    category === ProductCategory.CLEATS ||
-    category === ProductCategory.FOOTWEAR
-  ) {
+  if (category === ProductCategory.BOOTS) {
     const conversions: string[] = [`${system} ${value}`];
 
     // Add other size systems
@@ -185,14 +179,10 @@ export function getSizeDisplay(
 
 export function getAvailableSizes(
   category: ProductCategory,
-  subcategory?: string,
 ): { value: string; system: SizeSystem; display: string }[] {
   const sizes: { value: string; system: SizeSystem; display: string }[] = [];
 
-  if (
-    category === ProductCategory.CLEATS ||
-    category === ProductCategory.FOOTWEAR
-  ) {
+  if (category === ProductCategory.BOOTS) {
     // Add UK sizes (most common for football boots)
     MENS_FOOTWEAR_SIZES.forEach((size) => {
       if (size.UK) {
@@ -205,8 +195,7 @@ export function getAvailableSizes(
     });
   } else if (
     category === ProductCategory.JERSEYS ||
-    category === ProductCategory.TRAINING_GEAR ||
-    category === ProductCategory.CASUAL_WEAR
+    category === ProductCategory.TRAINING_EQUIPMENT
   ) {
     // Add standard apparel sizes
     APPAREL_SIZES.forEach((size) => {
@@ -216,10 +205,7 @@ export function getAvailableSizes(
         display: size.standard,
       });
     });
-  } else if (
-    category === ProductCategory.HEADWEAR ||
-    category === ProductCategory.SPORTS_ACCESSORIES
-  ) {
+  } else if (category === ProductCategory.ACCESSORIES) {
     // One size or adjustable
     sizes.push({
       value: "ONE SIZE",
@@ -233,31 +219,26 @@ export function getAvailableSizes(
 
 export function shouldShowSizeChart(category: ProductCategory): boolean {
   return [
-    ProductCategory.CLEATS,
-    ProductCategory.FOOTWEAR,
+    ProductCategory.BOOTS,
     ProductCategory.JERSEYS,
-    ProductCategory.TRAINING_GEAR,
-    ProductCategory.CASUAL_WEAR,
-    ProductCategory.OUTERWEAR,
-  ].includes(category);
+    ProductCategory.TRAINING_EQUIPMENT,
+  ].includes(category as any);
 }
 
 export function getConditionalFields(category: ProductCategory): string[] {
   const fields: string[] = [];
 
   switch (category) {
-    case ProductCategory.CLEATS:
+    case ProductCategory.BOOTS:
       fields.push("soleplateType", "tier", "year");
       break;
     case ProductCategory.JERSEYS:
       fields.push("playerVersion", "season", "year");
       break;
-    case ProductCategory.TRAINING_GEAR:
-    case ProductCategory.CASUAL_WEAR:
+    case ProductCategory.TRAINING_EQUIPMENT:
       fields.push("material", "season");
       break;
-    case ProductCategory.COLLECTIBLES:
-    case ProductCategory.MEMORABILIA:
+    case ProductCategory.TRADING_CARDS:
       fields.push("year", "tier");
       break;
     default:
@@ -272,9 +253,7 @@ export function getSizeConversions(
   size: string,
   fromSystem: string = "US",
 ): Record<string, string> {
-  const sizeNum = parseFloat(size);
-
-  if (category === "CLEATS" || category === "FOOTWEAR") {
+  if (category === "BOOTS") {
     const sizeEntry = MENS_FOOTWEAR_SIZES.find((entry) => {
       const value = entry[fromSystem as keyof SizeConversion];
       return value?.toString() === size;
