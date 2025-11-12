@@ -13,7 +13,7 @@ import {
   ModalContent,
 } from "@heroui/react";
 import UserAvatar from "@/components/common/user-avatar";
-import { useSession } from "@/lib/auth-client";
+import { useSession, signOut } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { Icon } from "@iconify/react";
 
@@ -195,7 +195,15 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
               <DropdownItem key="settings" href="/dashboard/settings">
                 Settings
               </DropdownItem>
-              <DropdownItem key="logout">Logout</DropdownItem>
+              <DropdownItem
+                key="logout"
+                onClick={async () => {
+                  await signOut();
+                  router.push("/auth/login");
+                }}
+              >
+                Logout
+              </DropdownItem>
             </DropdownSection>
           </DropdownMenu>
         </Dropdown>

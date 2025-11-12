@@ -36,19 +36,34 @@ export default function VerifyEmailForm() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/auth/verify-email?token=${token}`);
+      // BetterAuth handles email verification through the main auth endpoint
+      const response = await fetch(
+        `/api/auth/email-verification/verify?token=${token}`,
+        {
+          method: "GET",
+        },
+      );
 
       if (response.ok) {
         setSuccess(true);
+        // Auto-redirect after verification
         setTimeout(() => {
           router.push("/dashboard");
         }, 3000);
       } else {
-        const data = await response.json();
-        setError(data.error || "Verification failed. Please try again.");
+        const data = await response
+          .json()
+          .catch(() => ({ error: "Verification failed" }));
+        setError(
+          data.error ||
+            "Verification failed. The link may be expired or invalid.",
+        );
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Email verification error:", err);
+      setError(
+        "An unexpected error occurred. Please try again or request a new verification link.",
+      );
     } finally {
       setIsVerifying(false);
     }

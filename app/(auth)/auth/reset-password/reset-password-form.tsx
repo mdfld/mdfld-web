@@ -87,11 +87,8 @@ export default function ResetPasswordForm() {
             <p className="text-sm text-default-500 mb-4">
               You can now sign in with your new password.
             </p>
-            <Button
-              onPress={() => router.push("/auth/sign-in")}
-              color="primary"
-            >
-              Go to sign in
+            <Button onPress={() => router.push("/auth/login")} color="primary">
+              Go to login
             </Button>
           </CardBody>
         </Card>
@@ -191,8 +188,8 @@ export default function ResetPasswordForm() {
           </Button>
 
           <div className="text-center pt-2">
-            <Link href="/auth/sign-in" className="text-default-500" size="sm">
-              Back to sign in
+            <Link href="/auth/login" className="text-default-500" size="sm">
+              Back to login
             </Link>
           </div>
         </Form>
