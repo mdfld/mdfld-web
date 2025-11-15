@@ -58,7 +58,7 @@ export default function ReturnsLayout() {
   } = trpc.order.getMyOrders.useQuery({
     limit: 50,
     status: "delivered",
-  });
+  }) as any;
 
   // Mock return mutation - replace with actual API call when implemented
   const requestReturnMutation = {

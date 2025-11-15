@@ -43,7 +43,7 @@ export default function MainNavbar(props: NavbarProps) {
   // Get cart items count
   const { data: cartData } = trpc.cart.get.useQuery(undefined, {
     enabled: !!session?.user,
-  });
+  }) as any;
   const cartCount = cartData?.itemCount || 0;
 
   // Get wishlist items

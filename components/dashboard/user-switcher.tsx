@@ -30,7 +30,7 @@ interface UserSwitcherProps {
 export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
   const { data: session, isPending } = useSession();
   const { data: organizations } =
-    trpc.organization.getMyOrganizations.useQuery();
+    trpc.organization.getMyOrganizations.useQuery() as any;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const queryClient = useQueryClient();
   const router = useRouter();

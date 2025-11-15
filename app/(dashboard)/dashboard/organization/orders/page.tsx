@@ -22,7 +22,7 @@ export default function OrganizationOrders() {
     trpc.organization.get.useQuery(
       { slug: activeOrganization?.slug || "" },
       { enabled: !!activeOrganization?.slug && !!session },
-    );
+    ) as any;
 
   useEffect(() => {
     if (!sessionPending && !session) {
@@ -75,8 +75,8 @@ export default function OrganizationOrders() {
   }
 
   if (
-    (organization as any)?.role !== "owner" &&
-    (organization as any)?.role !== "admin"
+    !organization?.role ||
+    (organization?.role !== "owner" && organization?.role !== "admin")
   ) {
     return (
       <div className="flex items-center justify-center h-full">
