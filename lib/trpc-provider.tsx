@@ -5,7 +5,6 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 import { type AppRouter } from "@/server";
-import superjson from "superjson";
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -42,6 +41,12 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
             return {
               // Include any auth headers here
             };
+          },
+          fetch(url, options) {
+            return fetch(url, {
+              ...options,
+              credentials: "include",
+            });
           },
         }),
       ],

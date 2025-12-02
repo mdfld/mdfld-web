@@ -69,6 +69,7 @@ export default function ProductBasicForm({
           value={data.description || ""}
           onValueChange={(value) => onUpdate({ description: value })}
           minRows={3}
+          isRequired
           labelPlacement="outside"
           classNames={{
             label:

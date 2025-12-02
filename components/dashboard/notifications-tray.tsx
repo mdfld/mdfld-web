@@ -45,6 +45,7 @@ export default function NotificationsTray(props: CardProps) {
   // Fetch notifications
   const { data, isLoading } = (trpc as any).notification.list.useQuery({
     filter: activeTab === "unread" ? "unread" : "all",
+    limit: 50,
   });
 
   // Mutations

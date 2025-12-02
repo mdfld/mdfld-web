@@ -8,12 +8,17 @@ export function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = [
     "/auth/login",
+    "/auth/signup",
     "/auth/forgot-password",
     "/auth/reset-password",
     "/auth/verify-email",
     "/",
+    "/about",
+    "/contact",
+    "/products",
     "/api/auth",
     "/api/uploadthing",
+    "/api/debug-session",
   ];
 
   // Check if the current path is a public route or API route
@@ -21,19 +26,25 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
-  const isApiAuthRoute = pathname.startsWith("/api/auth");
+  const isApiRoute = pathname.startsWith("/api");
+  const isStaticAsset = pathname.startsWith("/_next") || pathname.includes(".");
 
-  // Allow access to public routes and auth API routes
-  if (isPublicRoute || isApiAuthRoute) {
+  // Allow access to public routes, API routes, and static assets
+  if (isPublicRoute || isApiRoute || isStaticAsset) {
     return NextResponse.next();
   }
 
   // For protected routes, check if user has a session cookie
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  // Better Auth uses __Secure- prefix for HTTPS connections
+  const sessionCookie =
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token");
 
   if (!sessionCookie) {
     // Redirect to login if no session
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Admin route protection

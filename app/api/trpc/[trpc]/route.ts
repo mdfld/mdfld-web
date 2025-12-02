@@ -16,7 +16,10 @@ const handler = async (req: NextRequest) => {
     onError:
       process.env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            // tRPC error: failed on path with error message
+            console.error(
+              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
+              error,
+            );
           }
         : undefined,
   });

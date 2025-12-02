@@ -1,4 +1,2 @@
-import { createTRPCReact } from "@trpc/react-query";
-import type { AppRouter } from "@/server";
-
-export const trpc = createTRPCReact<AppRouter>();
+// Re-export from provider to ensure single instance
+export { trpc } from "./trpc-provider";

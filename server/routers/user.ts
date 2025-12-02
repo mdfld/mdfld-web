@@ -7,8 +7,8 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         query: z.string().min(1),
-        limit: z.number().min(1).max(20).default(10),
-        excludeIds: z.array(z.string()).optional(),
+        limit: z.number().min(1).max(20).optional().default(10),
+        excludeIds: z.array(z.string()).optional().default([]),
       }),
     )
     .query(async ({ ctx, input }) => {

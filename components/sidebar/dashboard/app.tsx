@@ -88,7 +88,7 @@ export default function SidebarWrapper({
   const { isPending } = useSession();
 
   // Get user organizations
-  const { data: organizations } =
+  const { data: organizations, isLoading: isLoadingOrgs } =
     trpc.organization.getMyOrganizations.useQuery();
 
   // Get unread notification count
@@ -104,12 +104,22 @@ export default function SidebarWrapper({
 
   // Filter sidebar items based on whether user has organizations
   const filteredSectionItems = React.useMemo(() => {
+    console.log("Organizations data:", organizations);
+    console.log("Loading orgs:", isLoadingOrgs);
+
+    // Don't filter while still loading
+    if (isLoadingOrgs) {
+      return sectionItems;
+    }
+
     if (!organizations || organizations.length === 0) {
       // Remove the organization section if user has no organizations
+      console.log("Filtering out organization section - no orgs found");
       return sectionItems.filter((section) => section.key !== "organization");
     }
+    console.log("Keeping all sections - user has organizations");
     return sectionItems;
-  }, [organizations]);
+  }, [organizations, isLoadingOrgs]);
 
   // Find the active key based on current pathname
   const activeKey = React.useMemo(() => {

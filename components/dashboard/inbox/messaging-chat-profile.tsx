@@ -25,9 +25,9 @@ const MessagingChatProfile = React.forwardRef<
   // Get current user session
   const { data: session } = useSession();
   const { data: conversationData } = trpc.chat.conversations.useQuery();
-  const conversation = conversationData?.find(
-    (c: any) => c.id === conversationId,
-  );
+  const conversation = Array.isArray(conversationData)
+    ? conversationData.find((c: any) => c.id === conversationId)
+    : null;
 
   // For DMs, show the other participant's info
   const otherParticipant =

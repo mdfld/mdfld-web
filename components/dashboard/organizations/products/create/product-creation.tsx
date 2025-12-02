@@ -104,7 +104,12 @@ export default function ProductCreation({
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.price || !formData.quantity) {
+    if (
+      !formData.name ||
+      !formData.price ||
+      !formData.quantity ||
+      !formData.description
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -115,7 +120,7 @@ export default function ProductCreation({
         sellerProfileId,
         organizationId,
         title: formData.name,
-        description: formData.description || "",
+        description: formData.description!,
         category: formData.category || "OTHER",
         condition:
           (formData.condition as

@@ -124,8 +124,8 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
               </DropdownItem>
             </DropdownSection>
 
-            {organizations && organizations.length > 0 ? (
-              <DropdownSection title="STORES" showDivider>
+            <DropdownSection title="STORES" showDivider>
+              {organizations && organizations.length > 0 ? (
                 <>
                   {organizations.map((org: any) => (
                     <DropdownItem
@@ -155,11 +155,7 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
                     Create Store
                   </DropdownItem>
                 </>
-              </DropdownSection>
-            ) : null}
-
-            {!organizations || organizations.length === 0 ? (
-              <DropdownSection showDivider>
+              ) : (
                 <DropdownItem
                   key="create-org"
                   onClick={handleCreateOrganization}
@@ -168,8 +164,8 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
                 >
                   Create Store
                 </DropdownItem>
-              </DropdownSection>
-            ) : null}
+              )}
+            </DropdownSection>
 
             <DropdownSection>
               <DropdownItem

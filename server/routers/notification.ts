@@ -7,9 +7,9 @@ export const notificationRouter = createTRPCRouter({
   list: protectedProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).default(50),
+        limit: z.number().min(1).max(100).optional().default(50),
         cursor: z.string().optional(),
-        filter: z.enum(["all", "unread"]).default("all"),
+        filter: z.enum(["all", "unread"]).optional().default("all"),
       }),
     )
     .query(async ({ ctx, input }) => {
