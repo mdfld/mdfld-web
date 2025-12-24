@@ -21,6 +21,10 @@ export const LatestPosts = () => {
               className="p-6 px-15 font-semibold uppercase"
               color="primary"
               radius="full"
+              as="a"
+              href="https://www.instagram.com/mdfldmarketplace/"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Visit
             </Button>

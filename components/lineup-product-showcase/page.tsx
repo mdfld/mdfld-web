@@ -1,43 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@heroui/button";
-import { cn } from "@heroui/react";
 import { Input } from "@heroui/react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
-interface SlideData {
-	id: number;
-	title: string;
-	description: string;
-	image: string;
-}
-
-const slides: SlideData[] = [
-	{
-		id: 1,
-		title: "DISCOVER THE FINEST FOOTBALL STUFF.",
-		description:
-			"Discover a vibrant marketplace where you can explore exclusive kits, premium gear, rare memorabilia, and the latest drops—all curated for true football enthusiasts.",
-		image:
-			"https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjjzyuhjq9citS3x0WGLsIg7PbChw4oaymOZrH",
-	},
-	{
-		id: 2,
-		title: "DISCOVER THE FINEST FOOTBALL STUFF.",
-		description:
-			"Discover a vibrant marketplace where you can explore exclusive kits, premium gear, rare memorabilia, and the latest drops—all curated for true football enthusiasts.",
-		image:
-			"https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjjzyuhjq9citS3x0WGLsIg7PbChw4oaymOZrH",
-	},
-	{
-		id: 3,
-		title: "DISCOVER THE FINEST FOOTBALL STUFF.",
-		description:
-			"Discover a vibrant marketplace where you can explore exclusive kits, premium gear, rare memorabilia, and the latest drops—all curated for true football enthusiasts.",
-		image:
-			"https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjjzyuhjq9citS3x0WGLsIg7PbChw4oaymOZrH",
-	},
-];
+const heroData = {
+	title: "DISCOVER THE FINEST FOOTBALL STUFF.",
+	description:
+		"Discover a vibrant marketplace where you can explore exclusive kits, premium gear, rare memorabilia, and the latest drops—all curated for true football enthusiasts.",
+	image:
+		"https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjjzyuhjq9citS3x0WGLsIg7PbChw4oaymOZrH",
+	eyebrow: "Featured Collection",
+};
 
 export const SearchIcon = (props: any) => {
 	return (
@@ -70,255 +46,107 @@ export const SearchIcon = (props: any) => {
 };
 
 export const LineupProductShowcase = () => {
-	const [currentSlide, setCurrentSlide] = useState(0);
-	const [textPosition, setTextPosition] = useState(0);
+	const router = useRouter();
+	const [searchQuery, setSearchQuery] = useState("");
 
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setTextPosition((prev) => (prev + 2) % 400); // Cycle through positions
-		}, 50);
-		return () => clearInterval(interval);
-	}, []);
+	const handleSearch = () => {
+		if (searchQuery.trim()) {
+			router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+		} else {
+			router.push("/shop");
+		}
+	};
+
+	const handleKeyPress = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			handleSearch();
+		}
+	};
 
 	return (
-		<>
-			<style jsx>{`
-        @keyframes breathe {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-        .breathing-animation {
-          animation: breathe 3s ease-in-out infinite;
-        }
-      `}</style>
-			<div className="relative w-[95vw] min-h-screen bg-background flex overflow-hidden">
-				{/* Left Vertical Tabs Section */}
-				<div className="flex">
-					{/* Vertical Border Line with Active Sections */}
-					<div className="relative my-8 ml-4">
-						<div className="w-px h-full bg-foreground/20"></div>
-						{slides.map((_, index) => {
-							const totalHeight = 100; // percent
-							const sectionHeight = totalHeight / slides.length;
-							const sectionCenter = index * sectionHeight + sectionHeight / 2;
-							const highlightHeight = 12; // height of highlight in percent
-							const highlightTop = sectionCenter - highlightHeight / 2;
+		<section
+			aria-label="Hero section - Featured products"
+			className="w-full flex items-center justify-center py-4 md:py-6"
+		>
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.6, ease: "easeOut" }}
+				className="relative w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-7xl min-h-[70vh] md:min-h-[75vh] lg:min-h-[80vh] bg-cover bg-center bg-no-repeat rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden"
+				style={{
+					backgroundImage: `url('${heroData.image}')`,
+				}}
+			>
+				{/* Overlay Layer 1: Darken image */}
+				<div className="absolute inset-0 backdrop-brightness-50 backdrop-saturate-110" />
 
-							return (
-								<div
-									key={index}
-									className={cn(
-										"absolute w-px transition-colors duration-300",
-										currentSlide === index ? "bg-teal-500" : "bg-transparent",
-									)}
-									style={{
-										top: `${highlightTop}%`,
-										height: `${highlightHeight}%`,
-									}}
-								></div>
-							);
-						})}
-					</div>
+				{/* Overlay Layer 2: Teal brand wash */}
+				<div className="absolute inset-0 bg-teal-500/20 mix-blend-overlay" />
 
-					{/* Tab Numbers */}
-					<div className="flex flex-col justify-center items-center w-32 py-8">
-						{slides.map((_, index) => (
-							<button
-								key={index}
-								onClick={() => setCurrentSlide(index)}
-								className={cn(
-									"text-2xl font-light py-4 transition-colors duration-300",
-									currentSlide === index
-										? "text-teal-500"
-										: "text-foreground/50 hover:text-foreground/80",
-								)}
-							>
-								{String(index + 1).padStart(2, "0")}
-							</button>
-						))}
-					</div>
-				</div>
+				{/* Overlay Layer 3: Gradient for text readability */}
+				<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-				{/* Main Content Area */}
-				<div className="flex-1 flex items-center justify-center p-8 pl-2 overflow-visible">
-					<div className="w-full overflow-visible">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center overflow-visible">
-							{/* Slide Content */}
-							<div className="space-y-6">
-								<h2 className="text-5xl font-bold text-foreground">
-									{slides[currentSlide].title}
-								</h2>
-								<p className="text-lg text-foreground/80 leading-relaxed">
-									{slides[currentSlide].description}
-								</p>
-								<div className="flex gap-2">
-									<span>
-										<Input
-											isClearable
-											classNames={{
-												label: "text-black/50 dark:text-white/90",
-												input: [
-													"bg-transparent",
-													"text-black/90 dark:text-white/90",
-													"placeholder:text-default-700/50 dark:placeholder:text-white/60",
-												],
-												innerWrapper: "bg-transparent",
-												inputWrapper: [
-													"shadow-sm",
-													"bg-default-200/50",
-													"dark:bg-default/60",
-													"backdrop-blur-xl",
-													"backdrop-saturate-200",
-													"hover:bg-default-200/70",
-													"dark:hover:bg-default/70",
-													"group-data-[focus=true]:bg-default-200/50",
-													"dark:group-data-[focus=true]:bg-default/60",
-													"cursor-text!",
-												],
-											}}
-											placeholder="Search for brand, colors, etc."
-											radius="full"
-											startContent={
-												<>
-													<SearchIcon className="mb-0.5 dark:text-white/90 text-slate-400 pointer-events-none shrink-0" />
-												</>
-											}
-										/>
-									</span>
-									<span>
-										<Button
-											variant="shadow"
-											radius="full"
-											className="uppercase bg-teal-400 px-8 border-foreground font-semibold"
-										>
-											Search
-										</Button>
-									</span>
-								</div>
-							</div>
+				{/* Content Container */}
+				<div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-12 md:px-12 md:py-16 lg:px-16 lg:py-20 min-h-[70vh] md:min-h-[75vh] lg:min-h-[80vh]">
+					{/* Eyebrow Label */}
+					<span className="text-teal-400 uppercase text-xs md:text-sm tracking-wider font-semibold mb-4">
+						{heroData.eyebrow}
+					</span>
 
-							{/* Slide Image */}
-							<div className="relative overflow-visible" style={{ zIndex: 9 }}>
-								<div
-									className="w-full h-80 p-30 rounded-lg"
-									style={{
-										zIndex: 9,
-										transform: "scaleX(-1) rotate(45deg)",
-										filter: "drop-shadow(24px 24px 32px rgba(0, 0, 0, 0.8))",
-										overflow: "visible",
-									}}
-								>
-									<img
-										src={slides[currentSlide].image}
-										alt={slides[currentSlide].title}
-										className="w-full h-full object-cover rounded breathing-animation"
-										style={{ overflow: "visible" }}
-									/>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+					{/* Main Heading */}
+					<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white uppercase tracking-wide mb-6 max-w-4xl">
+						{heroData.title}
+					</h1>
 
-				{/* Rotated Rectangle Container */}
-				<div
-					className="absolute"
-					style={{
-						left: "70%",
-						top: "0%",
-						transform: "scaleX(1) scaleY(2) rotate(-20deg)",
-						transformOrigin: "center",
-						zIndex: 1,
-					}}
-				>
-					{/* Large Vertical Teal Rectangle */}
-					<div
-						className="bg-teal-600 opacity-80"
-						style={{
-							width: "180px",
-							height: "100vh",
-							position: "relative",
-						}}
-					></div>
+					{/* Description */}
+					<p className="text-base md:text-lg text-white/90 leading-relaxed mb-8 md:mb-12 max-w-2xl">
+						{heroData.description}
+					</p>
 
-					{/* Left White Rectangle */}
-					<div
-						className="absolute bg-white"
-						style={{
-							left: "-10px",
-							top: "0",
-							width: "12px",
-							height: "100vh",
-							zIndex: 3,
-						}}
-					></div>
-
-					{/* Thick Soft White Rectangle */}
-					<div
-						className="absolute bg-gray-100 opacity-90"
-						style={{
-							left: "185px",
-							top: "0",
-							width: "28px",
-							height: "100vh",
-						}}
-					></div>
-
-					{/* Sideways Text Overlay on Soft White Rectangle */}
-					<div
-						className="absolute overflow-hidden"
-						style={{
-							left: "185px",
-							top: "0",
-							width: "28px",
-							height: "100vh",
-							zIndex: 4,
-						}}
-					>
-						<div
-							className="flex flex-col text-xs font-bold text-black uppercase tracking-wider"
-							style={{
-								transform: `translateY(${textPosition - 100}px) rotate(-90deg)`,
-								transformOrigin: "center",
-								whiteSpace: "nowrap",
-								transition: "transform 0.05s linear",
-								position: "absolute",
-								left: "50%",
-								top: "50%",
+					{/* Search Section */}
+					<div className="w-full max-w-2xl flex flex-col md:flex-row gap-3">
+						<Input
+							isClearable
+							aria-label="Search products"
+							value={searchQuery}
+							onValueChange={setSearchQuery}
+							onKeyPress={handleKeyPress}
+							classNames={{
+								label: "text-white/90",
+								input: [
+									"bg-transparent",
+									"text-white/90",
+									"placeholder:text-white/60",
+								],
+								innerWrapper: "bg-transparent",
+								inputWrapper: [
+									"shadow-lg",
+									"bg-white/10",
+									"backdrop-blur-xl",
+									"backdrop-saturate-200",
+									"hover:bg-white/20",
+									"group-data-[focus=true]:bg-white/15",
+									"border",
+									"border-white/20",
+								],
 							}}
+							placeholder="Search for brand, colors, kits..."
+							radius="full"
+							size="lg"
+							startContent={<SearchIcon className="text-white/90" />}
+						/>
+						<Button
+							variant="shadow"
+							radius="full"
+							size="lg"
+							className="uppercase bg-teal-400 hover:bg-teal-500 px-8 md:px-12 font-semibold transition-all hover:scale-105 active:scale-95"
+							onPress={handleSearch}
 						>
-							<div className="py-4">PERFORMANCE</div>
-							<div className="py-4">INNOVATION</div>
-							<div className="py-4">EXCELLENCE</div>
-							<div className="py-4">PRECISION</div>
-							<div className="py-4">QUALITY</div>
-							<div className="py-4">DESIGN</div>
-						</div>
+							Search
+						</Button>
 					</div>
 				</div>
-
-				{/* Right Border */}
-				<div className="absolute right-0 top-0 bottom-0 w-px bg-foreground/20"></div>
-
-				{/* FOOTBALL Stroke Text Overlay */}
-				<div
-					className="absolute bottom-48 left-8 text-8xl font-thin uppercase select-none pointer-events-none opacity-15"
-					style={{
-						fontFamily: "Gordita, sans-serif",
-						WebkitTextStroke: "1px white",
-						WebkitTextFillColor: "transparent",
-						letterSpacing: "0.3em",
-						zIndex: 10,
-					}}
-				>
-					FOOTBALL
-				</div>
-			</div>
-		</>
+			</motion.div>
+		</section>
 	);
 };

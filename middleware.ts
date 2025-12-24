@@ -16,6 +16,7 @@ export function middleware(request: NextRequest) {
     "/about",
     "/contact",
     "/products",
+    "/shop",
     "/api/auth",
     "/api/uploadthing",
     "/api/debug-session",

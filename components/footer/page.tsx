@@ -18,7 +18,7 @@ const navLinks = [
 		href: "/about",
 	},
 	{
-		name: "Products",
+		name: "Shop",
 		href: "/shop",
 	},
 	{

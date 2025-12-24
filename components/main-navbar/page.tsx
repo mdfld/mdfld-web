@@ -383,7 +383,7 @@ export default function MainNavbar(props: NavbarProps) {
                 fullWidth
                 as={Link}
                 className="bg-foreground text-background"
-                href="/auth/signup"
+                href="/auth/login#signup"
               >
                 Get Started
               </Button>
