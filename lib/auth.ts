@@ -13,7 +13,7 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url, token }, request) => {
       await resend.emails.send({
-        from: "Midfield Co <no-reply@balon.ai>",
+        from: "Midfield Co <no-reply@mdfld.co>",
         to: user.email,
         subject: "Reset your password",
         html: `
@@ -54,7 +54,7 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       await resend.emails.send({
-        from: "Midfield Co <no-reply@balon.ai>",
+        from: "Midfield Co <no-reply@mdfld.co>",
         to: user.email,
         subject: "Welcome aboard! | Verify your email address",
         html: `
