@@ -34,17 +34,21 @@ import Link from "next/link";
 import NextLink from "next/link";
 import { link as linkStyles } from "@heroui/theme";
 import clsx from "clsx";
+import { useGuestCart } from "@/hooks/use-guest-cart";
 
 export default function MainNavbar(props: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const guestCart = useGuestCart();
 
   // Get cart items count
   const { data: cartData } = trpc.cart.get.useQuery(undefined, {
     enabled: !!session?.user,
   }) as any;
-  const cartCount = cartData?.itemCount || 0;
+  const cartCount = session?.user
+    ? (cartData?.itemCount || 0)
+    : guestCart.getCartData().itemCount;
 
   // Get wishlist items
   const [wishlistItems, setWishlistItems] = React.useState<any[]>([]);
@@ -75,15 +79,15 @@ export default function MainNavbar(props: NavbarProps) {
     >
       {/* Left Content */}
       <NavbarBrand className="bg-transparent">
-        <div className="text-background rounded-full">
+        <NextLink href="/" className="text-background rounded-full">
           <Image
             src="https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjlsYla8wKE2TjwSU8x3apY10zR5NV9ighPDtr"
             alt="mdfld logo"
             width={100}
             height={10}
-            className="bg-transparent"
+            className="bg-transparent cursor-pointer"
           ></Image>
-        </div>
+        </NextLink>
       </NavbarBrand>
 
       {/* Center Content */}
@@ -268,56 +272,113 @@ export default function MainNavbar(props: NavbarProps) {
                   ) : (
                     <>
                       <div className="max-h-[280px] overflow-y-auto">
-                        {cartData?.items.slice(0, 4).map((item: any) => (
-                          <div
-                            key={item.id}
-                            className="group hover:bg-default-50 transition-all"
-                          >
-                            <div className="flex items-center gap-2 px-3 py-2">
+                        {session?.user
+                          ? cartData?.items.slice(0, 4).map((item: any) => (
                               <div
-                                className="flex gap-2 flex-1 cursor-pointer"
-                                onClick={() =>
-                                  router.push(`/products/${item.product.id}`)
-                                }
+                                key={item.id}
+                                className="group hover:bg-default-50 transition-all"
                               >
-                                <HeroImage
-                                  src={
-                                    item.product.images?.[0] ||
-                                    "/placeholder-product.jpg"
-                                  }
-                                  alt={item.product.title}
-                                  width={48}
-                                  height={48}
-                                  className="rounded-md object-cover flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs truncate">
-                                    {item.product.title}
-                                  </p>
-                                  <p className="text-xs text-default-400 truncate">
-                                    $
-                                    {Number(
-                                      item.variant?.price || item.product.price,
-                                    ).toFixed(2)}{" "}
-                                    • Qty: {item.quantity}
-                                  </p>
+                                <div className="flex items-center gap-2 px-3 py-2">
+                                  <div
+                                    className="flex gap-2 flex-1 cursor-pointer"
+                                    onClick={() =>
+                                      router.push(`/products/${item.product.id}`)
+                                    }
+                                  >
+                                    <HeroImage
+                                      src={
+                                        item.product.images?.[0] ||
+                                        "/placeholder-product.jpg"
+                                      }
+                                      alt={item.product.title}
+                                      width={48}
+                                      height={48}
+                                      className="rounded-md object-cover flex-shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs truncate">
+                                        {item.product.title}
+                                      </p>
+                                      <p className="text-xs text-default-400 truncate">
+                                        $
+                                        {Number(
+                                          item.variant?.price || item.product.price,
+                                        ).toFixed(2)}{" "}
+                                        • Qty: {item.quantity}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    variant="light"
+                                    radius="full"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity min-w-unit-6 w-6 h-6"
+                                    onPress={() => {
+                                      // Remove from cart
+                                    }}
+                                  >
+                                    <Icon icon="tabler:x" width={14} />
+                                  </Button>
                                 </div>
                               </div>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                radius="full"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity min-w-unit-6 w-6 h-6"
-                                onPress={() => {
-                                  // Remove from cart
-                                }}
-                              >
-                                <Icon icon="tabler:x" width={14} />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                            ))
+                          : guestCart
+                              .getCartData()
+                              .items.slice(0, 4)
+                              .map((item) => (
+                                <div
+                                  key={`${item.productId}-${item.variantId || "default"}`}
+                                  className="group hover:bg-default-50 transition-all"
+                                >
+                                  <div className="flex items-center gap-2 px-3 py-2">
+                                    <div
+                                      className="flex gap-2 flex-1 cursor-pointer"
+                                      onClick={() =>
+                                        router.push(`/products/${item.product.id}`)
+                                      }
+                                    >
+                                      <HeroImage
+                                        src={
+                                          item.product.images?.[0] ||
+                                          "/placeholder-product.jpg"
+                                        }
+                                        alt={item.product.title}
+                                        width={48}
+                                        height={48}
+                                        className="rounded-md object-cover flex-shrink-0"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs truncate">
+                                          {item.product.title}
+                                        </p>
+                                        <p className="text-xs text-default-400 truncate">
+                                          $
+                                          {Number(
+                                            item.variant?.price || item.product.price,
+                                          ).toFixed(2)}{" "}
+                                          • Qty: {item.quantity}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="light"
+                                      radius="full"
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity min-w-unit-6 w-6 h-6"
+                                      onPress={() => {
+                                        guestCart.removeItem(
+                                          item.productId,
+                                          item.variantId
+                                        );
+                                      }}
+                                    >
+                                      <Icon icon="tabler:x" width={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
                       </div>
                       <Divider />
                       <div className="px-3 py-2">
@@ -326,7 +387,11 @@ export default function MainNavbar(props: NavbarProps) {
                             Subtotal
                           </span>
                           <span className="text-sm font-medium">
-                            ${cartData?.subtotal.toFixed(2)}
+                            $
+                            {(session?.user
+                              ? cartData?.subtotal
+                              : guestCart.getCartData().subtotal
+                            ).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -357,6 +422,119 @@ export default function MainNavbar(props: NavbarProps) {
             </>
           ) : (
             <>
+              {/* Shopping Bag for guests */}
+              <Popover placement="bottom-end">
+                <PopoverTrigger>
+                  <Button isIconOnly variant="light" radius="full">
+                    <Icon icon="ion:bag-outline" width={22} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-0">
+                  {cartCount === 0 ? (
+                    <div className="text-center py-8">
+                      <Icon
+                        icon="solar:bag-4-linear"
+                        className="w-10 h-10 mx-auto text-default-200 mb-3"
+                      />
+                      <p className="text-default-400 text-xs">
+                        Your bag is empty
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-[280px] overflow-y-auto">
+                        {guestCart
+                          .getCartData()
+                          .items.slice(0, 4)
+                          .map((item) => (
+                            <div
+                              key={`${item.productId}-${item.variantId || "default"}`}
+                              className="group hover:bg-default-50 transition-all"
+                            >
+                              <div className="flex items-center gap-2 px-3 py-2">
+                                <div
+                                  className="flex gap-2 flex-1 cursor-pointer"
+                                  onClick={() =>
+                                    router.push(`/products/${item.product.id}`)
+                                  }
+                                >
+                                  <HeroImage
+                                    src={
+                                      item.product.images?.[0] ||
+                                      "/placeholder-product.jpg"
+                                    }
+                                    alt={item.product.title}
+                                    width={48}
+                                    height={48}
+                                    className="rounded-md object-cover flex-shrink-0"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs truncate">
+                                      {item.product.title}
+                                    </p>
+                                    <p className="text-xs text-default-400 truncate">
+                                      $
+                                      {Number(
+                                        item.variant?.price || item.product.price,
+                                      ).toFixed(2)}{" "}
+                                      • Qty: {item.quantity}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  variant="light"
+                                  radius="full"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity min-w-unit-6 w-6 h-6"
+                                  onPress={() => {
+                                    guestCart.removeItem(
+                                      item.productId,
+                                      item.variantId
+                                    );
+                                  }}
+                                >
+                                  <Icon icon="tabler:x" width={14} />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                      <Divider />
+                      <div className="px-3 py-2">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-default-500">
+                            Subtotal
+                          </span>
+                          <span className="text-sm font-medium">
+                            ${guestCart.getCartData().subtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 p-2 pt-0">
+                        <Button
+                          fullWidth
+                          variant="light"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onPress={() => router.push("/bag")}
+                        >
+                          View Bag
+                        </Button>
+                        <Button
+                          fullWidth
+                          color="primary"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onPress={() => router.push("/checkout")}
+                        >
+                          Checkout
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
               <Button as={Link} href="/auth/login" variant="light" size="sm">
                 Sign In
               </Button>
@@ -371,8 +549,65 @@ export default function MainNavbar(props: NavbarProps) {
       <NavbarMenuToggle className="text-default-400 md:hidden" />
 
       <NavbarMenu className="bg-default-200/50 shadow-medium dark:bg-default-100/50 top-[calc(var(--navbar-height)-1px)] max-h-fit pt-6 pb-6 backdrop-blur-lg backdrop-saturate-150">
+        {session?.user && (
+          <>
+            <NavbarMenuItem>
+              <Button
+                fullWidth
+                variant="flat"
+                startContent={<Icon icon="octicon:person-24" width={20} />}
+                onPress={() => {
+                  router.push("/dashboard");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Profile
+              </Button>
+            </NavbarMenuItem>
+            <NavbarMenuItem>
+              <Button
+                fullWidth
+                variant="flat"
+                startContent={<Icon icon="ion:bag-outline" width={20} />}
+                onPress={() => {
+                  router.push("/bag");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Bag {cartCount > 0 && `(${cartCount})`}
+              </Button>
+            </NavbarMenuItem>
+            <NavbarMenuItem className="mb-4">
+              <Button
+                fullWidth
+                variant="flat"
+                startContent={<Icon icon="octicon:heart-24" width={20} />}
+                onPress={() => {
+                  router.push("/dashboard/wishlist");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+              </Button>
+            </NavbarMenuItem>
+            <Divider className="opacity-50 mb-4" />
+          </>
+        )}
         {!session?.user && (
           <>
+            <NavbarMenuItem>
+              <Button
+                fullWidth
+                variant="flat"
+                startContent={<Icon icon="ion:bag-outline" width={20} />}
+                onPress={() => {
+                  router.push("/bag");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Bag {cartCount > 0 && `(${cartCount})`}
+              </Button>
+            </NavbarMenuItem>
             <NavbarMenuItem>
               <Button fullWidth as={Link} href="/auth/login" variant="faded">
                 Sign In
@@ -403,6 +638,26 @@ export default function MainNavbar(props: NavbarProps) {
             )}
           </NavbarMenuItem>
         ))}
+        {session?.user && (
+          <>
+            <Divider className="opacity-50 mt-4 mb-4" />
+            <NavbarMenuItem>
+              <Button
+                fullWidth
+                color="danger"
+                variant="flat"
+                startContent={<Icon icon="solar:logout-2-linear" />}
+                onPress={async () => {
+                  await authClient.signOut();
+                  router.push("/");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Log Out
+              </Button>
+            </NavbarMenuItem>
+          </>
+        )}
       </NavbarMenu>
     </Navbar>
   );

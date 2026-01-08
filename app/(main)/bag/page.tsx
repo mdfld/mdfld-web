@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
+import { useGuestCart } from "@/hooks/use-guest-cart";
+import { useAuth } from "@/hooks/use-auth";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -25,10 +27,19 @@ export default function BagPage() {
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
   const [promoCode, setPromoCode] = React.useState("");
 
-  // Get cart data
-  const { data: cartData, isLoading, refetch } = trpc.cart.get.useQuery();
+  // Auth state
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Mutations
+  // Guest cart
+  const guestCart = useGuestCart();
+
+  // Authenticated cart
+  const { data: authCartData, isLoading: authCartLoading, refetch } = trpc.cart.get.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+
+  // Mutations for authenticated users
   const updateQuantity = trpc.cart.updateQuantity.useMutation({
     onSuccess: () => refetch(),
   });
@@ -40,17 +51,57 @@ export default function BagPage() {
     },
   });
 
-  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1) {
-      await removeItem.mutateAsync({ itemId });
+  // Determine which cart data to use
+  const cartData = isAuthenticated ? authCartData : guestCart.getCartData();
+  const isLoading = authLoading || (isAuthenticated && authCartLoading) || !guestCart.isLoaded;
+
+  const handleQuantityChange = async (
+    itemId: string,
+    productId: string,
+    variantId: string | undefined,
+    newQuantity: number
+  ) => {
+    if (isAuthenticated) {
+      // Authenticated user - use tRPC mutation
+      if (newQuantity < 1) {
+        await removeItem.mutateAsync({ itemId });
+      } else {
+        await updateQuantity.mutateAsync({ itemId, quantity: newQuantity });
+      }
     } else {
-      await updateQuantity.mutateAsync({ itemId, quantity: newQuantity });
+      // Guest user - use localStorage
+      if (newQuantity < 1) {
+        guestCart.removeItem(productId, variantId);
+        toast.success("Item removed from bag");
+      } else {
+        guestCart.updateQuantity(productId, variantId, newQuantity);
+      }
+    }
+  };
+
+  const handleRemoveItem = (
+    itemId: string,
+    productId: string,
+    variantId: string | undefined
+  ) => {
+    if (isAuthenticated) {
+      removeItem.mutate({ itemId });
+    } else {
+      guestCart.removeItem(productId, variantId);
+      toast.success("Item removed from bag");
     }
   };
 
   const handleCheckout = async () => {
     if (!cartData?.items.length) {
       toast.error("Your bag is empty");
+      return;
+    }
+
+    // Guest users need to log in
+    if (!isAuthenticated) {
+      toast.info("Please log in to continue to checkout");
+      router.push("/sign-in?redirect=/bag");
       return;
     }
 
@@ -68,7 +119,7 @@ export default function BagPage() {
             price: item.variant?.price || item.product.price,
             name: item.product.title,
             image: item.product.images?.[0],
-            sellerId: item.product.seller.id,
+            sellerId: item.product.seller?.id,
           })),
         }),
       });
@@ -139,85 +190,104 @@ export default function BagPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartData.items.map((item: any) => (
-            <Card key={item.id}>
-              <CardBody className="p-4">
-                <div className="flex gap-4">
-                  <Image
-                    src={item.product.images?.[0] || "/placeholder-product.jpg"}
-                    alt={item.product.title}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <div>
-                        <h3 className="font-medium">{item.product.title}</h3>
-                        {item.variant && (
-                          <div className="text-sm text-default-500 mt-1">
-                            {item.variant.sizeDisplay && (
-                              <span>Size: {item.variant.sizeDisplay}</span>
-                            )}
-                            {item.variant.color && (
-                              <span className="ml-3">
-                                Color: {item.variant.color}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <p className="text-sm text-default-500 mt-1">
-                          by{" "}
-                          {item.product.seller?.storeName || "Unknown Seller"}
+          {cartData.items.map((item: any) => {
+            // Handle both guest and auth cart item structures
+            const itemId = item.id || `${item.productId}-${item.variantId || 'no-variant'}`;
+            const productId = item.productId || item.product?.id;
+            const variantId = item.variantId || item.variant?.id;
+
+            return (
+              <Card key={itemId}>
+                <CardBody className="p-4">
+                  <div className="flex gap-4">
+                    <Image
+                      src={item.product.images?.[0] || "/placeholder-product.jpg"}
+                      alt={item.product.title}
+                      className="w-24 h-24 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="font-medium">{item.product.title}</h3>
+                          {item.variant && (
+                            <div className="text-sm text-default-500 mt-1">
+                              {item.variant.sizeDisplay && (
+                                <span>Size: {item.variant.sizeDisplay}</span>
+                              )}
+                              {item.variant.color && (
+                                <span className="ml-3">
+                                  Color: {item.variant.color}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {isAuthenticated && item.product.seller && (
+                            <p className="text-sm text-default-500 mt-1">
+                              by{" "}
+                              {item.product.seller?.storeName || "Unknown Seller"}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          onPress={() => handleRemoveItem(itemId, productId, variantId)}
+                        >
+                          <Icon icon="solar:trash-bin-2-linear" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="flat"
+                            onPress={() =>
+                              handleQuantityChange(
+                                itemId,
+                                productId,
+                                variantId,
+                                item.quantity - 1
+                              )
+                            }
+                          >
+                            <Icon icon="solar:minus-linear" />
+                          </Button>
+                          <span className="w-12 text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="flat"
+                            onPress={() =>
+                              handleQuantityChange(
+                                itemId,
+                                productId,
+                                variantId,
+                                item.quantity + 1
+                              )
+                            }
+                          >
+                            <Icon icon="solar:add-linear" />
+                          </Button>
+                        </div>
+                        <p className="font-medium">
+                          $
+                          {(
+                            Number(item.variant?.price || item.product.price) *
+                            item.quantity
+                          ).toFixed(2)}
                         </p>
                       </div>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onPress={() => removeItem.mutate({ itemId: item.id })}
-                      >
-                        <Icon icon="solar:trash-bin-2-linear" />
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="flat"
-                          onPress={() =>
-                            handleQuantityChange(item.id, item.quantity - 1)
-                          }
-                        >
-                          <Icon icon="solar:minus-linear" />
-                        </Button>
-                        <span className="w-12 text-center">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="flat"
-                          onPress={() =>
-                            handleQuantityChange(item.id, item.quantity + 1)
-                          }
-                        >
-                          <Icon icon="solar:add-linear" />
-                        </Button>
-                      </div>
-                      <p className="font-medium">
-                        $
-                        {(
-                          Number(item.variant?.price || item.product.price) *
-                          item.quantity
-                        ).toFixed(2)}
-                      </p>
                     </div>
                   </div>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
+                </CardBody>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Order Summary */}
@@ -271,8 +341,14 @@ export default function BagPage() {
                   isLoading={isCheckingOut}
                   startContent={<Icon icon="solar:lock-keyhole-bold" />}
                 >
-                  Secure Checkout
+                  {isAuthenticated ? "Secure Checkout" : "Continue to Checkout"}
                 </Button>
+
+                {!isAuthenticated && (
+                  <p className="text-xs text-center text-default-500">
+                    You'll be asked to log in at checkout
+                  </p>
+                )}
 
                 <div className="flex items-center justify-center gap-2 text-xs text-default-500">
                   <Icon icon="solar:shield-check-linear" />

@@ -366,4 +366,99 @@ export const cartRouter = createTRPCRouter({
       itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
     };
   }),
+
+  // Merge guest cart items into authenticated cart
+  mergeGuestCart: protectedProcedure
+    .input(
+      z.object({
+        guestItems: z.array(
+          z.object({
+            productId: z.string(),
+            variantId: z.string().optional(),
+            quantity: z.number().min(1),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // Get or create buyer profile
+      let buyerProfile = await ctx.prisma.buyerProfile.findUnique({
+        where: { userId },
+      });
+
+      if (!buyerProfile) {
+        buyerProfile = await ctx.prisma.buyerProfile.create({
+          data: { userId },
+        });
+      }
+
+      // Process each guest cart item
+      for (const guestItem of input.guestItems) {
+        try {
+          // Verify product exists
+          const product = await ctx.prisma.product.findUnique({
+            where: { id: guestItem.productId },
+            include: { variants: true },
+          });
+
+          if (!product || !product.isActive) {
+            continue; // Skip invalid products
+          }
+
+          // Verify variant if provided
+          let variant = null;
+          if (guestItem.variantId) {
+            variant = await ctx.prisma.productVariant.findUnique({
+              where: { id: guestItem.variantId },
+            });
+
+            if (!variant || variant.productId !== guestItem.productId) {
+              continue; // Skip invalid variants
+            }
+          }
+
+          // Check if item already in cart
+          const existingItem = await ctx.prisma.cartItem.findFirst({
+            where: {
+              buyerProfileId: buyerProfile.id,
+              productId: guestItem.productId,
+              variantId: guestItem.variantId || null,
+            },
+          });
+
+          if (existingItem) {
+            // Update quantity
+            const newQuantity = existingItem.quantity + guestItem.quantity;
+            const availableInventory = variant?.inventory || product.inventory;
+
+            if (newQuantity <= availableInventory) {
+              await ctx.prisma.cartItem.update({
+                where: { id: existingItem.id },
+                data: { quantity: newQuantity },
+              });
+            }
+          } else {
+            // Create new cart item
+            const availableInventory = variant?.inventory || product.inventory;
+            if (guestItem.quantity <= availableInventory) {
+              await ctx.prisma.cartItem.create({
+                data: {
+                  buyerProfileId: buyerProfile.id,
+                  productId: guestItem.productId,
+                  variantId: guestItem.variantId,
+                  quantity: guestItem.quantity,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          // Log error but continue processing other items
+          console.error("Error merging guest cart item:", error);
+        }
+      }
+
+      return { success: true };
+    }),
 });

@@ -42,21 +42,21 @@ const navLinks = [
 const socialItems = [
 	{
 		name: "Instagram",
-		href: "#",
+		href: "https://www.instagram.com/mdfldmarketplace/",
 		icon: (props: SocialIconProps) => (
 			<Icon {...props} color="teal" icon="fontisto:instagram" />
 		),
 	},
 	{
 		name: "LinkedIn",
-		href: "#",
+		href: "https://www.linkedin.com/company/mdfld/",
 		icon: (props: SocialIconProps) => (
 			<Icon {...props} color="teal" icon="fontisto:linkedin" />
 		),
 	},
 	{
 		name: "YouTube",
-		href: "#",
+		href: "https://www.youtube.com/@mdfld",
 		icon: (props: SocialIconProps) => (
 			<Icon {...props} color="teal" icon="fontisto:youtube-play" />
 		),

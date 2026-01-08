@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import { useAuth } from "@/hooks/use-auth";
+import { useGuestCart } from "@/hooks/use-guest-cart";
 
 import ColorRadioItem from "./color-radio-item";
 import StarRatingDisplay from "./star-rating-display";
@@ -89,6 +90,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
     const router = useRouter();
     const { user } = useAuth();
     const utils = trpc.useUtils();
+    const guestCart = useGuestCart();
     const [selectedImage, setSelectedImage] = React.useState(images[0]);
     const [selectedSize, setSelectedSize] = React.useState(sizes?.[0] || "");
     const [selectedColor, setSelectedColor] = React.useState(
@@ -96,6 +98,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
     );
     const [isDescriptionExpanded, setIsDescriptionExpanded] =
       React.useState(false);
+    const [isAddingToCart, setIsAddingToCart] = React.useState(false);
 
     // Get wishlist data
     const { data: wishlistProducts } = trpc.user.getWishlist.useQuery(
@@ -156,12 +159,6 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
     };
 
     const handleAddToBag = () => {
-      if (!user) {
-        toast.error("Please log in to add items to bag");
-        router.push("/auth/login");
-        return;
-      }
-
       // Find the selected variant if product has variants
       const variant = hasVariants
         ? variants?.find((v: any) => {
@@ -171,11 +168,43 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
           })
         : null;
 
-      addToCart.mutate({
-        productId: props.id,
-        variantId: variant?.id,
-        quantity: 1,
-      });
+      if (user) {
+        // Add to authenticated cart
+        addToCart.mutate({
+          productId: props.id,
+          variantId: variant?.id,
+          quantity: 1,
+        });
+      } else {
+        // Add to guest cart
+        setIsAddingToCart(true);
+        try {
+          guestCart.addItem({
+            productId: props.id,
+            variantId: variant?.id,
+            quantity: 1,
+            product: {
+              id: props.id,
+              title: name,
+              price: price.toString(),
+              images: images,
+            },
+            variant: variant
+              ? {
+                  id: variant.id,
+                  price: variant.price.toString(),
+                  sizeDisplay: variant.sizeDisplay,
+                  color: variant.color,
+                }
+              : undefined,
+          });
+          toast.success("Added to bag");
+        } catch (error) {
+          toast.error("Failed to add to bag");
+        } finally {
+          setIsAddingToCart(false);
+        }
+      }
     };
 
     // Calculate variant price based on selection
@@ -385,10 +414,10 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
               startContent={<Icon icon="solar:bag-4-bold" width={24} />}
               variant="solid"
               onPress={handleAddToBag}
-              isLoading={addToCart.isPending}
-              isDisabled={addToCart.isPending}
+              isLoading={addToCart.isPending || isAddingToCart}
+              isDisabled={addToCart.isPending || isAddingToCart}
             >
-              {addToCart.isPending ? "Adding..." : "Add to bag"}
+              {addToCart.isPending || isAddingToCart ? "Adding..." : "Add to bag"}
             </Button>
             <Button
               isIconOnly
