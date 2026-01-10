@@ -15,12 +15,7 @@ import { Icon } from "@iconify/react";
 import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
-import { loadStripe } from "@stripe/stripe-js";
 import { useGuestCart } from "@/hooks/use-guest-cart";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -105,16 +100,7 @@ export default function CheckoutPage() {
       const { sessionId } = await response.json();
 
       // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe not loaded");
-
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      });
-
-      if (error) {
-        throw error;
-      }
+      window.location.href = `https://checkout.stripe.com/c/pay/${sessionId}`;
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to process checkout");
