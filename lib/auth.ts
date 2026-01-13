@@ -12,11 +12,13 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url, token }, request) => {
-      await resend.emails.send({
-        from: "Midfield Co <no-reply@mdfld.co>",
-        to: user.email,
-        subject: "Reset your password",
-        html: `
+      try {
+        console.log(`[Auth] Sending password reset email to: ${user.email}`);
+        const result = await resend.emails.send({
+          from: "Midfield Co <no-reply@mdfld.co>",
+          to: user.email,
+          subject: "Reset your password",
+          html: `
 					<!DOCTYPE html>
 					<html>
 					<head>
@@ -46,18 +48,32 @@ export const auth = betterAuth({
 					</body>
 					</html>
 				`,
-      });
+        });
+
+        if (result.error) {
+          console.error(`[Auth] Failed to send password reset email:`, result.error);
+          throw new Error(`Failed to send password reset email: ${JSON.stringify(result.error)}`);
+        }
+
+        const emailId = 'data' in result && result.data ? result.data.id : result.id;
+        console.log(`[Auth] Password reset email sent successfully! ID: ${emailId}`);
+      } catch (error) {
+        console.error(`[Auth] Exception sending password reset email:`, error);
+        throw error;
+      }
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await resend.emails.send({
-        from: "Midfield Co <no-reply@mdfld.co>",
-        to: user.email,
-        subject: "Welcome aboard! | Verify your email address",
-        html: `
+      try {
+        console.log(`[Auth] Sending verification email to: ${user.email}`);
+        const result = await resend.emails.send({
+          from: "Midfield Co <no-reply@mdfld.co>",
+          to: user.email,
+          subject: "Welcome aboard! | Verify your email address",
+          html: `
 					<!DOCTYPE html>
 					<html>
 					<head>
@@ -87,7 +103,19 @@ export const auth = betterAuth({
 					</body>
 					</html>
 				`,
-      });
+        });
+
+        if (result.error) {
+          console.error(`[Auth] Failed to send verification email:`, result.error);
+          throw new Error(`Failed to send verification email: ${JSON.stringify(result.error)}`);
+        }
+
+        const emailId = 'data' in result && result.data ? result.data.id : result.id;
+        console.log(`[Auth] Verification email sent successfully! ID: ${emailId}`);
+      } catch (error) {
+        console.error(`[Auth] Exception sending verification email:`, error);
+        throw error;
+      }
     },
   },
   socialProviders: {
