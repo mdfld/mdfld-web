@@ -14,78 +14,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send email using Resend
+    const subjectLabel = type ?? subject;
+
+    // Send to support inbox
     const { error } = await resend.emails.send({
-      from: "MDFLD Contact <contact@mdfld.com>",
-      to: ["support@mdfld.com"], // Replace with your actual support email
+      from: "Midfield Co <onboarding@resend.dev>",
+      to: ["ayoola@mdfld.co"], // test mode: must be account owner's email
       replyTo: email,
-      subject: `[${type.toUpperCase()}] ${subject}`,
+      subject: `[CONTACT] ${subjectLabel} — ${name}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">New Contact Form Submission</h2>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Type:</strong> ${type}</p>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Subject:</strong> ${subject}</p>
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"></head>
+        <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+          <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:8px;border:1px solid #eaeaea;padding:28px;">
+            <h2 style="color:#000;font-size:20px;margin:0 0 20px;">New Contact Message</h2>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+              <tr><td style="padding:8px 0;color:#666;font-size:13px;width:100px;">Name</td><td style="padding:8px 0;font-size:13px;font-weight:600;">${name}</td></tr>
+              <tr><td style="padding:8px 0;color:#666;font-size:13px;">Email</td><td style="padding:8px 0;font-size:13px;"><a href="mailto:${email}" style="color:#00d4b6;">${email}</a></td></tr>
+              <tr><td style="padding:8px 0;color:#666;font-size:13px;">Subject</td><td style="padding:8px 0;font-size:13px;text-transform:capitalize;">${subjectLabel}</td></tr>
+            </table>
+            <div style="background:#f9f9f9;border-left:3px solid #00d4b6;padding:16px;border-radius:0 4px 4px 0;">
+              <p style="margin:0;font-size:13px;line-height:1.7;white-space:pre-wrap;">${message}</p>
+            </div>
+            <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
+            <p style="color:#999;font-size:11px;margin:0;">Sent via mdfld.co contact form</p>
           </div>
-          
-          <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h3 style="color: #333; margin-top: 0;">Message:</h3>
-            <p style="white-space: pre-wrap;">${message}</p>
-          </div>
-          
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
-          
-          <p style="color: #666; font-size: 14px;">
-            This email was sent from the MDFLD contact form.
-          </p>
-        </div>
+        </body>
+        </html>
       `,
     });
 
     if (error) {
-      // Failed to send email
+      console.error("[Contact API] Email send error:", error);
       return NextResponse.json(
         { error: "Failed to send message" },
         { status: 500 },
       );
     }
 
-    // Optional: Send confirmation email to the user
-    await resend.emails.send({
-      from: "MDFLD <noreply@mdfld.com>",
+    // Auto-reply to sender (non-blocking — don't fail if this fails)
+    resend.emails.send({
+      from: "Midfield Co <onboarding@resend.dev>",
       to: [email],
-      subject: "We've received your message",
+      subject: "We've received your message — mdfld",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Thank you for contacting MDFLD</h2>
-          
-          <p>Hi ${name},</p>
-          
-          <p>We've received your message and will get back to you within 24-48 hours.</p>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #333; margin-top: 0;">Your message:</h3>
-            <p><strong>Subject:</strong> ${subject}</p>
-            <p style="white-space: pre-wrap;">${message}</p>
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"></head>
+        <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+          <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:8px;border:1px solid #eaeaea;padding:28px;">
+            <h2 style="color:#000;font-size:20px;font-weight:normal;margin:0 0 20px;">Thanks, <strong>${name}</strong>.</h2>
+            <p style="color:#333;font-size:14px;line-height:1.7;margin:0 0 20px;">
+              We've received your message and will get back to you within 24 hours.
+            </p>
+            <div style="background:#f9f9f9;border:1px solid #eee;padding:16px;border-radius:4px;margin-bottom:20px;">
+              <p style="margin:0 0 6px;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:0.1em;">Your message</p>
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#333;white-space:pre-wrap;">${message}</p>
+            </div>
+            <p style="color:#666;font-size:13px;line-height:1.7;margin:0;">— The mdfld Team</p>
           </div>
-          
-          <p>Best regards,<br>The MDFLD Team</p>
-          
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
-          
-          <p style="color: #666; font-size: 14px;">
-            This is an automated response. Please do not reply to this email.
-          </p>
-        </div>
+        </body>
+        </html>
       `,
-    });
+    }).catch(() => {}); // silently ignore auto-reply failures
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    // Contact form error
+    console.error("[Contact API] Unexpected error:", error);
     return NextResponse.json(
       { error: "Failed to process request" },
       { status: 500 },

@@ -147,7 +147,7 @@ export const productRouter = createTRPCRouter({
           category: input.category as any,
           subcategory: input.subcategory as any,
           brand: input.brand,
-          sku: input.sku || undefined,
+          sku: input.sku && input.sku.trim() !== "" ? input.sku.trim() : `SKU-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
           inventory: input.inventory,
           weight: input.weight,
           dimensions: input.dimensions,

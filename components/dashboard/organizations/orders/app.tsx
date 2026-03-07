@@ -362,8 +362,17 @@ export default function OrganizationOrdersLayout() {
                             Mark as Confirmed
                           </DropdownItem>
                           <DropdownItem
-                            key="ship"
+                            key="process"
                             isDisabled={order.status !== "CONFIRMED"}
+                            onPress={() =>
+                              handleStatusUpdate(order.id, "PROCESSING")
+                            }
+                          >
+                            Mark as Processing
+                          </DropdownItem>
+                          <DropdownItem
+                            key="ship"
+                            isDisabled={order.status !== "PROCESSING"}
                             onPress={() =>
                               handleStatusUpdate(order.id, "SHIPPED")
                             }

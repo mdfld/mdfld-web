@@ -13,7 +13,7 @@ import {
   ModalContent,
 } from "@heroui/react";
 import UserAvatar from "@/components/common/user-avatar";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { Icon } from "@iconify/react";
 
@@ -42,7 +42,6 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
     (state) => state.setActiveOrganization,
   );
 
-  // Set the first organization as active if none is selected
   useEffect(() => {
     if (organizations && organizations.length > 0 && !activeOrganization) {
       const firstOrg = organizations[0];
@@ -56,6 +55,19 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
   }, [organizations, activeOrganization, setActiveOrganization]);
 
   if (isPending) return null;
+
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut();
+    } catch (e) {
+      // ignore errors
+    } finally {
+      // Clear cookies manually as fallback
+      document.cookie = "better-auth.session_token=; Max-Age=0; path=/";
+      document.cookie = "__Secure-better-auth.session_token=; Max-Age=0; path=/";
+      window.location.href = "/auth/login";
+    }
+  };
 
   const handleOrganizationSelect = (org: any) => {
     setActiveOrganization({
@@ -193,10 +205,8 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
               </DropdownItem>
               <DropdownItem
                 key="logout"
-                onClick={async () => {
-                  await signOut();
-                  router.push("/auth/login");
-                }}
+                color="danger"
+                onClick={handleLogout}
               >
                 Logout
               </DropdownItem>

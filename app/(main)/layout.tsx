@@ -1,19 +1,16 @@
-import MainNavbar from "@/components/main-navbar/page";
-import MainFooter from "@/components/footer/page";
+import Navbar from "@/Components/Navbar";
+import Footer from "@/Components/Footer";
 
 export default function MainLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return (
-		<div className="relative w-full flex flex-col h-screen">
-			<main className="container mx-auto max-w-full pt-0 px-0 flex-grow overflow-x-hidden">
-				<MainNavbar />
-				{children}
-				<MainFooter />
-			</main>
-			<footer className="w-full flex items-center justify-center py-3" />
-		</div>
-	);
+  return (
+    <div style={{ background: "#020606", minHeight: "100vh" }}>
+      <Navbar />
+      <main>{children}</main>
+      <Footer />
+    </div>
+  );
 }
