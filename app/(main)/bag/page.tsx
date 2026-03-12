@@ -14,13 +14,11 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
-import { loadStripe } from "@stripe/stripe-js";
+// Stripe redirect handled via checkout session URL
 import { useGuestCart } from "@/hooks/use-guest-cart";
 import { useAuth } from "@/hooks/use-auth";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
+
 
 export default function BagPage() {
   const router = useRouter();
@@ -128,14 +126,11 @@ export default function BagPage() {
         throw new Error("Failed to create checkout session");
       }
 
-      const { sessionId } = await response.json();
+      const { url } = await response.json();
 
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe not loaded");
-
-      // Redirect to Checkout
-      window.location.href = `/checkout?session_id=${sessionId}`;
+      // Redirect directly to Stripe Checkout URL
+      if (!url) throw new Error("No checkout URL received");
+      window.location.href = url;
     } catch (error) {
       // Checkout error
       toast.error("Failed to start checkout");

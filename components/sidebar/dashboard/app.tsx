@@ -17,7 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@heroui/react";
 import Image from "next/image";
 import Sidebar from "./sidebar";
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { useNotificationSubscription } from "@/hooks/useNotifications";
 
@@ -75,6 +75,13 @@ const findActiveKey = (items: any[], pathname: string): string => {
   }
 
   return "home"; // Default fallback
+};
+
+const handleLogout = async () => {
+  try { await authClient.signOut(); } catch {}
+  document.cookie = "better-auth.session_token=; Max-Age=0; path=/";
+  document.cookie = "__Secure-better-auth.session_token=; Max-Age=0; path=/";
+  window.location.href = "/";
 };
 
 export default function SidebarWrapper({
@@ -313,6 +320,7 @@ export default function SidebarWrapper({
                 )
               }
               variant="light"
+              onPress={handleLogout}
             >
               {isCompact ? (
                 <Icon

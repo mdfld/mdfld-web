@@ -16,7 +16,7 @@ export const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY!;
 export const PLATFORM_FEE_RATE = 0.1;
 
 // Stripe account types
-export const STRIPE_ACCOUNT_TYPE = "standard"; // Standard Connect accounts
+export const STRIPE_ACCOUNT_TYPE = "standard";
 
 // Stripe capabilities required for sellers
 export const SELLER_CAPABILITIES = {
