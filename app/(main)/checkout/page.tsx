@@ -97,10 +97,10 @@ export default function CheckoutPage() {
         throw new Error("Failed to create checkout session");
       }
 
-      const { sessionId } = await response.json();
+      const { url } = await response.json();
 
       // Redirect to Stripe Checkout
-      window.location.href = `https://checkout.stripe.com/c/pay/${sessionId}`;
+      window.location.href = url;
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to process checkout");

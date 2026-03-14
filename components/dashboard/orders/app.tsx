@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Chip,
@@ -44,6 +45,7 @@ const statusConfig = {
 };
 
 export default function UserOrdersLayout() {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -231,8 +233,8 @@ export default function UserOrdersLayout() {
                           </Button>
                         </DropdownTrigger>
                         <DropdownMenu aria-label="Order actions">
-                          <DropdownItem key="view">View Details</DropdownItem>
-                          <DropdownItem key="track">Track Order</DropdownItem>
+                          <DropdownItem key="view" onPress={() => router.push(`/dashboard/orders/${order.id}`)}>View Details</DropdownItem>
+                          <DropdownItem key="track" onPress={() => router.push(`/dashboard/orders/${order.id}`)}>Track Order</DropdownItem>
                           <DropdownItem
                             key="return"
                             isDisabled={order.status !== "DELIVERED"}

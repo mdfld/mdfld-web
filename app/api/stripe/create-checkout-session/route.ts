@@ -29,17 +29,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Create customer if doesn't exist
+    // Get or create Stripe customer — always verify it exists in current mode
     let customerId = user.stripeCustomerId;
+    if (customerId) {
+      // Verify the customer exists in the current Stripe mode (test vs live)
+      try {
+        await stripe.customers.retrieve(customerId);
+      } catch {
+        // Customer doesn't exist in this mode (e.g. live ID used with test key)
+        customerId = null;
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId: null },
+        });
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
         name: user.name,
-        metadata: {
-          userId: user.id,
-        },
+        metadata: { userId: user.id },
       });
-
       customerId = customer.id;
       await prisma.user.update({
         where: { id: user.id },
@@ -133,11 +144,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ sessionId: checkoutSession.id });
+    if (!checkoutSession.url) {
+      console.error("[Stripe] Session created but no URL:", checkoutSession.id);
+      return NextResponse.json({ error: "No redirect URL from Stripe" }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: checkoutSession.url, sessionId: checkoutSession.id });
   } catch (error) {
-    // Failed to create checkout session
+    console.error("[Stripe] create-checkout-session error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: "Failed to create checkout session", detail: error instanceof Error ? (error as Error).message : String(error) },
       { status: 500 },
     );
   }
