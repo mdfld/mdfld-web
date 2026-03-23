@@ -15,7 +15,12 @@ export default async function AdminLayout({
 	});
 
 	if (!session?.user) {
-		redirect("/auth/login");
+		redirect("/auth/login?from=/admin");
+	}
+
+	const role = (session.user as any).role as string | undefined;
+	if (role !== "SUPER_ADMIN" && role !== "ADMIN") {
+		redirect("/");
 	}
 
 	return (
