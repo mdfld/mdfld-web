@@ -28,7 +28,13 @@ export default async function AdminLayout({
 
 	const role = dbUser?.role;
 	if (!role || (role !== "SUPER_ADMIN" && role !== "ADMIN")) {
-		redirect("/");
+		return (
+			<div style={{ padding: 40, fontFamily: "monospace" }}>
+				<h1>403 — Access Denied</h1>
+				<p>role: {String(role)}</p>
+				<p>userId: {session!.user.id}</p>
+			</div>
+		);
 	}
 
 	return (
