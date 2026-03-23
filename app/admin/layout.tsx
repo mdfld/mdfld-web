@@ -8,18 +8,19 @@ export default async function AdminLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const headersList = await headers();
-
-	const session = await auth.api.getSession({
-		headers: headersList,
-	});
+	let session;
+	try {
+		session = await auth.api.getSession({ headers: await headers() });
+	} catch {
+		redirect("/auth/login?from=/admin");
+	}
 
 	if (!session?.user) {
 		redirect("/auth/login?from=/admin");
 	}
 
-	const role = (session.user as any).role as string | undefined;
-	if (role !== "SUPER_ADMIN" && role !== "ADMIN") {
+	const role = (session.user as { role?: string }).role;
+	if (!role || (role !== "SUPER_ADMIN" && role !== "ADMIN")) {
 		redirect("/");
 	}
 
