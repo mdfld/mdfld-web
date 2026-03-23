@@ -12,11 +12,13 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 	REFUNDED: { bg: "#f3f4f6", text: "#374151" },
 };
 
+type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
+
 export default function AdminOrdersPage() {
-	const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+	const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
 
 	const { data, isLoading } = trpc.admin.listOrders.useQuery({
-		status: statusFilter as any,
+		status: statusFilter,
 		limit: 30,
 	});
 
@@ -26,11 +28,11 @@ export default function AdminOrdersPage() {
 
 			<select
 				value={statusFilter ?? ""}
-				onChange={(e) => setStatusFilter(e.target.value || undefined)}
+				onChange={(e) => setStatusFilter((e.target.value as OrderStatus) || undefined)}
 				style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #ddd", marginBottom: 20, fontSize: 14 }}
 			>
 				<option value="">All Statuses</option>
-				{Object.keys(STATUS_COLORS).map((s) => (
+				{(Object.keys(STATUS_COLORS) as OrderStatus[]).map((s) => (
 					<option key={s} value={s}>{s}</option>
 				))}
 			</select>
@@ -47,7 +49,7 @@ export default function AdminOrdersPage() {
 						</tr>
 					</thead>
 					<tbody>
-						{data?.orders.map((order) => {
+						{(data?.orders as any[] | undefined)?.map((order) => {
 							const colors = STATUS_COLORS[order.status] ?? STATUS_COLORS.PENDING;
 							return (
 								<tr key={order.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
