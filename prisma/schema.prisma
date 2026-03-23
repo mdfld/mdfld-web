@@ -31,6 +31,7 @@ model User {
   phoneNumber      String?
   dateOfBirth      DateTime?
   kycStatus        KycStatus @default(PENDING)
+  role             UserRole  @default(BUYER)
 
   // Stripe customer fields
   stripeCustomerId String? @unique
@@ -128,6 +129,7 @@ model Organization {
   taxId           String?
   businessLicense String?
   isVerified      Boolean      @default(false)
+  storeStatus     StoreStatus  @default(PENDING)
   trustScore      Float        @default(0.0)
 
   // Address fields
@@ -210,6 +212,8 @@ model SellerProfile {
   
   // Commission settings
   commissionRate          Float     @default(0.10) // 10% default commission
+  pendingBalance          Decimal   @default(0.00)
+  settledBalance          Decimal   @default(0.00)
 
   // Fraud detection metrics
   fraudScore              Float     @default(0.0)
@@ -639,6 +643,20 @@ enum KycStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum StoreStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 enum BusinessType {
