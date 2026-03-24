@@ -27,10 +27,10 @@ describe("normaliseSize", () => {
     expect(normaliseSize("XL")).toEqual({ sizeValue: "XL", sizeSystem: "STANDARD", sizeDisplay: "STANDARD XL" });
   });
   it("parses 'One Size'", () => {
-    expect(normaliseSize("One Size")).toEqual({ sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "ONE_SIZE ONE_SIZE" });
+    expect(normaliseSize("One Size")).toEqual({ sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "One Size" });
   });
   it("parses 'OS'", () => {
-    expect(normaliseSize("OS")).toEqual({ sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "ONE_SIZE ONE_SIZE" });
+    expect(normaliseSize("OS")).toEqual({ sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "One Size" });
   });
   it("returns null for unrecognised string", () => {
     expect(normaliseSize("weird size XYZ")).toBeNull();
