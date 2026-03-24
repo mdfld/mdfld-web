@@ -16,6 +16,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@heroui/react";
 import Image from "next/image";
+import Link from "next/link";
 import Sidebar from "./sidebar";
 import { useSession, authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
@@ -169,7 +170,7 @@ export default function SidebarWrapper({
           },
         )}
       >
-        <div className="text-background justify-center rounded-full">
+        <Link href="/" className="text-background justify-center rounded-full flex">
           <Image
             src="https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjlsYla8wKE2TjwSU8x3apY10zR5NV9ighPDtr"
             alt="mdfld logo"
@@ -177,7 +178,7 @@ export default function SidebarWrapper({
             height={10}
             className="flex bg-transparent"
           ></Image>
-        </div>
+        </Link>
         <Spacer y={8} />
         <div
           className={cn(

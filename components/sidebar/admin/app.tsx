@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
@@ -44,7 +45,7 @@ const groups: Record<string, string> = {
 // ─── Logo ─────────────────────────────────────────────────────
 function LogoMark({ collapsed }: { collapsed: boolean }) {
 	return (
-		<div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 4px" }}>
+		<Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 4px", textDecoration: "none" }}>
 			<div style={{
 				width: 36, height: 36, flexShrink: 0,
 				background: `linear-gradient(135deg, ${ACCENT} 0%, #007a6e 100%)`,
@@ -81,7 +82,7 @@ function LogoMark({ collapsed }: { collapsed: boolean }) {
 					</div>
 				</div>
 			)}
-		</div>
+		</Link>
 	);
 }
 
