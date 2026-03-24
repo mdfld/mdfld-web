@@ -6,15 +6,6 @@ import type { SizeSystem, ProductCategory, ProductCondition } from "@prisma/clie
 
 const MAX_ROWS = 5000;
 
-const variantSchema = z.object({
-  sizeValue: z.string(),
-  sizeSystem: z.string(),
-  price: z.number(),
-  inventory: z.number().int(),
-  sku: z.string().optional(),
-  color: z.string().optional(),
-});
-
 const rowSchema = z.object({
   title: z.string().min(1),
   description: z.string(),
