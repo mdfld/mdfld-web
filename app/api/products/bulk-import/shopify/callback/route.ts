@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
   const shop = searchParams.get("shop");
 
   if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
-    return NextResponse.json({ error: "Invalid shop domain" }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=invalid_shop`, request.url)
+    );
   }
 
   const cookieStore = await cookies();
@@ -28,19 +30,27 @@ export async function GET(request: NextRequest) {
     savedState = parsed.state;
     savedShop = parsed.shop;
   } catch {
-    return NextResponse.json({ error: "Invalid or missing OAuth state cookie." }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+    );
   }
 
   if (!state || !savedState || state !== savedState) {
-    return NextResponse.json({ error: "Invalid state. Possible CSRF attack." }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+    );
   }
 
   if (shop !== savedShop) {
-    return NextResponse.json({ error: "Shop mismatch. Possible CSRF attack." }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+    );
   }
 
   if (!code) {
-    return NextResponse.json({ error: "Missing code or shop" }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=missing_params`, request.url)
+    );
   }
 
   const session = await auth.api.getSession({ headers: request.headers });

@@ -95,10 +95,7 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
       .map((r) => ({
         ...r,
         sizeSystem: r.status === "fix_size" ? sizeFixMap[r.id] : r.sizeSystem,
-        sizeDisplay:
-          r.status === "fix_size" && sizeFixMap[r.id]
-            ? `${sizeFixMap[r.id]} ${r.sizeValue}`
-            : r.sizeDisplay,
+        // sizeDisplay removed — server derives from sizeSystem + sizeValue
       }));
 
     try {

@@ -10,6 +10,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  Input,
 } from "@heroui/react";
 import GuideModal from "./guide-modal";
 
@@ -166,9 +167,13 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
   const [guideOpen, setGuideOpen] = useState(false);
   const [activePlatform, setActivePlatform] = useState<Platform | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [shopifyModalOpen, setShopifyModalOpen] = useState(false);
+  const [shopDomain, setShopDomain] = useState("");
 
   const handleClick = (platform: Platform) => {
-    if (platform.type === "api" && platform.connectHref) {
+    if (platform.key === "shopify") {
+      setShopifyModalOpen(true);
+    } else if (platform.type === "api" && platform.connectHref) {
       router.push(platform.connectHref);
     } else {
       setActivePlatform(platform);
@@ -221,6 +226,38 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
           steps={activePlatform.guideSteps ?? []}
         />
       )}
+
+      {/* Shopify domain modal */}
+      <Modal isOpen={shopifyModalOpen} onClose={() => setShopifyModalOpen(false)} size="sm">
+        <ModalContent>
+          <ModalHeader>Connect your Shopify store</ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-500 mb-3">
+              Enter your Shopify store domain to connect.
+            </p>
+            <Input
+              label="Store domain"
+              placeholder="mystore.myshopify.com"
+              value={shopDomain}
+              onChange={(e) => setShopDomain(e.target.value)}
+              size="sm"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => setShopifyModalOpen(false)}>Cancel</Button>
+            <Button
+              color="primary"
+              isDisabled={!shopDomain.includes("myshopify.com")}
+              onPress={() => {
+                setShopifyModalOpen(false);
+                router.push(`/api/products/bulk-import/shopify/connect?shop=${encodeURIComponent(shopDomain.trim())}`);
+              }}
+            >
+              Connect
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} size="md">
         <ModalContent>

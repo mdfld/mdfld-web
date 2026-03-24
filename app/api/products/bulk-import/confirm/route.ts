@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import type { SizeSystem, ProductCategory, ProductCondition } from "@prisma/client";
+import { createId } from "@paralleldrive/cuid2";
+import { ProductCategory, ProductCondition } from "@prisma/client";
+import type { SizeSystem } from "@prisma/client";
 
 const MAX_ROWS = 5000;
 
@@ -11,8 +13,8 @@ const rowSchema = z.object({
   description: z.string(),
   price: z.number().positive(),
   compareAtPrice: z.number().positive().optional(),
-  category: z.string(),
-  condition: z.string(),
+  category: z.nativeEnum(ProductCategory),
+  condition: z.nativeEnum(ProductCondition),
   brand: z.string().optional(),
   sku: z.string().optional(),
   inventory: z.number().int().nonnegative(),
@@ -91,10 +93,10 @@ export async function POST(request: NextRequest) {
             description: row.description || row.title,
             price: row.price,
             compareAtPrice: row.compareAtPrice,
-            category: row.category as ProductCategory,
-            condition: row.condition as ProductCondition,
+            category: row.category,
+            condition: row.condition,
             brand: row.brand,
-            sku: row.sku || `IMPORT-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+            sku: row.sku || createId(),
             inventory: row.hasVariants ? 0 : row.inventory,
             images: row.images,
             tags: row.tags,

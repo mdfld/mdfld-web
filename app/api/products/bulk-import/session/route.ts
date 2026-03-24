@@ -25,5 +25,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Session expired" }, { status: 410 });
   }
 
+  const sellerProfile = await prisma.sellerProfile.findUnique({
+    where: { userId: session.user.id },
+  });
+  if (!sellerProfile || importSession.sellerId !== sellerProfile.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   return NextResponse.json({ rows: importSession.rows, platform: importSession.platform });
 }

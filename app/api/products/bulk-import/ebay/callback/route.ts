@@ -19,11 +19,15 @@ export async function GET(request: NextRequest) {
   cookieStore.delete("import_oauth_state_ebay");
 
   if (!state || !savedState || state !== savedState) {
-    return NextResponse.json({ error: "Invalid state. Possible CSRF attack." }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+    );
   }
 
   if (!code) {
-    return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=missing_params`, request.url)
+    );
   }
 
   const session = await auth.api.getSession({ headers: request.headers });
@@ -113,7 +117,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const rows = (inventoryItems ?? []).map((item: any) => {
+  if (!inventoryItems || inventoryItems.length === 0) {
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=ebay_no_listings`, request.url)
+    );
+  }
+
+  const rows = inventoryItems.map((item: any) => {
     const product = item.product ?? {};
     const category = normaliseCategory(item.groupType ?? "");
     const rawSize = product.aspects?.Size?.[0] ?? "";

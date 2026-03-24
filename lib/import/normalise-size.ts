@@ -16,7 +16,7 @@ export function normaliseSize(raw: string): SizeResult | null {
 
   // One size
   if (ONE_SIZE_LABELS.has(upper)) {
-    return { sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "ONE_SIZE ONE_SIZE" };
+    return { sizeValue: "ONE_SIZE", sizeSystem: "ONE_SIZE", sizeDisplay: "One Size" };
   }
 
   // Standard apparel
