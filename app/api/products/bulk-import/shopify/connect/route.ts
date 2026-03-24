@@ -10,13 +10,14 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const shop = searchParams.get("shop"); // e.g. mystore.myshopify.com
-  if (!shop) {
-    return NextResponse.json({ error: "Missing shop parameter" }, { status: 400 });
+
+  if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
+    return NextResponse.json({ error: "Invalid shop domain" }, { status: 400 });
   }
 
   const state = crypto.randomUUID();
   const cookieStore = await cookies();
-  cookieStore.set("import_oauth_state", state, {
+  cookieStore.set("import_oauth_state_shopify", JSON.stringify({ state, shop }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: 600,

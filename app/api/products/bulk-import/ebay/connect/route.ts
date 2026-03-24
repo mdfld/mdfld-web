@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const state = crypto.randomUUID();
   const cookieStore = await cookies();
-  cookieStore.set("import_oauth_state", state, {
+  cookieStore.set("import_oauth_state_ebay", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: 600,

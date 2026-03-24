@@ -3,6 +3,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { createId } from "@paralleldrive/cuid2";
+import { normaliseCategory } from "@/lib/import/normalise-category";
+import { normaliseCondition } from "@/lib/import/normalise-condition";
+import { normaliseSize } from "@/lib/import/normalise-size";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,15 +13,33 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const shop = searchParams.get("shop");
 
+  if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
+    return NextResponse.json({ error: "Invalid shop domain" }, { status: 400 });
+  }
+
   const cookieStore = await cookies();
-  const savedState = cookieStore.get("import_oauth_state")?.value;
-  cookieStore.delete("import_oauth_state");
+  const rawCookie = cookieStore.get("import_oauth_state_shopify")?.value;
+  cookieStore.delete("import_oauth_state_shopify");
+
+  let savedState: string;
+  let savedShop: string;
+  try {
+    const parsed = JSON.parse(rawCookie ?? "");
+    savedState = parsed.state;
+    savedShop = parsed.shop;
+  } catch {
+    return NextResponse.json({ error: "Invalid or missing OAuth state cookie." }, { status: 400 });
+  }
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.json({ error: "Invalid state. Possible CSRF attack." }, { status: 400 });
   }
 
-  if (!code || !shop) {
+  if (shop !== savedShop) {
+    return NextResponse.json({ error: "Shop mismatch. Possible CSRF attack." }, { status: 400 });
+  }
+
+  if (!code) {
     return NextResponse.json({ error: "Missing code or shop" }, { status: 400 });
   }
 
@@ -28,56 +49,71 @@ export async function GET(request: NextRequest) {
   }
 
   // Exchange code for token
-  const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: process.env.SHOPIFY_CLIENT_ID,
-      client_secret: process.env.SHOPIFY_CLIENT_SECRET,
-      code,
-    }),
-  });
+  let access_token: string;
+  try {
+    const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: process.env.SHOPIFY_CLIENT_ID,
+        client_secret: process.env.SHOPIFY_CLIENT_SECRET,
+        code,
+      }),
+    });
 
-  if (!tokenRes.ok) {
-    return NextResponse.json({ error: "Failed to exchange token" }, { status: 502 });
+    if (!tokenRes.ok) {
+      return NextResponse.json({ error: "Failed to exchange token" }, { status: 502 });
+    }
+
+    const body = await tokenRes.json();
+    access_token = body.access_token;
+  } catch {
+    return NextResponse.json({ error: "Failed to reach Shopify token endpoint" }, { status: 502 });
   }
-
-  const { access_token } = await tokenRes.json();
 
   // Store token on SellerProfile
-  const sellerProfile = await prisma.sellerProfile.findUnique({
-    where: { userId: session.user.id },
-  });
-  if (!sellerProfile) {
-    return NextResponse.json({ error: "No seller profile" }, { status: 403 });
+  let sellerProfile: { id: string } | null;
+  try {
+    sellerProfile = await prisma.sellerProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!sellerProfile) {
+      return NextResponse.json({ error: "No seller profile" }, { status: 403 });
+    }
+
+    await prisma.sellerProfile.update({
+      where: { id: sellerProfile.id },
+      data: {
+        shopifyAccessToken: access_token,
+        shopifyShopDomain: shop,
+        shopifyTokenExpiresAt: null,
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "Database error saving token" }, { status: 500 });
   }
 
-  await prisma.sellerProfile.update({
-    where: { id: sellerProfile.id },
-    data: {
-      shopifyAccessToken: access_token,
-      shopifyShopDomain: shop,
-      shopifyTokenExpiresAt: null,
-    },
-  });
-
   // Fetch products from Shopify
-  const productsRes = await fetch(
-    `https://${shop}/admin/api/2024-01/products.json?limit=250`,
-    { headers: { "X-Shopify-Access-Token": access_token } }
-  );
+  let products: any[];
+  try {
+    const productsRes = await fetch(
+      `https://${shop}/admin/api/2024-01/products.json?limit=250`,
+      { headers: { "X-Shopify-Access-Token": access_token } }
+    );
 
-  if (!productsRes.ok) {
+    if (!productsRes.ok) {
+      return NextResponse.redirect(
+        new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, request.url)
+      );
+    }
+
+    const body = await productsRes.json();
+    products = body.products;
+  } catch {
     return NextResponse.redirect(
       new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, request.url)
     );
   }
-
-  const { products } = await productsRes.json();
-
-  const { normaliseCategory } = await import("@/lib/import/normalise-category");
-  const { normaliseCondition } = await import("@/lib/import/normalise-condition");
-  const { normaliseSize } = await import("@/lib/import/normalise-size");
 
   const rows = products.flatMap((product: any) =>
     product.variants.map((variant: any) => {
@@ -87,7 +123,7 @@ export async function GET(request: NextRequest) {
         id: createId(),
         title: product.title,
         description: product.body_html?.replace(/<[^>]+>/g, "") || product.title,
-        price: parseFloat(variant.price),
+        price: Number.isFinite(parseFloat(variant.price)) ? parseFloat(variant.price) : 0,
         category,
         condition: normaliseCondition(""),
         brand: product.vendor,
@@ -107,14 +143,19 @@ export async function GET(request: NextRequest) {
   );
 
   // Store in ImportSession
-  const importSession = await prisma.importSession.create({
-    data: {
-      sellerId: sellerProfile.id,
-      platform: "shopify",
-      rows,
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-    },
-  });
+  let importSession: { id: string };
+  try {
+    importSession = await prisma.importSession.create({
+      data: {
+        sellerId: sellerProfile.id,
+        platform: "shopify",
+        rows,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "Database error creating import session" }, { status: 500 });
+  }
 
   return NextResponse.redirect(
     new URL(`/dashboard/organization/import?session=${importSession.id}`, request.url)
