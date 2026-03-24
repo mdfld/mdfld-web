@@ -25,8 +25,8 @@ export const SELLER_CAPABILITIES = {
 };
 
 // Helper function to calculate application fee
-export function calculateApplicationFee(amount: number): number {
-  return Math.round(amount * PLATFORM_FEE_RATE);
+export function calculateApplicationFee(amount: number, rate: number = PLATFORM_FEE_RATE): number {
+  return Math.round(amount * rate);
 }
 
 // Helper function to format amount for Stripe (convert to cents)

@@ -1,14 +1,35 @@
 "use client";
 
-// Features unchanged: all settings sections, Switch defaultSelected values, Reset/Save buttons — identical
 import { Switch, Button } from "@heroui/react";
-import { Users, Building2, MessageSquare } from "lucide-react";
+import { Users, Building2, MessageSquare, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc-client";
 
 const ACCENT = "#00d4b6";
 const BLUE = "#0066ff";
 
 export default function AdminSettingsPage() {
-	// ── Feature unchanged: same settings data ─────────────────
+	const { data: platformSettings } = trpc.admin.getPlatformSettings.useQuery();
+	const updateSettings = trpc.admin.updatePlatformSettings.useMutation();
+
+	const [commissionPct, setCommissionPct] = useState<string>("");
+	const [marketplaceFee, setMarketplaceFee] = useState<string>("");
+	const [feesSaved, setFeesSaved] = useState(false);
+
+	// Sync fetched values into inputs on first load
+	const commissionValue = commissionPct !== "" ? commissionPct : platformSettings ? String(Math.round(platformSettings.sellerCommissionPct * 100)) : "";
+	const marketplaceValue = marketplaceFee !== "" ? marketplaceFee : platformSettings ? String(Math.round(platformSettings.buyerMarketplaceFee * 100)) : "";
+
+	const handleSaveFees = () => {
+		const commission = parseFloat(commissionValue) / 100;
+		const fee = parseFloat(marketplaceValue) / 100;
+		if (isNaN(commission) || isNaN(fee)) return;
+		updateSettings.mutate(
+			{ sellerCommissionPct: commission, buyerMarketplaceFee: fee },
+			{ onSuccess: () => { setFeesSaved(true); setTimeout(() => setFeesSaved(false), 2000); } }
+		);
+	};
+
 	const settings = [
 		{
 			section: "User Management",
@@ -140,30 +161,63 @@ export default function AdminSettingsPage() {
 				))}
 			</div>
 
-			{/* Action buttons — feature unchanged */}
+			{/* Fee Configuration */}
 			<div style={{
-				display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24,
-				animation: "fadeIn 0.5s ease 0.2s backwards",
+				background: "#fff", border: "1px solid #e8e8e8",
+				borderRadius: 16, padding: 24, marginTop: 16,
+				boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+				animation: "fadeIn 0.5s ease 0.15s backwards",
 			}}>
-				{/* Keep HeroUI Button — feature unchanged */}
-				<Button
-					variant="bordered"
-					style={{
-						fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13,
-						borderColor: "#e2e8f0", color: "#64748b",
-					}}
-				>
-					Reset to Defaults
-				</Button>
-				<Button
-					color="primary"
-					style={{
-						fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13,
-						background: ACCENT, color: "#020a0a", border: "none",
-					}}
-				>
-					Save Changes
-				</Button>
+				<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: "2px solid #f1f5f9" }}>
+					<div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(0,212,182,0.1)", border: `1.5px solid ${ACCENT}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+						<DollarSign size={18} color={ACCENT} strokeWidth={2.5} />
+					</div>
+					<h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 17, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", margin: 0, textTransform: "uppercase" }}>
+						Fee Configuration
+					</h3>
+				</div>
+				<div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+					<div style={{ flex: 1, minWidth: 200 }}>
+						<label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>
+							Seller Commission (%)
+						</label>
+						<p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Platform cut taken from each seller payout</p>
+						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+							<input
+								type="number" min="0" max="100" step="0.5"
+								value={commissionValue}
+								onChange={(e) => setCommissionPct(e.target.value)}
+								style={{ width: 80, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}
+							/>
+							<span style={{ fontSize: 14, color: "#64748b" }}>%</span>
+						</div>
+					</div>
+					<div style={{ flex: 1, minWidth: 200 }}>
+						<label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>
+							Buyer Marketplace Fee (%)
+						</label>
+						<p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Fee added to buyer checkout total</p>
+						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+							<input
+								type="number" min="0" max="100" step="0.5"
+								value={marketplaceValue}
+								onChange={(e) => setMarketplaceFee(e.target.value)}
+								style={{ width: 80, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}
+							/>
+							<span style={{ fontSize: 14, color: "#64748b" }}>%</span>
+						</div>
+					</div>
+				</div>
+				<div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+					<Button
+						color="primary"
+						onPress={handleSaveFees}
+						isLoading={updateSettings.isPending}
+						style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, background: feesSaved ? "#22c55e" : ACCENT, color: "#020a0a", border: "none" }}
+					>
+						{feesSaved ? "Saved!" : "Save Fees"}
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

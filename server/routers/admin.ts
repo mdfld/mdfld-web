@@ -342,6 +342,37 @@ export const adminRouter = createTRPCRouter({
       return { sellers, nextCursor };
     }),
 
+  getPlatformSettings: adminProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.platformSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton" },
+      update: {},
+    });
+  }),
+
+  updatePlatformSettings: adminProcedure
+    .input(z.object({
+      sellerCommissionPct: z.number().min(0).max(1),
+      buyerMarketplaceFee: z.number().min(0).max(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const settings = await ctx.prisma.platformSettings.upsert({
+        where: { id: "singleton" },
+        create: { id: "singleton", ...input, updatedById: ctx.user.id },
+        update: { ...input, updatedById: ctx.user.id },
+      });
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PLATFORM_SETTINGS_UPDATED",
+          entityType: "PlatformSettings",
+          entityId: "singleton",
+          newValues: input,
+        },
+      });
+      return settings;
+    }),
+
   triggerPayout: adminProcedure
     .input(
       z.object({

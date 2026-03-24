@@ -1043,3 +1043,11 @@ enum OrgConversationStatus {
   RESOLVED
   CLOSED
 }
+
+model PlatformSettings {
+  id                  String   @id @default("singleton")
+  sellerCommissionPct Float    @default(0.10)
+  buyerMarketplaceFee Float    @default(0.00)
+  updatedAt           DateTime @updatedAt
+  updatedById         String?
+}

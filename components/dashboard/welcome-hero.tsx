@@ -98,6 +98,7 @@ export const WelcomeHero = () => {
               color="primary"
               className="h-12 px-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
               startContent={<Icon icon="solar:add-circle-bold" width={20} />}
+              onPress={() => router.push("/dashboard/organization/listings")}
             >
               Add Item
             </Button>
