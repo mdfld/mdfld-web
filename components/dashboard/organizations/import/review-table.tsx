@@ -30,6 +30,7 @@ interface Props {
 
 export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack }: Props) {
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [selected, setSelected] = useState<Set<string>>(
     new Set(rows.filter((r) => r.status !== "skip").map((r) => r.id))
   );
@@ -37,11 +38,18 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const categories = useMemo(
+    () => [...new Set(rows.map((r) => r.category).filter(Boolean))],
+    [rows]
+  );
+
   const filtered = useMemo(() => {
-    if (!search) return rows;
-    const q = search.toLowerCase();
-    return rows.filter((r) => r.title.toLowerCase().includes(q));
-  }, [rows, search]);
+    return rows.filter((r) => {
+      const matchesSearch = !search || r.title.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = !categoryFilter || r.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [rows, search, categoryFilter]);
 
   const toggleRow = (id: string) => {
     setSelected((prev) => {
@@ -120,17 +128,30 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
           </button>
           <h1 className="text-2xl font-semibold">Review your listings</h1>
           <p className="text-sm text-default-500 mt-1">
-            {rows.length} products found · {readyCount} selected
+            {rows.length} products found
           </p>
         </div>
-        <Input
-          placeholder="Search listings..."
-          size="sm"
-          className="w-56"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          startContent={<Icon icon="solar:magnifer-outline" className="w-4 h-4 text-default-400" />}
-        />
+        <div className="flex items-center gap-2">
+          <Select
+            size="sm"
+            className="w-40"
+            placeholder="All categories"
+            selectedKeys={categoryFilter ? [categoryFilter] : []}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            {(categories as string[]).map((cat) => (
+              <SelectItem key={cat}>{cat}</SelectItem>
+            ))}
+          </Select>
+          <Input
+            placeholder="Search listings..."
+            size="sm"
+            className="w-56"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            startContent={<Icon icon="solar:magnifer-outline" className="w-4 h-4 text-default-400" />}
+          />
+        </div>
       </div>
 
       <div className="border border-divider rounded-xl overflow-hidden mb-4">

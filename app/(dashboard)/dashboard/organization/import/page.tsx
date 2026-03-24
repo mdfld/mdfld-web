@@ -5,6 +5,7 @@ import { Spinner } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import SidebarWrapper from "@/components/sidebar/dashboard/app";
+import { trpc } from "@/lib/trpc-client";
 import { useOrganizationStore } from "@/lib/stores/organization";
 import ImportPlatformGrid from "@/components/dashboard/organizations/import/platform-grid";
 import ImportSocialTrack from "@/components/dashboard/organizations/import/social-track";
@@ -22,6 +23,12 @@ export default function ImportPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeOrganization = useOrganizationStore((state) => state.activeOrganization);
+
+  const { data, isLoading: orgPending } = trpc.organization.get.useQuery(
+    { slug: activeOrganization?.slug || "" },
+    { enabled: !!activeOrganization?.slug && !!session },
+  );
+  const organization = data as any;
 
   const [stage, setStage] = useState<ImportStage>("landing");
   const [rows, setRows] = useState<ImportRow[]>([]);
@@ -55,15 +62,55 @@ export default function ImportPage() {
       .finally(() => setSessionLoading(false));
   }, [searchParams, stage]);
 
-  if (typeof window === "undefined" || sessionPending) {
+  if (typeof window === "undefined" || sessionPending || orgPending) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <Spinner size="lg" />
       </div>
     );
   }
 
-  if (!session) return null;
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeOrganization) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">Please select an organization first</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">Organization not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (organization?.role !== "owner" && organization?.role !== "admin") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">
+            You don't have permission to access product import
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCsvParsed = (parsedRows: ImportRow[]) => {
     setRows(parsedRows);
@@ -80,6 +127,22 @@ export default function ImportPage() {
     setSessionId(undefined);
     setStage("landing");
     router.replace("/dashboard/organization/import");
+  };
+
+  const handleCsvFile = (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    setSessionLoading(true);
+    fetch("/api/products/bulk-import/parse", { method: "POST", body: formData })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.rows) {
+          setRows(data.rows as ImportRow[]);
+          setStage("review");
+        }
+      })
+      .catch(console.error)
+      .finally(() => setSessionLoading(false));
   };
 
   return (
@@ -100,7 +163,7 @@ export default function ImportPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <ImportPlatformGrid />
+              <ImportPlatformGrid onFilePicked={handleCsvFile} />
               <ImportSocialTrack />
             </div>
             <ImportCsvDropZone onParsed={handleCsvParsed} />

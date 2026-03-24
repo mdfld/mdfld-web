@@ -2,6 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
 import GuideModal from "./guide-modal";
 
 type Platform = {
@@ -148,10 +156,15 @@ const PLATFORMS: Platform[] = [
   },
 ];
 
-export default function ImportPlatformGrid() {
+interface ImportPlatformGridProps {
+  onFilePicked?: (file: File) => void;
+}
+
+export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridProps) {
   const router = useRouter();
   const [guideOpen, setGuideOpen] = useState(false);
   const [activePlatform, setActivePlatform] = useState<Platform | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const handleClick = (platform: Platform) => {
     if (platform.type === "api" && platform.connectHref) {
@@ -190,7 +203,10 @@ export default function ImportPlatformGrid() {
             </span>
           </button>
         ))}
-        <button className="flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors">
+        <button
+          onClick={() => setMoreOpen(true)}
+          className="flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors"
+        >
           More platforms
         </button>
       </div>
@@ -199,10 +215,27 @@ export default function ImportPlatformGrid() {
         <GuideModal
           isOpen={guideOpen}
           onClose={() => setGuideOpen(false)}
+          onUpload={onFilePicked ?? (() => setGuideOpen(false))}
           platform={activePlatform.name}
           steps={activePlatform.guideSteps ?? []}
         />
       )}
+
+      <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} size="md">
+        <ModalContent>
+          <ModalHeader>More platforms coming soon</ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-600">
+              We're always adding new integrations. Let us know which platforms you use and we'll prioritise accordingly.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => setMoreOpen(false)}>
+              Got it
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
