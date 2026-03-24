@@ -7,11 +7,6 @@ import { createId } from "@paralleldrive/cuid2";
 const EBAY_TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
-
   const { searchParams } = new URL(request.url);
   const state = searchParams.get("state");
   const code = searchParams.get("code");
@@ -26,6 +21,11 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
+  }
+
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   const sellerProfile = await prisma.sellerProfile.findUnique({

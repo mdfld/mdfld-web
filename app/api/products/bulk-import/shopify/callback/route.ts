@@ -5,11 +5,6 @@ import { cookies } from "next/headers";
 import { createId } from "@paralleldrive/cuid2";
 
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
-
   const { searchParams } = new URL(request.url);
   const state = searchParams.get("state");
   const code = searchParams.get("code");
@@ -25,6 +20,11 @@ export async function GET(request: NextRequest) {
 
   if (!code || !shop) {
     return NextResponse.json({ error: "Missing code or shop" }, { status: 400 });
+  }
+
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   // Exchange code for token
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
     data: {
       shopifyAccessToken: access_token,
       shopifyShopDomain: shop,
+      shopifyTokenExpiresAt: null,
     },
   });
 
