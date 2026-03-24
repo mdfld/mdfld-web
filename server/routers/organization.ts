@@ -1374,4 +1374,78 @@ export const organizationRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  // ── Seller Earnings & Payouts ──────────────────────────────
+  getEarnings: protectedProcedure.query(async ({ ctx }) => {
+    const seller = await ctx.prisma.sellerProfile.findUnique({
+      where: { userId: ctx.user.id },
+      select: {
+        id: true,
+        pendingBalance: true,
+        settledBalance: true,
+        totalSales: true,
+        bankAccount: true,
+        commissionRate: true,
+      },
+    });
+    if (!seller) return null;
+
+    const transactions = await ctx.prisma.transaction.findMany({
+      where: { userId: ctx.user.id, type: { in: ["PAYOUT", "SALE"] } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { id: true, type: true, amount: true, status: true, createdAt: true, netAmount: true },
+    });
+
+    return {
+      pendingBalance: Number(seller.pendingBalance),
+      settledBalance: Number(seller.settledBalance),
+      totalSales: seller.totalSales,
+      bankAccount: seller.bankAccount,
+      commissionRate: seller.commissionRate,
+      transactions,
+    };
+  }),
+
+  updateBankAccount: protectedProcedure
+    .input(z.object({ bankAccount: z.string().min(5) }))
+    .mutation(async ({ ctx, input }) => {
+      const seller = await ctx.prisma.sellerProfile.findUnique({
+        where: { userId: ctx.user.id },
+      });
+      if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller profile not found" });
+      await ctx.prisma.sellerProfile.update({
+        where: { userId: ctx.user.id },
+        data: { bankAccount: input.bankAccount },
+      });
+      return { success: true };
+    }),
+
+  requestPayout: protectedProcedure
+    .input(z.object({ amount: z.number().positive(), notes: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const seller = await ctx.prisma.sellerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { id: true, pendingBalance: true, bankAccount: true, storeName: true },
+      });
+      if (!seller) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!seller.bankAccount) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Please add a bank account before requesting a payout" });
+      }
+      if (input.amount > Number(seller.pendingBalance)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Amount exceeds your pending balance" });
+      }
+
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PAYOUT_REQUESTED",
+          entityType: "SellerProfile",
+          entityId: seller.id,
+          newValues: { amount: input.amount, notes: input.notes, storeName: seller.storeName, bankAccount: seller.bankAccount },
+        },
+      });
+
+      return { success: true };
+    }),
 });
