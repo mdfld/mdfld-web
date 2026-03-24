@@ -76,15 +76,18 @@ export default function OrganizationListingsLayout() {
   const rowsPerPage = 10;
 
   // Fetch seller profile
-  const { data: sellerProfileData } =
-    trpc.organization.getSellerProfile.useQuery(
-      {
-        organizationId: activeOrganization?.id || "",
-      },
-      {
-        enabled: !!activeOrganization?.id,
-      },
-    );
+  const {
+    data: sellerProfileData,
+    isLoading: isSellerProfileLoading,
+    isError: isSellerProfileError,
+  } = trpc.organization.getSellerProfile.useQuery(
+    {
+      organizationId: activeOrganization?.id || "",
+    },
+    {
+      enabled: !!activeOrganization?.id,
+    },
+  );
 
   // Fetch products
   const {
@@ -162,17 +165,29 @@ export default function OrganizationListingsLayout() {
             Manage your product inventory
           </p>
         </div>
-        <Button
-          color="primary"
-          variant="flat"
-          size="sm"
-          startContent={
-            <Icon icon="solar:add-circle-linear" className="w-4 h-4" />
-          }
-          onPress={handleCreateProduct}
-        >
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="flat"
+            size="sm"
+            startContent={
+              <Icon icon="solar:upload-outline" className="w-4 h-4" />
+            }
+            onPress={() => router.push("/dashboard/organization/import")}
+          >
+            Import
+          </Button>
+          <Button
+            color="primary"
+            variant="flat"
+            size="sm"
+            startContent={
+              <Icon icon="solar:add-circle-linear" className="w-4 h-4" />
+            }
+            onPress={handleCreateProduct}
+          >
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -416,7 +431,16 @@ export default function OrganizationListingsLayout() {
         <ModalContent>
           {() => (
             <ModalBody className="p-0">
-              {sellerProfileData ? (
+              {isSellerProfileLoading ? (
+                <div className="flex items-center justify-center h-96">
+                  <Spinner size="lg" />
+                </div>
+              ) : isSellerProfileError || !sellerProfileData ? (
+                <div className="flex flex-col items-center justify-center h-96 gap-4">
+                  <p className="text-default-500">Failed to load store profile. Please refresh and try again.</p>
+                  <Button onPress={() => setIsCreateModalOpen(false)}>Close</Button>
+                </div>
+              ) : (
                 <ProductCreation
                   sellerProfileId={sellerProfileData.id}
                   organizationId={activeOrganization?.id || ""}
@@ -426,10 +450,6 @@ export default function OrganizationListingsLayout() {
                   }}
                   onClose={() => setIsCreateModalOpen(false)}
                 />
-              ) : (
-                <div className="flex items-center justify-center h-96">
-                  <Spinner size="lg" />
-                </div>
               )}
             </ModalBody>
           )}

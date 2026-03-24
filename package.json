@@ -6,7 +6,9 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@daveyplate/better-auth-ui": "^3.2.9",
@@ -29,6 +31,7 @@
     "@noble/ciphers": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@noble/post-quantum": "^0.5.2",
+    "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/client": "^6.19.0",
     "@react-aria/ssr": "^3.9.10",
     "@react-aria/visually-hidden": "^3.8.28",
@@ -83,6 +86,7 @@
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
+    "@vitest/coverage-v8": "^4.1.1",
     "eslint": "^9.39.1",
     "eslint-config-next": "15.3.4",
     "eslint-config-prettier": "^9.1.0",
@@ -98,7 +102,9 @@
     "prettier": "^3.6.2",
     "tailwind-variants": "^3.1.1",
     "tailwindcss": "^4.1.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.1"
   },
   "overrides": {
     "@heroui/system": "^2.4.23"

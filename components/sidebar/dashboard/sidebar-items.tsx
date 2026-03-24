@@ -123,6 +123,12 @@ export const sectionItems: SidebarItem[] = [
 				icon: "solar:widget-2-outline",
 			},
 			{
+				key: "import",
+				href: "/dashboard/organization/import",
+				icon: "solar:upload-outline",
+				title: "Import",
+			},
+			{
 				key: "org-orders",
 				href: "/dashboard/organization/orders",
 				icon: "solar:bag-smile-outline",
