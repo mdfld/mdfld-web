@@ -218,12 +218,23 @@ model SellerProfile {
   accountAge              Int       @default(0) // days since account creation
   verificationLevel       Int       @default(0) // 0-5 scale
 
+  // Shopify OAuth
+  shopifyAccessToken    String?
+  shopifyShopDomain     String?
+  shopifyTokenExpiresAt DateTime?
+
+  // eBay OAuth
+  ebayAccessToken       String?
+  ebayRefreshToken      String?
+  ebayTokenExpiresAt    DateTime?
+
   user         User?         @relation(fields: [userId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
   products     Product[]
   orders       Order[]
   reviews      Review[]
   fraudAlerts  FraudAlert[]
+  importSessions ImportSession[]
 
   @@map("seller_profile")
 }
@@ -306,6 +317,11 @@ model Product {
   variants     ProductVariant[]
   sizeChart    SizeChart?
 
+  @@index([sellerProfileId])
+  @@index([organizationId])
+  @@index([isActive])
+  @@index([category])
+  @@index([createdAt])
   @@map("product")
 }
 
@@ -402,6 +418,9 @@ model Order {
   transactions Transaction[]
   fraudAlerts  FraudAlert[]
 
+  @@index([buyerProfileId])
+  @@index([sellerProfileId])
+  @@index([createdAt])
   @@map("order")
 }
 
@@ -618,6 +637,8 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([isRead])
   @@map("notification")
 }
 
@@ -989,6 +1010,20 @@ enum PlayerVersion {
   REPLICA
   STADIUM
   MATCH
+}
+
+model ImportSession {
+  id        String   @id @default(cuid())
+  sellerId  String
+  platform  String
+  rows      Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId])
+  @@map("import_session")
 }
 
 // Organization Messaging Models
