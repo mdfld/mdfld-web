@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -16,7 +17,7 @@ type Platform = {
   key: string;
   name: string;
   type: "api" | "guide";
-  icon: React.ReactNode;
+  icon: ReactNode;
   guideSteps?: string[];
   connectHref?: string;
 };

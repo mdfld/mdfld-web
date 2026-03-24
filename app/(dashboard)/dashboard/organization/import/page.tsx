@@ -35,6 +35,7 @@ export default function ImportPage() {
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [importedCount, setImportedCount] = useState(0);
   const [sessionLoading, setSessionLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sessionPending && !session) router.push("/auth/login");
@@ -60,7 +61,8 @@ export default function ImportPage() {
       })
       .catch(console.error)
       .finally(() => setSessionLoading(false));
-  }, [searchParams, stage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   if (typeof window === "undefined" || sessionPending || orgPending) {
     return (
@@ -126,22 +128,31 @@ export default function ImportPage() {
     setRows([]);
     setSessionId(undefined);
     setStage("landing");
+    setSessionLoading(false);
+    setUploadError(null);
     router.replace("/dashboard/organization/import");
   };
 
   const handleCsvFile = (file: File) => {
+    setUploadError(null);
+    setSessionLoading(true);
     const formData = new FormData();
     formData.append("file", file);
-    setSessionLoading(true);
     fetch("/api/products/bulk-import/parse", { method: "POST", body: formData })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.rows) {
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setUploadError(data.error ?? "Failed to parse file.");
+          return;
+        }
+        if (data.rows?.length > 0) {
           setRows(data.rows as ImportRow[]);
           setStage("review");
+        } else {
+          setUploadError("No products found in this file.");
         }
       })
-      .catch(console.error)
+      .catch(() => setUploadError("Something went wrong. Please try again."))
       .finally(() => setSessionLoading(false));
   };
 
@@ -167,6 +178,9 @@ export default function ImportPage() {
               <ImportSocialTrack />
             </div>
             <ImportCsvDropZone onParsed={handleCsvParsed} />
+            {uploadError && (
+              <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
+            )}
           </>
         )}
 

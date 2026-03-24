@@ -62,6 +62,8 @@ export default function ImportCsvDropZone({ onParsed }: Props) {
 
   return (
     <div
+      role="region"
+      aria-label="CSV file drop zone"
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}

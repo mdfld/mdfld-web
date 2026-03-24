@@ -39,7 +39,7 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
   const [error, setError] = useState<string | null>(null);
 
   const categories = useMemo(
-    () => [...new Set(rows.map((r) => r.category).filter(Boolean))],
+    () => [...new Set(rows.map((r) => r.category).filter((c): c is NonNullable<typeof c> => c !== null))],
     [rows]
   );
 
@@ -60,21 +60,30 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
   };
 
   const toggleAll = () => {
-    if (selected.size === rows.filter((r) => r.status !== "skip").length) {
-      setSelected(new Set());
+    const actionable = filtered.filter((r) => r.status !== "skip");
+    if (actionable.every((r) => selected.has(r.id))) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        actionable.forEach((r) => next.delete(r.id));
+        return next;
+      });
     } else {
-      setSelected(new Set(rows.filter((r) => r.status !== "skip").map((r) => r.id)));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        actionable.forEach((r) => next.add(r.id));
+        return next;
+      });
     }
   };
 
+  const readyCount = [...selected].filter((id) => {
+    const r = rows.find((row) => row.id === id);
+    return r && (r.status === "ready" || (r.status === "fix_size" && sizeFixMap[id]));
+  }).length;
+
   const canConfirm = useMemo(() => {
-    return [...selected].some((id) => {
-      const row = rows.find((r) => r.id === id);
-      if (!row) return false;
-      if (row.status === "fix_size") return !!sizeFixMap[id];
-      return row.status === "ready";
-    });
-  }, [selected, rows, sizeFixMap]);
+    return readyCount > 0;
+  }, [readyCount]);
 
   const handleConfirm = async () => {
     setError(null);
@@ -111,11 +120,6 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
     }
   };
 
-  const readyCount = [...selected].filter((id) => {
-    const r = rows.find((row) => row.id === id);
-    return r && (r.status === "ready" || (r.status === "fix_size" && sizeFixMap[id]));
-  }).length;
-
   const fixCount = rows.filter((r) => r.status === "fix_size").length;
   const skipCount = rows.filter((r) => r.status === "skip").length;
 
@@ -139,7 +143,7 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
             selectedKeys={categoryFilter ? [categoryFilter] : []}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
-            {(categories as string[]).map((cat) => (
+            {categories.map((cat) => (
               <SelectItem key={cat}>{cat}</SelectItem>
             ))}
           </Select>
@@ -157,12 +161,17 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
       <div className="border border-divider rounded-xl overflow-hidden mb-4">
         {/* Select all header */}
         <div className="flex items-center gap-3 px-4 py-3 bg-content2 border-b border-divider">
-          <Checkbox
-            isSelected={selected.size === rows.filter((r) => r.status !== "skip").length}
-            isIndeterminate={selected.size > 0 && selected.size < rows.filter((r) => r.status !== "skip").length}
-            onValueChange={toggleAll}
-            size="sm"
-          />
+          {(() => {
+            const actionableFiltered = filtered.filter((r) => r.status !== "skip");
+            return (
+              <Checkbox
+                isSelected={actionableFiltered.length > 0 && actionableFiltered.every((r) => selected.has(r.id))}
+                isIndeterminate={actionableFiltered.some((r) => selected.has(r.id)) && !actionableFiltered.every((r) => selected.has(r.id))}
+                onValueChange={toggleAll}
+                size="sm"
+              />
+            );
+          })()}
           <span className="text-xs text-default-500">
             {selected.size} of {rows.length} selected
           </span>
@@ -187,7 +196,18 @@ export default function ImportReviewTable({ rows, sessionId, onConfirmed, onBack
                   size="sm"
                 />
                 {row.sourceThumbnail ? (
-                  <img src={row.sourceThumbnail} alt="" className="w-9 h-9 rounded object-cover flex-shrink-0" />
+                  <>
+                    <img
+                      src={row.sourceThumbnail}
+                      alt=""
+                      className="w-9 h-9 rounded object-cover flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        (e.target as HTMLImageElement).nextElementSibling?.removeAttribute("hidden");
+                      }}
+                    />
+                    <div className="w-9 h-9 rounded bg-content2 flex-shrink-0" hidden />
+                  </>
                 ) : (
                   <div className="w-9 h-9 rounded bg-content2 flex-shrink-0" />
                 )}

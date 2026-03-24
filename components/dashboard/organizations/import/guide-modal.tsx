@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ChangeEvent } from "react";
 import {
   Modal,
   ModalContent,
@@ -22,7 +22,7 @@ interface GuideModalProps {
 export default function GuideModal({ isOpen, onClose, onUpload, platform, steps }: GuideModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       onUpload(file);
