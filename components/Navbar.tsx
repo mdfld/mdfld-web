@@ -4,6 +4,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Heart, ShoppingBag, Search, X, Menu, ChevronRight, Minus, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc-client';
@@ -428,8 +429,8 @@ export default function MainNavbar() {
           <div className={`nb-glow${scrolled ? ' active' : ''}`} />
 
           {/* LOGO */}
-          <Link href="/" className="nb-logo" style={{ zIndex: 2 }}>
-            mdfld<span className="dot">.</span>
+          <Link href="/" style={{ zIndex: 2, display: 'flex', alignItems: 'center' }}>
+            <Image src="https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjlsYla8wKE2TjwSU8x3apY10zR5NV9ighPDtr" alt="mdfld" width={90} height={24} style={{ objectFit: 'contain' }} />
           </Link>
 
           {/* NAV LINKS — desktop */}
@@ -549,8 +550,8 @@ export default function MainNavbar() {
         <div className="mob-grid" />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'clamp(24px,6vw,40px)', paddingTop: 'max(clamp(24px,6vw,40px),env(safe-area-inset-top,24px))', paddingBottom: 'max(clamp(24px,6vw,40px),env(safe-area-inset-bottom,24px))', position: 'relative', zIndex: 2, minHeight: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(32px,8vh,56px)' }}>
-            <Link href="/" className="nb-logo" style={{ fontSize: 24 }} onClick={() => setMobileOpen(false)}>
-              mdfld<span className="dot">.</span>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center' }} onClick={() => setMobileOpen(false)}>
+              <Image src="https://n4ctyckve4.ufs.sh/f/oNMWZPwVRgqjlsYla8wKE2TjwSU8x3apY10zR5NV9ighPDtr" alt="mdfld" width={80} height={20} style={{ objectFit: 'contain' }} />
             </Link>
             <button className="nb-icon" onClick={() => setMobileOpen(false)} style={{ width: 44, height: 44 }}>
               <X size={22} />
