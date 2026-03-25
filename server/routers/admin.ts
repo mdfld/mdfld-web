@@ -214,6 +214,29 @@ export const adminRouter = createTRPCRouter({
       return { users, nextCursor };
     }),
 
+  updateUserRole: adminProcedure
+    .input(z.object({
+      userId: z.string(),
+      role: z.enum(["SUPER_ADMIN", "ADMIN", "SELLER", "BUYER"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.update({
+        where: { id: input.userId },
+        data: { role: input.role as any },
+        select: { id: true, email: true, role: true },
+      });
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "USER_ROLE_UPDATED",
+          entityType: "User",
+          entityId: input.userId,
+          newValues: { role: input.role },
+        },
+      });
+      return user;
+    }),
+
   listProducts: adminProcedure
     .input(
       z.object({
