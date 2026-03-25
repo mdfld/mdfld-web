@@ -70,7 +70,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending verification email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <no-reply@mdfld.co>",
+          from: "Midfield Co <onboarding@resend.dev>",
           to: user.email,
           subject: "Welcome aboard! | Verify your email address",
           html: `
