@@ -1391,7 +1391,7 @@ export const organizationRouter = createTRPCRouter({
     if (!seller) return null;
 
     const transactions = await ctx.prisma.transaction.findMany({
-      where: { userId: ctx.user.id, type: { in: ["PAYOUT", "SALE"] } },
+      where: { userId: ctx.user.id, type: { in: ["PAYOUT", "PURCHASE"] } },
       orderBy: { createdAt: "desc" },
       take: 20,
       select: { id: true, type: true, amount: true, status: true, createdAt: true, netAmount: true },
