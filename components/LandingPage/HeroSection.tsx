@@ -2,45 +2,51 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ShoppingBag } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const CATEGORIES = [
   {
     id: '01',
-    title: 'OUTERWEAR',
-    subtitle: 'Engineered for the elements.',
-    price: 'From $450',
-    img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
-    color: '#111111'
+    title: 'KITS',
+    subtitle: 'Match-worn styles for every club.',
+    price: 'From $45',
+    img: '/categories/kits.jpeg',
+    color: '#111111',
+    href: '/shop?category=JERSEYS',
   },
   {
     id: '02',
-    title: 'FOOTWEAR',
-    subtitle: 'Tactical mobility.',
-    price: 'From $220',
-    img: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=1200&auto=format&fit=crop',
-    color: '#0a0a0a'
+    title: 'BOOTS',
+    subtitle: 'Elite performance on the pitch.',
+    price: 'From $120',
+    img: '/categories/boots.jpg',
+    color: '#0a0a0a',
+    href: '/shop?category=BOOTS',
   },
   {
     id: '03',
     title: 'ACCESSORIES',
-    subtitle: 'Utilitarian precision.',
-    price: 'From $85',
-    img: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?q=80&w=1200&auto=format&fit=crop',
-    color: '#161616'
+    subtitle: 'Complete your kit.',
+    price: 'From $25',
+    img: '/categories/accessories.jpg',
+    color: '#161616',
+    href: '/shop?category=ACCESSORIES',
   },
   {
     id: '04',
-    title: 'ARCHIVE',
-    subtitle: 'Rare & unreleased.',
-    price: 'Vault Access',
-    img: 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?q=80&w=1200&auto=format&fit=crop',
-    color: '#050505'
-  }
+    title: 'GOALKEEPER',
+    subtitle: 'Gear built for the last line.',
+    price: 'From $35',
+    img: '/categories/goalkeeper.webp',
+    color: '#050505',
+    href: '/shop?category=GOALKEEPER_GLOVES',
+  },
 ];
 
 // ─── Desktop: original accordion ───────────────────────────────────────────
 function DesktopView() {
   const [hovered, setHovered] = useState<number | null>(null);
+  const router = useRouter();
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: '#000', overflow: 'hidden' }}>
@@ -132,7 +138,7 @@ function DesktopView() {
                       {cat.subtitle}
                     </p>
                     <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-                      <button className="vault-btn">
+                      <button className="vault-btn" onClick={() => router.push(cat.href)}>
                         <ShoppingBag size={18} strokeWidth={2.5} />
                         Explore
                       </button>
@@ -154,6 +160,7 @@ function DesktopView() {
 // ─── Mobile: vertical tap-to-expand accordion ──────────────────────────────
 function MobileView() {
   const [expanded, setExpanded] = useState<number | null>(0);
+  const router = useRouter();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000' }}>
@@ -246,14 +253,17 @@ function MobileView() {
                     {cat.subtitle}
                   </p>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
-                    <button style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 10,
-                      background: '#fff', color: '#000',
-                      padding: '14px 28px', borderRadius: 4,
-                      fontFamily: "'Manrope', sans-serif",
-                      fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 13,
-                      border: 'none', cursor: 'pointer',
-                    }}>
+                    <button
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 10,
+                        background: '#fff', color: '#000',
+                        padding: '14px 28px', borderRadius: 4,
+                        fontFamily: "'Manrope', sans-serif",
+                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 13,
+                        border: 'none', cursor: 'pointer',
+                      }}
+                      onClick={() => router.push(cat.href)}
+                    >
                       <ShoppingBag size={15} strokeWidth={2.5} />
                       Explore
                     </button>
