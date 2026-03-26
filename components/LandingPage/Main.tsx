@@ -99,7 +99,7 @@ export default function App() {
       <PromoBanner />
       {/* <ProAthletes /> */}
       {/* <RecentDrops /> */}
-      <Testimonials />
+      {/* <Testimonials /> */}
       <InstagramFeed />
     </div>
   );
