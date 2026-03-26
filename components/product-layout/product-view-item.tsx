@@ -448,6 +448,16 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
                 <Icon icon="solar:heart-linear" width={24} />
               )}
             </Button>
+            <Button
+              isIconOnly
+              className="text-default-400"
+              size="lg"
+              variant="flat"
+              title="Report this listing"
+              onPress={() => window.open(`/contact?subject=suspicious-listing&id=${props.id}`, '_blank')}
+            >
+              <Icon icon="solar:flag-linear" width={22} />
+            </Button>
           </div>
         </div>
       </div>

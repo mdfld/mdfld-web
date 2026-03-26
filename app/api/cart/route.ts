@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [], itemCount: 0, subtotal: 0 });
     }
 
-    const cart = await prisma.cart.findUnique({
+    const cart = await (prisma as any).cart.findUnique({
       where: { userId: session.user.id },
       include: {
         items: {
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [], itemCount: 0, subtotal: 0 });
     }
 
-    const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = cart.items.reduce((sum, item) => {
+    const itemCount = cart.items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    const subtotal = cart.items.reduce((sum: number, item: any) => {
       const price = item.variant?.price ?? item.product.price;
       return sum + Number(price) * item.quantity;
     }, 0);

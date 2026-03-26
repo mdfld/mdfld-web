@@ -2,10 +2,10 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 
 const STATS = [
-  { value: "50K+", label: "Active Players" },
+  { value: "50K+", label: "Amount of Users" },
   { value: "150+", label: "Countries Served" },
-  { value: "10K+", label: "Verified Products" },
-  { value: "98%", label: "Authenticity Rate" },
+  { value: "10K+", label: "All Products" },
+  { value: "98%", label: "CAPS" },
 ];
 
 const VALUES = [
@@ -13,13 +13,13 @@ const VALUES = [
     icon: "solar:shield-check-bold-duotone",
     title: "Authenticity First",
     description:
-      "Every product listed on mdfld goes through a rigorous multi-point verification process. No fakes. No compromises.",
+      "Every product listed on MDFLD goes through a rigorous multi-point verification process. No fakes. No compromises.",
   },
   {
     icon: "solar:users-group-rounded-bold-duotone",
     title: "Built for the Culture",
     description:
-      "From grassroots players to elite pros — mdfld exists to serve football culture at every level, globally.",
+      "From grassroots players to elite pros — MDFLD exists to serve football culture at every level, globally.",
   },
   {
     icon: "solar:bolt-bold-duotone",
@@ -29,17 +29,17 @@ const VALUES = [
   },
   {
     icon: "solar:hand-shake-bold-duotone",
-    title: "Fair for Sellers",
+    title: "Fair for EVERYONE",
     description:
       "We give serious sellers the tools to reach a global audience — with transparent fees and no hidden costs.",
   },
 ];
 
 const TEAM = [
-  { initials: "AK", name: "Aman Kaushik", role: "Founder & CEO" },
-  { initials: "RS", name: "Rahul Singh", role: "Head of Product" },
-  { initials: "ZA", name: "Zara Ahmed", role: "Head of Operations" },
-  { initials: "MO", name: "Marcus Osei", role: "Lead Engineer" },
+  { initials: "AO", name: "Ayoola Morakinyo", role: "Founder & CEO" },
+  { initials: "KB", name: "Kayla Bloom", role: "Co-Founder & CMO" },
+  { initials: "RW", name: "Ryan Walden", role: "Board Advisor" },
+  { initials: "AR", name: "Aman Rathore", role: "Lead Engineer" },
 ];
 
 export default function AboutPage() {
@@ -112,7 +112,7 @@ export default function AboutPage() {
               marginBottom: 20,
             }}
           >
-            About mdfld
+            About MDFLD
           </p>
           <h1
             className="ab-condensed"
@@ -138,7 +138,7 @@ export default function AboutPage() {
               fontWeight: 300,
             }}
           >
-            mdfld is the global marketplace for premium football gear —
+            MDFLD is the global marketplace for premium football gear —
             connecting serious players, verified sellers, and collectors across
             150+ countries. Every product. Authenticated.
           </p>
@@ -227,13 +227,13 @@ export default function AboutPage() {
               <br />WITHOUT COMPROMISE
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", fontWeight: 300 }}>
-              We built mdfld because football culture deserves better. Better
+              We built MDFLD because football culture deserves better. Better
               access, better authentication, better prices — without sacrificing
               the premium feel that serious players demand.
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", fontWeight: 300, marginTop: 16 }}>
               Every listing is seller-verified and buyer-protected. From match
-              boots to training kits, if it's on mdfld, it's real.
+              boots to training kits, if it's on MDFLD, it's real.
             </p>
           </div>
 
@@ -271,7 +271,7 @@ export default function AboutPage() {
                 zIndex: 1,
               }}
             >
-              mdfld
+              MDFLD
             </p>
             <div
               style={{
@@ -360,7 +360,7 @@ export default function AboutPage() {
             className="ab-condensed ab-accent"
             style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.35em", textTransform: "uppercase", marginBottom: 8 }}
           >
-            Behind mdfld
+            Behind MDFLD
           </p>
           <h2
             className="ab-condensed"

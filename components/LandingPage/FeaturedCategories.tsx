@@ -334,8 +334,8 @@ export default function FeaturedCategories() {
           </div>
 
           {/* View All Link */}
-          <a 
-            href="#"
+          <a
+            href="/shop"
             onMouseEnter={() => setViewAllHovered(true)}
             onMouseLeave={() => setViewAllHovered(false)}
             style={{

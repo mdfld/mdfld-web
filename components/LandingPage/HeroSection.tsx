@@ -6,34 +6,34 @@ import { ArrowRight, ShoppingBag } from 'lucide-react';
 const CATEGORIES = [
   {
     id: '01',
-    title: 'OUTERWEAR',
-    subtitle: 'Engineered for the elements.',
-    price: 'From $450',
-    img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1200&auto=format&fit=crop',
+    title: 'KITS',
+    subtitle: 'Rep your club.',
+    price: 'From $65',
+    img: '/hero-kits.jpeg',
     color: '#111111'
   },
   {
     id: '02',
-    title: 'FOOTWEAR',
-    subtitle: 'Tactical mobility.',
-    price: 'From $220',
-    img: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=1200&auto=format&fit=crop',
+    title: 'BOOTS',
+    subtitle: 'Built for the pitch.',
+    price: 'From $120',
+    img: '/hero-boots.jpg',
     color: '#0a0a0a'
   },
   {
     id: '03',
     title: 'ACCESSORIES',
-    subtitle: 'Utilitarian precision.',
-    price: 'From $85',
-    img: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?q=80&w=1200&auto=format&fit=crop',
+    subtitle: 'Gear up completely.',
+    price: 'From $25',
+    img: '/hero-accessories.jpg',
     color: '#161616'
   },
   {
     id: '04',
-    title: 'ARCHIVE',
-    subtitle: 'Rare & unreleased.',
-    price: 'Vault Access',
-    img: 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?q=80&w=1200&auto=format&fit=crop',
+    title: 'GOALKEEPER',
+    subtitle: 'Own the box.',
+    price: 'From $85',
+    img: '/hero-goalkeeper.webp',
     color: '#050505'
   }
 ];

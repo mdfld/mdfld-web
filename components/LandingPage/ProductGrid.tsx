@@ -24,7 +24,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
     },
   });
 
-  const toggleWishlist = trpc.user.toggleWishlist?.useMutation?.({
+  const toggleWishlist = (trpc.user as any).toggleWishlist?.useMutation?.({
     onSuccess: () => setLiked(l => !l),
   });
 

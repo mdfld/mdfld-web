@@ -187,14 +187,7 @@ export default function EditorialRosterFeed() {
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex(index)} // For mobile taps
                 >
-                  {/* Striker line for active state */}
-                  <motion.div 
-                    className="roster-strike"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: isActive ? 1 : 0 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ width: '80px' }}
-                  />
+                  {/* Striker line removed */}
 
                   {/* Number */}
                   <span style={{ 
@@ -227,17 +220,30 @@ export default function EditorialRosterFeed() {
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
               style={{ marginTop: 64 }}
             >
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 12,
-                background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
-              >
-                <Instagram size={16} /> View Instagram
-              </a>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <a href="https://www.instagram.com/mdfldmarketplace/" target="_blank" rel="noopener noreferrer" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 12,
+                  background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+                >
+                  <Instagram size={16} /> Follow on Instagram
+                </a>
+                <a href="#" target="_blank" rel="noopener noreferrer" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 12,
+                  background: 'transparent', color: '#00d4b6', border: '1px solid rgba(0,212,182,0.3)',
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,212,182,0.1)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  MDFLD FC — Join Discord
+                </a>
+              </div>
             </motion.div>
           </div>
 
@@ -289,7 +295,7 @@ export default function EditorialRosterFeed() {
                       </div>
                     </div>
                     
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    <a href="https://www.instagram.com/mdfldmarketplace/" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                       Open Post <ArrowUpRight size={14} color={ACCENT} />
                     </a>
                   </div>
