@@ -196,7 +196,7 @@ export default function ContactPage() {
             >
               <Icon icon="solar:clock-circle-bold-duotone" width={24} style={{ color: "#00d4b6", marginBottom: 14, display: "block" }} />
               <p className="ct-condensed" style={{ fontSize: 14, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase", color: "#fff", marginBottom: 6 }}>Response Time</p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>Within 24 hours,<br />Mon–Fri 9am–6pm GMT</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>Within 24 hours</p>
             </div>
             <div
               style={{
@@ -207,7 +207,7 @@ export default function ContactPage() {
             >
               <Icon icon="solar:map-point-bold-duotone" width={24} style={{ color: "#00d4b6", marginBottom: 14, display: "block" }} />
               <p className="ct-condensed" style={{ fontSize: 14, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase", color: "#fff", marginBottom: 6 }}>Location</p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>London, UK<br />Serving 150+ Countries</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>Atlanta, GA<br />Serving 150+ Countries</p>
             </div>
           </div>
         </div>
