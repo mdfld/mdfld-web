@@ -469,6 +469,7 @@ export const productRouter = createTRPCRouter({
         minPrice: z.number().optional(),
         maxPrice: z.number().optional(),
         tags: z.array(z.string()).optional(),
+        featured: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -477,6 +478,10 @@ export const productRouter = createTRPCRouter({
       const where: any = {
         isActive: true,
       };
+
+      if (input.featured !== undefined) {
+        where.featured = input.featured;
+      }
 
       if (input.query) {
         where.OR = [

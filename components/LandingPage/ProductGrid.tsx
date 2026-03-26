@@ -141,10 +141,10 @@ function SkeletonCard() {
 export default function EditorialGrid() {
   const [filter, setFilter] = useState('All');
 
-  // ── Fetch real products from backend ──────────────────────
+  // ── Fetch featured products from backend ──────────────────────
   const { data, isLoading } = trpc.product.search.useQuery({
     limit: 12,
-    minPrice: 0,
+    featured: true,
   });
 
   const allProducts = data?.items ?? [];
@@ -196,7 +196,7 @@ export default function EditorialGrid() {
           >
             <div style={{ width: 48, height: 2, background: ACCENT }} />
             <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 13, fontWeight: 800, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              Curated For You
+              Featured Drops
             </span>
           </motion.div>
 
@@ -204,7 +204,7 @@ export default function EditorialGrid() {
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
             style={{ fontFamily: "'Manrope', sans-serif", fontSize: 'clamp(48px, 8vw, 100px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', textAlign: 'left', margin: 0, lineHeight: 1.05 }}
           >
-            Latest <span style={{ color: ACCENT }}>Drops</span>
+            Featured <span style={{ color: ACCENT }}>Drops</span>
           </motion.h2>
 
           {/* Filter Tabs */}
