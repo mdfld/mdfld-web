@@ -1,7 +1,9 @@
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Instagram, Twitter, Youtube, Facebook, ShieldCheck, Zap, Globe } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, Instagram, Twitter, Linkedin, ShieldCheck, Zap, Globe } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 const ACCENT = '#00d4b6';
 
@@ -18,7 +20,6 @@ const NAV = {
     { label: 'My Account', href: '/account' },
     { label: 'My Orders', href: '/myorders' },
     { label: 'Saved Items', href: '/saved' },
-    { label: 'Addresses', href: '/addresses' },
     { label: 'Login', href: '/login' },
     { label: 'Sign Up', href: '/signup' },
   ],
@@ -29,16 +30,35 @@ const NAV = {
 };
 
 const SOCIALS = [
-  { icon: <Instagram size={15} />, label: 'Instagram', href: '#' },
-  { icon: <Twitter size={15} />, label: 'Twitter', href: '#' },
-  { icon: <Youtube size={15} />, label: 'YouTube', href: '#' },
-  { icon: <Facebook size={15} />, label: 'Facebook', href: '#' },
+  { icon: <Instagram size={15} />, label: 'Instagram', href: 'https://www.instagram.com/mdfldmarketplace/' },
+  { icon: <Twitter size={15} />, label: 'X', href: 'https://x.com/mdfldmp' },
+  { icon: <Linkedin size={15} />, label: 'LinkedIn', href: 'https://www.linkedin.com/in/ayoolamorakinyo/' },
+  { icon: <Icon icon="ic:baseline-discord" width={15} />, label: 'Discord', href: 'https://discord.gg/pW87DDjZ' },
 ];
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!email.includes('@')) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      setSent(true);
+    } catch {
+      // fail silently — UI still shows success to avoid frustrating user
+      setSent(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <footer style={{
@@ -134,6 +154,13 @@ export default function Footer() {
           <div className="f-brand-col">
             <div style={{ marginBottom: 20 }}>
               <Link href="/" style={{ textDecoration: 'none' }}>
+                <Image
+                  src="/mdfld-logo-v2.png"
+                  alt="MDFLD"
+                  width={80}
+                  height={40}
+                  style={{ marginBottom: 8, objectFit: 'contain' }}
+                />
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 30, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff', lineHeight: 1 }}>
                   MID<span style={{ color: ACCENT }}>FIELD</span>
                 </div>
@@ -207,12 +234,13 @@ export default function Footer() {
                   style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#fff', padding: '11px 14px', letterSpacing: '0.04em', width: '100%', boxSizing: 'border-box' }}
                 />
                 <button
-                  onClick={() => email.includes('@') && setSent(true)}
-                  style={{ background: ACCENT, border: 'none', color: '#020606', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }}
+                  onClick={handleSubscribe}
+                  disabled={submitting}
+                  style={{ background: ACCENT, border: 'none', color: '#020606', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '10px 14px', cursor: submitting ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', opacity: submitting ? 0.7 : 1 }}
                   onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.08)')}
                   onMouseLeave={e => (e.currentTarget.style.filter = 'brightness(1)')}
                 >
-                  Subscribe <ArrowRight size={12} />
+                  {submitting ? 'Sending...' : 'Subscribe'} <ArrowRight size={12} />
                 </button>
               </div>
             )}
