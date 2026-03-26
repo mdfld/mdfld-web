@@ -190,7 +190,7 @@ export default function EarningsPage() {
 							</tr>
 						</thead>
 						<tbody>
-							{data.transactions.map(tx => (
+							{(data.transactions as any[]).map(tx => (
 								<tr key={tx.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
 									<td style={{ padding: "12px", fontSize: 13, color: "#64748b" }}>{new Date(tx.createdAt).toLocaleDateString()}</td>
 									<td style={{ padding: "12px" }}>
