@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 const ACCENT = "#00d4b6";
 
@@ -17,6 +17,11 @@ const BRANDS = [
 
 export default function BrandsPage() {
   const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const filtered = BRANDS.filter(b =>
+    b.name.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <div style={{ background: "#020606", minHeight: "100vh", paddingTop: 120, paddingBottom: 80 }}>
@@ -29,23 +34,31 @@ export default function BrandsPage() {
       `}</style>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 clamp(24px, 5vw, 64px)" }}>
-
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 80 }}>
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 48 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
             <div style={{ width: 48, height: 2, background: ACCENT }} />
             <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 700, color: ACCENT, letterSpacing: "0.2em", textTransform: "uppercase" }}>
               All Brands
             </span>
           </div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "clamp(48px, 8vw, 96px)", fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.02em", margin: 0, lineHeight: 0.95 }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "clamp(48px, 8vw, 96px)", fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.02em", margin: "0 0 40px 0", lineHeight: 0.95 }}>
             Shop By<br /><span style={{ color: ACCENT }}>Brand</span>
           </h1>
+
+          {/* Search */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", padding: "12px 16px", maxWidth: 400 }}>
+            <Search size={16} color="rgba(255,255,255,0.4)" />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search brands..."
+              style={{ background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: "'Barlow', sans-serif", fontSize: 14, flex: 1 }}
+            />
+          </div>
         </motion.div>
 
-        {/* Brands Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 2 }}>
-          {BRANDS.map((brand, i) => (
+          {filtered.map((brand, i) => (
             <motion.div
               key={brand.name}
               initial={{ opacity: 0, y: 20 }}
@@ -54,12 +67,7 @@ export default function BrandsPage() {
               className="brand-card"
               onClick={() => router.push(`/shop?brand=${encodeURIComponent(brand.slug)}`)}
             >
-              <div style={{
-                width: 64, height: 64, background: "rgba(255,255,255,0.05)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900,
-                color: ACCENT, border: "1px solid rgba(0,212,182,0.2)",
-              }}>
+              <div style={{ width: 64, height: 64, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, color: ACCENT, border: "1px solid rgba(0,212,182,0.2)" }}>
                 {brand.logo}
               </div>
               <div>
