@@ -138,13 +138,6 @@ export default function Footer() {
       {/* Ambient glow */}
       <div style={{ position: 'absolute', top: 0, left: '10%', width: 400, height: 250, background: 'radial-gradient(ellipse, rgba(0,212,182,0.05) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
-      {/* Ghost wordmark */}
-      <div className="f-ghost" style={{
-        position: 'absolute', bottom: 50, right: '-2%',
-        fontSize: 'clamp(80px, 12vw, 160px)', fontWeight: 900, letterSpacing: '-0.06em',
-        color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.025)',
-        textTransform: 'uppercase', lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
-      }}>MIDFIELD</div>
 
       {/* Main body */}
       <div style={{ padding: 'clamp(40px, 5vw, 72px) clamp(16px, 4vw, 48px) 0', position: 'relative', zIndex: 2 }}>
@@ -161,9 +154,6 @@ export default function Footer() {
                   height={40}
                   style={{ marginBottom: 8, objectFit: 'contain' }}
                 />
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 30, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff', lineHeight: 1 }}>
-                  MID<span style={{ color: ACCENT }}>FIELD</span>
-                </div>
               </Link>
               <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginTop: 4 }}>
                 The Apex of Football Culture
