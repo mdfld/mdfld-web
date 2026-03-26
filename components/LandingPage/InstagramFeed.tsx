@@ -13,44 +13,39 @@ interface Post {
   comments: string;
   date: string;
   img: string;
+  href: string;
 }
 
 const POSTS: Post[] = [
   {
     id: '01',
-    title: 'THE PHANTOM DROP',
-    caption: 'The Phantom GX Elite just landed. Blockchain verified. Zero compromise. Shop the link in bio.',
-    likes: '12.4K',
-    comments: '284',
-    date: '2 HOURS AGO',
+    title: 'MDFLD FC',
+    caption: 'Join the MDFLD FC community on Discord. Connect with players, sellers, and fans from around the world.',
+    likes: '—',
+    comments: '—',
+    date: 'JOIN NOW',
     img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=90&auto=format&fit=crop',
+    href: 'https://discord.gg/pW87DDjZ',
   },
   {
     id: '02',
-    title: 'WET PITCH PREDATORS',
-    caption: 'Training in the wet. The Predator grips where others slip. Elite is a standard, not a label.',
-    likes: '9.1K',
-    comments: '193',
-    date: '1 DAY AGO',
+    title: '2025 MDFLD CUP',
+    caption: 'The 2025 MDFLD Cup is coming. Follow us on Instagram to stay updated on fixtures, players, and drops.',
+    likes: '—',
+    comments: '—',
+    date: 'COMING SOON',
     img: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=1200&q=90&auto=format&fit=crop',
+    href: 'https://www.instagram.com/mdfldmarketplace/',
   },
   {
     id: '03',
-    title: '25/26 HOME KITS',
-    caption: 'New season. New kit. Same hunger. 2025/26 home shirts are now live — all clubs, all sizes.',
-    likes: '7.8K',
-    comments: '147',
-    date: '3 DAYS AGO',
+    title: 'FOLLOW US',
+    caption: 'Stay up to date with the latest drops, verified sellers, and MDFLD news. Follow @mdfldmarketplace on Instagram.',
+    likes: '—',
+    comments: '—',
+    date: 'INSTAGRAM',
     img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=90&auto=format&fit=crop',
-  },
-  {
-    id: '04',
-    title: 'MIDFIELD ESSENTIALS',
-    caption: 'Everyday utility meets professional grade. Accessorize your game.',
-    likes: '15.2K',
-    comments: '412',
-    date: '1 WEEK AGO',
-    img: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=1200&q=90&auto=format&fit=crop',
+    href: 'https://www.instagram.com/mdfldmarketplace/',
   },
 ];
 
@@ -145,13 +140,12 @@ export default function EditorialRosterFeed() {
 
       <div style={{ maxWidth: 1600, margin: '0 auto' }}>
 
-        {/* ── HEADER ROW (Matching 'Find Your Position' perfectly) ── */}
+        {/* ── HEADER ROW ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 'clamp(60px, 8vw, 80px)' }}>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}
           >
-            <div style={{ width: 32, height: 1.5, background: `linear-gradient(90deg, ${ACCENT} 0%, transparent 100%)` }} />
             <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 600, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
               On The Pitch
             </span>
@@ -222,12 +216,23 @@ export default function EditorialRosterFeed() {
               );
             })}
 
-            {/* CTA Button under list */}
-            <motion.div 
+            {/* CTA Buttons under list */}
+            <motion.div
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-              style={{ marginTop: 64 }}
+              style={{ marginTop: 64, display: 'flex', gap: 16, flexWrap: 'wrap' }}
             >
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{
+              <a href="https://discord.gg/pW87DDjZ" target="_blank" rel="noopener noreferrer" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 12,
+                background: ACCENT, color: '#020606', border: '1px solid transparent',
+                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+              >
+                Join MDFLD FC
+              </a>
+              <a href="https://www.instagram.com/mdfldmarketplace/" target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 12,
                 background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
                 fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -236,7 +241,7 @@ export default function EditorialRosterFeed() {
               onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
               >
-                <Instagram size={16} /> View Instagram
+                <Instagram size={16} /> Follow Us
               </a>
             </motion.div>
           </div>
@@ -264,7 +269,7 @@ export default function EditorialRosterFeed() {
                 {/* Top Tag */}
                 <div style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)' }}>
                   <Instagram size={14} color="#fff" />
-                  <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.1em' }}>@MIDFIELD.FC</span>
+                  <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.1em' }}>@MDFLDMARKETPLACE</span>
                 </div>
 
                 {/* Bottom Content Tray */}
@@ -289,8 +294,8 @@ export default function EditorialRosterFeed() {
                       </div>
                     </div>
                     
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                      Open Post <ArrowUpRight size={14} color={ACCENT} />
+                    <a href={activePost.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      View <ArrowUpRight size={14} color={ACCENT} />
                     </a>
                   </div>
                 </div>
