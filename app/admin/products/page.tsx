@@ -4,10 +4,15 @@ import { useState } from "react";
 
 export default function AdminProductsPage() {
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+  const utils = trpc.useUtils();
 
   const { data, isLoading } = trpc.admin.listProducts.useQuery({
     isActive: activeFilter,
     limit: 50,
+  });
+
+  const toggleFeatured = trpc.admin.toggleFeatured.useMutation({
+    onSuccess: () => utils.admin.listProducts.invalidate(),
   });
 
   return (
@@ -24,14 +29,11 @@ export default function AdminProductsPage() {
             key={opt.label}
             onClick={() => setActiveFilter(opt.value)}
             style={{
-              padding: "6px 16px",
-              borderRadius: 6,
-              border: "1px solid",
+              padding: "6px 16px", borderRadius: 6, border: "1px solid",
               borderColor: activeFilter === opt.value ? "#00d4b6" : "#ccc",
               background: activeFilter === opt.value ? "#00d4b6" : "white",
               color: activeFilter === opt.value ? "white" : "#333",
-              fontWeight: 600,
-              cursor: "pointer",
+              fontWeight: 600, cursor: "pointer",
             }}
           >
             {opt.label}
@@ -45,7 +47,7 @@ export default function AdminProductsPage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #eee" }}>
-              {["Product", "Store", "Category", "Price", "Inventory", "Orders", "Active"].map((h) => (
+              {["Product", "Store", "Category", "Price", "Inventory", "Orders", "Reports", "Featured", "Active"].map((h) => (
                 <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 13, color: "#666" }}>{h}</th>
               ))}
             </tr>
@@ -69,6 +71,25 @@ export default function AdminProductsPage() {
                 <td style={{ padding: "12px", fontWeight: 600 }}>${Number(product.price).toFixed(2)}</td>
                 <td style={{ padding: "12px", fontSize: 14 }}>{product.inventory}</td>
                 <td style={{ padding: "12px", fontSize: 14 }}>{product._count.orderItems}</td>
+                <td style={{ padding: "12px", fontSize: 14 }}>
+                  <span style={{ color: product.reportCount > 0 ? "#ef4444" : "#999", fontWeight: product.reportCount > 0 ? 700 : 400 }}>
+                    {product.reportCount}
+                  </span>
+                </td>
+                <td style={{ padding: "12px" }}>
+                  <button
+                    onClick={() => toggleFeatured.mutate({ productId: product.id, featured: !product.featured })}
+                    style={{
+                      padding: "4px 12px", borderRadius: 4, border: "1px solid",
+                      borderColor: product.featured ? "#00d4b6" : "#ccc",
+                      background: product.featured ? "rgba(0,212,182,0.1)" : "transparent",
+                      color: product.featured ? "#00d4b6" : "#999",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    {product.featured ? "Featured" : "Set Featured"}
+                  </button>
+                </td>
                 <td style={{ padding: "12px" }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: product.isActive ? "#10b981" : "#ef4444", display: "inline-block" }} />
                 </td>

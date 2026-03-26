@@ -268,6 +268,16 @@ export const adminRouter = createTRPCRouter({
       return { products, nextCursor };
     }),
 
+  toggleFeatured: adminProcedure
+    .input(z.object({ productId: z.string(), featured: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.product.update({
+        where: { id: input.productId },
+        data: { featured: input.featured },
+        select: { id: true, featured: true },
+      });
+    }),
+
   listOrders: adminProcedure
     .input(
       z.object({
