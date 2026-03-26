@@ -7,11 +7,33 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mdfld.co"),
   title: {
     default: siteConfig.name,
     template: `%s - ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  openGraph: {
+    title: "MDFLD — The Football Marketplace",
+    description: "Buy and sell authentic football boots, kits, and gear. Verified. Global.",
+    url: "https://mdfld.co",
+    siteName: "MDFLD",
+    images: [
+      {
+        url: "/mdfld-logo-v2.png",
+        width: 800,
+        height: 400,
+        alt: "MDFLD — The Football Marketplace",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MDFLD — The Football Marketplace",
+    description: "Buy and sell authentic football boots, kits, and gear. Verified. Global.",
+    images: ["/mdfld-logo-v2.png"],
+  },
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
