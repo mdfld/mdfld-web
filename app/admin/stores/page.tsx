@@ -60,7 +60,7 @@ export default function AdminStoresPage() {
 						</tr>
 					</thead>
 					<tbody>
-						{data?.stores.map((org) => (
+						{(data?.stores as any[] | undefined)?.map((org) => (
 							<tr key={org.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
 								<td style={{ padding: "12px" }}>
 									<strong>{org.name}</strong>
