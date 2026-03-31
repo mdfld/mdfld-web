@@ -3,12 +3,16 @@
 import { useSession } from "@/lib/auth-client";
 import { Spinner, Card, CardBody, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import SidebarWrapper from "@/components/sidebar/dashboard/app";
 import { trpc } from "@/lib/trpc-client";
 import { useOrganizationStore } from "@/lib/stores/organization";
 import { Icon } from "@iconify/react";
 import { toast } from "sonner";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +22,9 @@ export default function StripeConnect() {
   const activeOrganization = useOrganizationStore(
     (state) => state.activeOrganization,
   );
+  const { shouldShowTour, markTourSeen } = useOnboarding();
+  const [tourActive, setTourActive] = useState(false);
+  const tour = getTour("connect");
 
   const { data: stripeStatus, isLoading: stripeLoading } =
     trpc.stripe.getAccountStatus.useQuery(
@@ -58,6 +65,15 @@ export default function StripeConnect() {
       router.push("/dashboard");
     }
   }, [activeOrganization, sessionPending, session, router]);
+
+  useEffect(() => {
+    if (session && shouldShowTour("connect")) setTourActive(true);
+  }, [session, shouldShowTour]);
+
+  const handleTourEnd = async () => {
+    setTourActive(false);
+    await markTourSeen("connect");
+  };
 
   if (typeof window === "undefined" || sessionPending || stripeLoading) {
     return (
@@ -110,6 +126,8 @@ export default function StripeConnect() {
       <SidebarWrapper>
         <div className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
+            <div data-onboarding="conversation-list" className="hidden" />
+            <div data-onboarding="response-time" className="hidden" />
             <div className="mb-8">
               <h1 className="text-2xl font-medium mb-2">Stripe Connect</h1>
               <p className="text-default-500">
@@ -296,6 +314,14 @@ export default function StripeConnect() {
           </div>
         </div>
       </SidebarWrapper>
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }
