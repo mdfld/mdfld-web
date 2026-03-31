@@ -16,12 +16,28 @@ import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { useGuestCart } from "@/hooks/use-guest-cart";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [isProcessing, setIsProcessing] = React.useState(false);
   const guestCart = useGuestCart();
+  const { shouldShowTour, markTourSeen, completeStep } = useOnboarding();
+  const [tourActive, setTourActive] = React.useState(false);
+  const tour = getTour("checkout");
+
+  useEffect(() => {
+    if (shouldShowTour("checkout")) setTourActive(true);
+  }, [shouldShowTour]);
+
+  const handleTourEnd = async () => {
+    setTourActive(false);
+    await markTourSeen("checkout");
+  };
 
   // Merge cart mutation
   const mergeCart = trpc.cart.mergeGuestCart.useMutation();
@@ -98,6 +114,10 @@ export default function CheckoutPage() {
       }
 
       const { url } = await response.json();
+
+      // Complete onboarding steps before redirecting
+      await completeStep("understand-auth", "buyer");
+      await completeStep("place-order", "buyer");
 
       // Redirect to Stripe Checkout
       window.location.href = url;
@@ -341,6 +361,14 @@ export default function CheckoutPage() {
           </Card>
         </div>
       </div>
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }
