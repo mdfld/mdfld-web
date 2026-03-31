@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { Toaster } from "sonner";
+import { OnboardingProvider } from "@/contexts/onboarding-context";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -30,7 +31,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
     <TRPCProvider>
       <HeroUIProvider navigate={router.push}>
         <NextThemesProvider {...themeProps}>
-          {children}
+          <OnboardingProvider>
+            {children}
+          </OnboardingProvider>
           <ToastProvider placement="bottom-right" />
           <Toaster
             position="bottom-right"

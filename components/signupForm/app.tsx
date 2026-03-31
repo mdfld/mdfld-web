@@ -14,7 +14,11 @@ const PERKS = [
   "Members-only pricing",
 ];
 
-export default function SignUpFormFrameless() {
+interface SignUpFormFramelessProps {
+  onSuccess?: () => void;
+}
+
+export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessProps = {}) {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -41,6 +45,7 @@ export default function SignUpFormFrameless() {
         {
           onSuccess: () => {
             setSuccess("Account created! Check your email to verify before signing in.");
+            onSuccess?.();
             setTimeout(() => router.push("/auth/login"), 3000);
           },
           onError: (ctx) => {

@@ -16,6 +16,7 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
+  const enabled = process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === "true";
   const { isAuthenticated } = useAuth();
   const [state, setState] = useState<OnboardingState>({ ...EMPTY_ONBOARDING_STATE });
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +67,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     (pageId: string) => !isLoading && isAuthenticated && !state.tours.includes(pageId as any),
     [isLoading, isAuthenticated, state.tours],
   );
+
+  if (!enabled) return <>{children}</>;
 
   return (
     <OnboardingContext.Provider value={{ state, isLoading, completeStep, markTourSeen, shouldShowTour }}>
