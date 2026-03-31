@@ -101,11 +101,13 @@ export function OrganizationProfileContent({
   useEffect(() => {
     if (isOwner && shouldShowTour("org-profile")) {
       setTourActive(true);
-      markTourSeen("org-profile");
     }
-  }, [isOwner, shouldShowTour, markTourSeen]);
+  }, [isOwner, shouldShowTour]);
 
-  const handleTourEnd = () => setTourActive(false);
+  const handleTourEnd = () => {
+    markTourSeen("org-profile");
+    setTourActive(false);
+  };
 
   const formatLocation = () => {
     const parts = [

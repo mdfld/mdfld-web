@@ -15,6 +15,14 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
+const noopValue: OnboardingContextValue = {
+  state: { ...EMPTY_ONBOARDING_STATE },
+  isLoading: false,
+  completeStep: async () => {},
+  markTourSeen: async () => {},
+  shouldShowTour: () => false,
+};
+
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const enabled = process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === "true";
   const { isAuthenticated } = useAuth();
@@ -35,32 +43,32 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const completeStep = useCallback(
     async (id: string, stepType: "buyer" | "seller") => {
-      const array = stepType === "buyer" ? state.buyer : state.seller;
-      if (array.includes(id as any)) return;
-      setState((prev) => ({
-        ...prev,
-        [stepType]: [...prev[stepType], id as any],
-      }));
+      setState((prev) => {
+        if ((prev[stepType] as string[]).includes(id)) return prev;
+        return { ...prev, [stepType]: [...prev[stepType], id as any] };
+      });
       await fetch("/api/onboarding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ step: id, stepType }),
       });
     },
-    [state],
+    [],
   );
 
   const markTourSeen = useCallback(
     async (pageId: string) => {
-      if (state.tours.includes(pageId as any)) return;
-      setState((prev) => ({ ...prev, tours: [...prev.tours, pageId as any] }));
+      setState((prev) => {
+        if ((prev.tours as string[]).includes(pageId)) return prev;
+        return { ...prev, tours: [...prev.tours, pageId as any] };
+      });
       await fetch("/api/onboarding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tour: pageId }),
       });
     },
-    [state.tours],
+    [],
   );
 
   const shouldShowTour = useCallback(
@@ -68,7 +76,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     [isLoading, isAuthenticated, state.tours],
   );
 
-  if (!enabled) return <>{children}</>;
+  if (!enabled) {
+    return (
+      <OnboardingContext.Provider value={noopValue}>
+        {children}
+      </OnboardingContext.Provider>
+    );
+  }
 
   return (
     <OnboardingContext.Provider value={{ state, isLoading, completeStep, markTourSeen, shouldShowTour }}>
