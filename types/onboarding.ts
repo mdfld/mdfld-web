@@ -1,7 +1,7 @@
 export interface OnboardingState {
-  buyer: string[];   // completed buyer step IDs
-  seller: string[];  // completed seller step IDs
-  tours: string[];   // seen tour page IDs
+  buyer: BuyerStepId[];
+  seller: SellerStepId[];
+  tours: TourPageId[];
 }
 
 export type BuyerStepId =
