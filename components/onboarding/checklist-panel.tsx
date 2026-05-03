@@ -16,22 +16,22 @@ export function ChecklistPanel({ type }: ChecklistPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const steps: ChecklistStep[] = type === "buyer" ? BUYER_CHECKLIST : SELLER_CHECKLIST;
-  const completed = type === "buyer" ? state.buyer : state.seller;
+  const completed = (type === "buyer" ? state.buyer : state.seller) as string[];
 
   function isUnlocked(stepId: string): boolean {
     if (type === "buyer") return true;
     if (stepId === "org-name-bio" || stepId === "org-logo") return true;
     if (stepId === "payout-method" || stepId === "return-policy") {
-      return completed.includes("org-name-bio" as any);
+      return completed.includes("org-name-bio");
     }
     if (stepId === "list-product") {
-      return completed.includes("payout-method" as any) && completed.includes("return-policy" as any);
+      return completed.includes("payout-method") && completed.includes("return-policy");
     }
     return true;
   }
 
   const requiredSteps = steps.filter((s) => !s.optional);
-  const requiredCompleted = requiredSteps.filter((s) => completed.includes(s.id as any));
+  const requiredCompleted = requiredSteps.filter((s) => completed.includes(s.id));
   const allRequiredDone = requiredCompleted.length === requiredSteps.length;
 
   if (allRequiredDone) return null;
@@ -73,7 +73,7 @@ export function ChecklistPanel({ type }: ChecklistPanelProps) {
       {!collapsed && (
         <ul className="space-y-2">
           {steps.map((step) => {
-            const done = completed.includes(step.id as any);
+            const done = completed.includes(step.id);
             const unlocked = isUnlocked(step.id);
             return (
               <li

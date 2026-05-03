@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { onboardingState: state },
+    data: { onboardingState: state as any },
   });
 
   return NextResponse.json({ ok: true });
