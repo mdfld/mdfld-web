@@ -5,7 +5,8 @@ import { Spinner } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SidebarWrapper from "@/components/sidebar/dashboard/app";
-import ReturnsLayout from "@/components/dashboard/returns/app";
+import OrganizationInboxLayout from "@/components/dashboard/organizations/inbox/app";
+import { useOrganizationStore } from "@/lib/stores/organization";
 import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
 import { TourTrigger } from "@/components/onboarding/tour-trigger";
 import { useOnboarding } from "@/contexts/onboarding-context";
@@ -13,29 +14,38 @@ import { getTour } from "@/lib/onboarding-tours.config";
 
 export const dynamic = "force-dynamic";
 
-export default function Returns() {
-  const { data: session, isPending: sessionPending } = useSession();
+export default function ConnectInbox() {
+  const { data: session, isPending } = useSession();
   const router = useRouter();
+  const activeOrganization = useOrganizationStore(
+    (state) => state.activeOrganization,
+  );
   const { shouldShowTour, markTourSeen } = useOnboarding();
   const [tourActive, setTourActive] = useState(false);
-  const tour = getTour("returns");
+  const tour = getTour("connect");
 
   useEffect(() => {
-    if (!sessionPending && !session) {
+    if (!isPending && !session) {
       router.push("/auth/login");
     }
-  }, [session, sessionPending, router]);
+  }, [session, isPending, router]);
 
   useEffect(() => {
-    if (session && shouldShowTour("returns")) setTourActive(true);
+    if (!isPending && session && !activeOrganization) {
+      router.push("/dashboard");
+    }
+  }, [activeOrganization, session, isPending, router]);
+
+  useEffect(() => {
+    if (session && shouldShowTour("connect")) setTourActive(true);
   }, [session, shouldShowTour]);
 
   const handleTourEnd = async () => {
     setTourActive(false);
-    await markTourSeen("returns");
+    await markTourSeen("connect");
   };
 
-  if (typeof window === "undefined" || sessionPending) {
+  if (typeof window === "undefined" || isPending) {
     return (
       <div className="flex items-center justify-center h-full">
         <Spinner size="lg" />
@@ -43,24 +53,23 @@ export default function Returns() {
     );
   }
 
-  if (!session) {
+  if (!session || !activeOrganization) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-gray-600">Redirecting to login...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="h-full">
       <SidebarWrapper>
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div data-onboarding="returns-policy" className="hidden" />
-          <div data-onboarding="returns-cta" className="hidden" />
-          <ReturnsLayout />
+        <div data-onboarding="conversation-list" className="h-full">
+          <OrganizationInboxLayout organizationId={activeOrganization.id} />
         </div>
+        <div data-onboarding="response-time" className="hidden" />
       </SidebarWrapper>
       {tourActive && tour && (
         <SpotlightTour

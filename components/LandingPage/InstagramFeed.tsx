@@ -181,14 +181,7 @@ export default function EditorialRosterFeed() {
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex(index)} // For mobile taps
                 >
-                  {/* Striker line for active state */}
-                  <motion.div 
-                    className="roster-strike"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: isActive ? 1 : 0 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ width: '80px' }}
-                  />
+                  {/* Striker line removed */}
 
                   {/* Number */}
                   <span style={{ 

@@ -57,8 +57,8 @@ export const ReturnsSection = () => {
   const extraCount = (order?.items?.length ?? 1) - 1;
   const total = `$${Number(order?.total ?? 0).toFixed(2)}`;
   const orderId = order?.id?.slice(-6).toUpperCase();
-  const deliveredDate = order?.updatedAt
-    ? new Date(order.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  const deliveredDate = (order as any)?.updatedAt
+    ? new Date((order as any).updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : "";
   const daysSince = Math.floor((Date.now() - new Date(order?.createdAt ?? 0).getTime()) / 86400000);
   const daysLeft = 30 - daysSince;

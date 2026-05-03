@@ -17,6 +17,10 @@ import { toast } from "sonner";
 // Stripe redirect handled via checkout session URL
 import { useGuestCart } from "@/hooks/use-guest-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 
 
@@ -24,6 +28,18 @@ export default function BagPage() {
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
   const [promoCode, setPromoCode] = React.useState("");
+  const { shouldShowTour, markTourSeen } = useOnboarding();
+  const [tourActive, setTourActive] = React.useState(false);
+  const tour = getTour("bag");
+
+  React.useEffect(() => {
+    if (shouldShowTour("bag")) setTourActive(true);
+  }, [shouldShowTour]);
+
+  const handleTourEnd = async () => {
+    setTourActive(false);
+    await markTourSeen("bag");
+  };
 
   // Auth state
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -185,6 +201,8 @@ export default function BagPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
+          <div data-onboarding="auth-badge" className="hidden" />
+          <div data-onboarding="buyer-protection" className="hidden" />
           {cartData.items.map((item: any) => {
             // Handle both guest and auth cart item structures
             const itemId = item.id || `${item.productId}-${item.variantId || 'no-variant'}`;
@@ -369,6 +387,14 @@ export default function BagPage() {
           </Card>
         </div>
       </div>
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }

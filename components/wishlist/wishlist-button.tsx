@@ -5,6 +5,7 @@ import { Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 interface WishlistButtonProps {
   productId: string;
@@ -25,6 +26,7 @@ export function WishlistButton({
   const [isLoading, setIsLoading] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
+  const { completeStep } = useOnboarding();
 
   useEffect(() => {
     if (session?.user) {
@@ -75,6 +77,7 @@ export function WishlistButton({
         if (response.ok) {
           setIsInWishlist(true);
           onToggle?.(true);
+          completeStep("first-wishlist", "buyer");
         }
       }
     } catch (error) {

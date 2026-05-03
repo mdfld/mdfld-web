@@ -86,7 +86,7 @@ export default function ProductPage() {
           )
         : parseFloat(product.price.toString()),
     rating: product.seller.averageRating || 4.5,
-    ratingCount: product.reviews.length || 0,
+    ratingCount: (product as any).reviews?.length || 0,
     sizes: sizes,
     isPopular: product.featured,
     availableColors:

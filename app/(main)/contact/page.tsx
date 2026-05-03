@@ -196,7 +196,7 @@ export default function ContactPage() {
             >
               <Icon icon="solar:clock-circle-bold-duotone" width={24} style={{ color: "#00d4b6", marginBottom: 14, display: "block" }} />
               <p className="ct-condensed" style={{ fontSize: 14, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase", color: "#fff", marginBottom: 6 }}>Response Time</p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>Within 24 hours</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>Within 24 hours,<br />Mon–Fri 9am–6pm ET</p>
             </div>
             <div
               style={{

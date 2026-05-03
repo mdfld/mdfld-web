@@ -290,12 +290,12 @@ export default function PromoBanner() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.35 }}
             >
-              <button className="promo-shop-btn">
+              <a href="/shop" className="promo-shop-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 Shop the Sale <ArrowRight size={15} />
-              </button>
-              <button className="promo-ghost-btn">
+              </a>
+              <a href="/shop" className="promo-ghost-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                 View All Deals
-              </button>
+              </a>
             </motion.div>
 
             {/* Trust pills */}

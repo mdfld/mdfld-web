@@ -6,6 +6,7 @@ import { domAnimation, LazyMotion, m } from "framer-motion";
 import { trpc } from "@/lib/trpc-client";
 
 import { toast } from "sonner";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 import MultistepSidebar from "./multistep-sidebar";
 import ProductBasicForm from "./product-basic-form";
@@ -71,6 +72,7 @@ export default function ProductCreation({
   const createProduct = trpc.product.create.useMutation();
   const [formData, setFormData] = useState<Partial<ProductFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const { completeStep } = useOnboarding();
 
   const paginate = React.useCallback((newDirection: number) => {
     setPage((prev) => {
@@ -143,6 +145,7 @@ export default function ProductCreation({
       });
 
       toast.success("Product created successfully!");
+      completeStep("list-product", "seller");
       onComplete?.();
     } catch (error: any) {
       toast.error(error.message || "Failed to create product");
