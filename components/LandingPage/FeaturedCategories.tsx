@@ -23,7 +23,7 @@ const CATEGORIES: Category[] = [
   {
     id: 1,
     label: 'Match Kits',
-    img: '/categories/kits.jpeg',
+    img: '/categories/kits-v2.jpeg',
     tag: 'New Season',
     span: 'small',
   },
