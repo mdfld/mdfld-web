@@ -1,34 +1,29 @@
 "use client"
 import React from 'react';
-import { ShieldCheck, Truck, RotateCcw, Zap } from 'lucide-react';
 
 const ACCENT = '#00d4b6';
 
 const ITEMS = [
-  { 
-    type: 'brand', 
-    name: 'NIKE', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg' 
+  {
+    type: 'brand',
+    name: 'NIKE',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg'
   },
-  { type: 'trust', icon: ShieldCheck, text: 'BLOCKCHAIN VERIFIED' },
-  { 
-    type: 'brand', 
-    name: 'ADIDAS', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg' 
+  {
+    type: 'brand',
+    name: 'ADIDAS',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg'
   },
-  { type: 'trust', icon: Truck, text: 'FREE GLOBAL SHIPPING' },
-  { 
-    type: 'brand', 
-    name: 'PUMA', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Puma_Logo.svg' 
+  {
+    type: 'brand',
+    name: 'PUMA',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Puma_Logo.svg/320px-Puma_Logo.svg.png'
   },
-  { type: 'trust', icon: RotateCcw, text: '30-DAY RETURNS' },
-  { 
-    type: 'brand', 
-    name: 'UNDER ARMOUR', 
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Under_armour_logo.svg' 
+  {
+    type: 'brand',
+    name: 'UNDER ARMOUR',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Under_armour_logo.svg'
   },
-  { type: 'trust', icon: Zap, text: 'SAME-DAY DISPATCH' },
 ];
 
 export default function LogoTrustMarquee() {
@@ -131,25 +126,13 @@ export default function LogoTrustMarquee() {
       <div className="hq-marquee-track">
         {LOOPED_ITEMS.map((item, i) => (
           <React.Fragment key={i}>
-            
-            {/* Render Logo or Trust Badge */}
-            {item.type === 'brand' ? (
-              <img 
-                src={item.logo} 
-                alt={item.name} 
-                className="hq-brand-logo"
-                title={`Shop ${item.name}`}
-              />
-            ) : (
-              <div className="hq-trust-badge">
-                {item.icon && React.createElement(item.icon, { size: 20, className: 'hq-trust-icon', strokeWidth: 2.5 })}
-                <span>{item.text}</span>
-              </div>
-            )}
-            
-            {/* Separator */}
+            <img
+              src={item.logo}
+              alt={item.name}
+              className="hq-brand-logo"
+              title={`Shop ${item.name}`}
+            />
             <span className="hq-separator">✦</span>
-            
           </React.Fragment>
         ))}
       </div>

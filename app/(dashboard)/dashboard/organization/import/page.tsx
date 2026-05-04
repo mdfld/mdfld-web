@@ -36,6 +36,7 @@ export default function ImportPage() {
   const [importedCount, setImportedCount] = useState(0);
   const [sessionLoading, setSessionLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"store" | "social" | "csv">("store");
 
   useEffect(() => {
     if (!sessionPending && !session) router.push("/auth/login");
@@ -167,20 +168,53 @@ export default function ImportPage() {
 
         {!sessionLoading && stage === "landing" && (
           <>
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-2xl font-semibold text-foreground">Import Products</h1>
               <p className="text-sm text-default-500 mt-1">
                 Move your listings to MDFLD — whether you're on a marketplace, social media, or building from scratch.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <ImportPlatformGrid onFilePicked={handleCsvFile} />
-              <ImportSocialTrack />
+
+            {/* Mobile: tab bar */}
+            <div className="md:hidden">
+              <div className="flex border-b border-divider mb-4">
+                {(["store", "social", "csv"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2.5 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
+                      activeTab === tab
+                        ? "border-primary text-primary"
+                        : "border-transparent text-default-400"
+                    }`}
+                  >
+                    {tab === "store" ? "Store" : tab === "social" ? "Social" : "CSV"}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "store" && <ImportPlatformGrid onFilePicked={handleCsvFile} />}
+              {activeTab === "social" && <ImportSocialTrack />}
+              {activeTab === "csv" && (
+                <>
+                  <ImportCsvDropZone onParsed={handleCsvParsed} />
+                  {uploadError && (
+                    <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
+                  )}
+                </>
+              )}
             </div>
-            <ImportCsvDropZone onParsed={handleCsvParsed} />
-            {uploadError && (
-              <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
-            )}
+
+            {/* Desktop: original grid */}
+            <div className="hidden md:block">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <ImportPlatformGrid onFilePicked={handleCsvFile} />
+                <ImportSocialTrack />
+              </div>
+              <ImportCsvDropZone onParsed={handleCsvParsed} />
+              {uploadError && (
+                <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
+              )}
+            </div>
           </>
         )}
 

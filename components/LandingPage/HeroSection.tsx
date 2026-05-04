@@ -6,37 +6,29 @@ import { useRouter } from 'next/navigation';
 
 const CATEGORIES = [
   {
-    id: '01',
     title: 'KITS',
     subtitle: 'Match-worn styles for every club.',
-    price: 'From $45',
     img: '/categories/kits.jpeg',
     color: '#111111',
     href: '/shop?category=JERSEYS',
   },
   {
-    id: '02',
     title: 'BOOTS',
     subtitle: 'Elite performance on the pitch.',
-    price: 'From $120',
     img: '/categories/boots.jpg',
     color: '#0a0a0a',
     href: '/shop?category=BOOTS',
   },
   {
-    id: '03',
     title: 'ACCESSORIES',
     subtitle: 'Complete your kit.',
-    price: 'From $25',
     img: '/categories/accessories.jpg',
     color: '#161616',
     href: '/shop?category=ACCESSORIES',
   },
   {
-    id: '04',
     title: 'GOALKEEPER',
     subtitle: 'Gear built for the last line.',
-    price: 'From $35',
     img: '/categories/goalkeeper.webp',
     color: '#050505',
     href: '/shop?category=GOALKEEPER_GLOVES',
@@ -56,7 +48,7 @@ function DesktopView() {
 
         return (
           <motion.div
-            key={cat.id}
+            key={cat.title}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
             animate={{ width: hovered === null ? '25%' : isHovered ? '70%' : '10%' }}
@@ -93,7 +85,6 @@ function DesktopView() {
                 padding: '40px 0', alignItems: 'center', pointerEvents: 'none',
               }}
             >
-              <span style={{ color: '#fff', fontWeight: 600, fontSize: 14, letterSpacing: '0.2em' }}>{cat.id}</span>
               <div style={{
                 writingMode: 'vertical-rl', transform: 'rotate(180deg)',
                 color: '#fff', fontFamily: "'Syncopate', sans-serif",
@@ -119,14 +110,6 @@ function DesktopView() {
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <span style={{ color: '#fff', fontSize: 14, fontWeight: 800, letterSpacing: '0.2em', background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: 100 }}>
-                        {cat.id}
-                      </span>
-                      <span style={{ color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 14, fontWeight: 600 }}>
-                        {cat.price}
-                      </span>
-                    </div>
                     <h2 style={{
                       color: '#fff', fontFamily: "'Syncopate', sans-serif",
                       fontSize: 'clamp(48px, 6vw, 100px)', fontWeight: 700,
@@ -169,7 +152,7 @@ function MobileView() {
 
         return (
           <motion.div
-            key={cat.id}
+            key={cat.title}
             animate={{ flex: isOpen ? 4 : 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => setExpanded(isOpen ? null : i)}
@@ -210,9 +193,6 @@ function MobileView() {
               padding: '18px 24px', zIndex: 2,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <span style={{ fontFamily: "'Manrope', sans-serif", color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 800, letterSpacing: '0.2em' }}>
-                  {cat.id}
-                </span>
                 <span style={{
                   fontFamily: "'Syncopate', sans-serif", color: '#fff',
                   fontSize: isOpen ? 18 : 15, fontWeight: 700,
@@ -246,9 +226,6 @@ function MobileView() {
                   }}
                   onClick={e => e.stopPropagation()}
                 >
-                  <span style={{ fontFamily: "'Manrope', sans-serif", color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                    {cat.price}
-                  </span>
                   <p style={{ fontFamily: "'Manrope', sans-serif", color: 'rgba(255,255,255,0.72)', fontSize: 15, fontWeight: 400, lineHeight: 1.5, margin: 0, maxWidth: 320 }}>
                     {cat.subtitle}
                   </p>

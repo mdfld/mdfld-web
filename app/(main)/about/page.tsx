@@ -46,26 +46,18 @@ const VALUES = [
   {
     icon: "solar:shield-check-bold-duotone",
     title: "Authenticity First",
-    description:
-      "Every product listed on MDFLD goes through a rigorous multi-point verification process. No fakes. No compromises.",
   },
   {
     icon: "solar:users-group-rounded-bold-duotone",
     title: "Built for the Culture",
-    description:
-      "From grassroots players to elite pros — MDFLD exists to serve football culture at every level, globally.",
   },
   {
     icon: "solar:bolt-bold-duotone",
     title: "Fast. Seamless. Global.",
-    description:
-      "Same-day dispatch, real-time tracking, and shipping to 150+ countries. Your gear arrives when you need it.",
   },
   {
     icon: "solar:hand-shake-bold-duotone",
     title: "Fair for EVERYONE",
-    description:
-      "We give players, collectors, and serious sellers the tools to reach a global audience — with transparent fees and no hidden costs.",
   },
 ];
 
@@ -73,7 +65,6 @@ const TEAM = [
   { initials: "AM", name: "Ayoola Morakinyo", role: "Founder & CEO" },
   { initials: "KB", name: "Kayla Bloom", role: "Co-Founder & CMO" },
   { initials: "RW", name: "Ryan Walden", role: "Board Advisor" },
-  { initials: "AR", name: "Aman Rathore", role: "Lead Engineer" },
 ];
 
 export default function AboutPage() {
@@ -385,14 +376,11 @@ export default function AboutPage() {
                     letterSpacing: "0.04em",
                     textTransform: "uppercase",
                     color: "#fff",
-                    marginBottom: 10,
+                    marginBottom: 0,
                   }}
                 >
                   {v.title}
                 </h3>
-                <p style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>
-                  {v.description}
-                </p>
               </div>
             ))}
           </div>

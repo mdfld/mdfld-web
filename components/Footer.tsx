@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Instagram, Twitter, Linkedin, ShieldCheck, Zap, Globe } from 'lucide-react';
+import { ArrowRight, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { Icon } from '@iconify/react';
 
 const ACCENT = '#00d4b6';
@@ -170,19 +170,6 @@ export default function Footer() {
               Premium football boots, kits and gear — globally shipped, pro approved.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 24 }}>
-              {[
-                { icon: <ShieldCheck size={11} />, text: 'Verified Authentic Products' },
-                { icon: <Globe size={11} />, text: '150+ Countries Shipped' },
-                { icon: <Zap size={11} />, text: 'Same-Day Dispatch Available' },
-              ].map((b, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: ACCENT, flexShrink: 0 }}>{b.icon}</span>
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.26)', letterSpacing: '0.05em' }}>{b.text}</span>
-                </div>
-              ))}
-            </div>
-
             {/* Socials */}
             <div style={{ display: 'flex', gap: 8 }}>
               {SOCIALS.map(s => (
@@ -250,7 +237,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="f-bottom" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '16px clamp(16px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'relative', zIndex: 2 }}>
         <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-          © 2025 Midfield FC Ltd. All rights reserved.
+          © 2025 MDFLD LLC. All rights reserved.
         </span>
         <div className="f-legal-row" style={{ display: 'flex', gap: 20 }}>
           {NAV.Legal.map(l => (
