@@ -8,7 +8,7 @@ const CATEGORIES = [
   {
     title: 'KITS',
     subtitle: 'Match-worn styles for every club.',
-    img: '/categories/kits.jpeg',
+    img: '/categories/kits-v2.jpeg',
     color: '#111111',
     href: '/shop?category=JERSEYS',
   },
