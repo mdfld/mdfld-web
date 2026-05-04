@@ -43,11 +43,17 @@ export default function ContactPage() {
         .ct-promise:hover {
           border-color: rgba(0,212,182,0.25) !important;
         }
+        @media (max-width: 768px) {
+          .ct-hero-mobile { padding: 80px clamp(20px,6vw,80px) 80px !important; }
+          .ct-form-grid { grid-template-columns: 1fr !important; }
+          .ct-sidebar { display: none !important; }
+          .ct-promise-section { display: none !important; }
+        }
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section
-        className="ct-grid-bg"
+        className="ct-grid-bg ct-hero-mobile"
         style={{
           padding: "120px clamp(20px,6vw,80px) 80px",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -119,6 +125,7 @@ export default function ContactPage() {
         }}
       >
         <div
+          className="ct-form-grid"
           style={{
             maxWidth: 900,
             margin: "0 auto",
@@ -136,17 +143,11 @@ export default function ContactPage() {
             >
               Send a Message
             </p>
-            <h2
-              className="ct-condensed"
-              style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.02em", color: "#fff", marginBottom: 32 }}
-            >
-              WE'RE LISTENING
-            </h2>
             <ContactForm />
           </div>
 
           {/* Sidebar info */}
-          <div style={{ paddingTop: 52 }}>
+          <div className="ct-sidebar" style={{ paddingTop: 52 }}>
             <div
               style={{
                 padding: "28px",
@@ -188,6 +189,7 @@ export default function ContactPage() {
 
       {/* ── OUR PROMISE ──────────────────────────────────── */}
       <section
+        className="ct-promise-section"
         style={{
           padding: "80px clamp(20px,6vw,80px)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",

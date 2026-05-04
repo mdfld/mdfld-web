@@ -72,6 +72,13 @@ export function ContactForm() {
 
   return (
     <div style={{ width: "100%" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .contact-form-name-email {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
       {/* Status banners */}
       {status === "success" && (
         <div
@@ -113,7 +120,7 @@ export function ContactForm() {
 
       <form onSubmit={handleSubmit}>
         {/* Name + Email */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        <div className="contact-form-name-email" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div>
             <label style={labelStyle}>Name *</label>
             <input
