@@ -7,7 +7,6 @@ const ACCENT = '#00d4b6';
 interface Category {
   id: number;
   label: string;
-  count: string;
   img: string;
   tag: string;
   span: 'large' | 'small';
@@ -17,7 +16,6 @@ const CATEGORIES: Category[] = [
   {
     id: 0,
     label: 'Football Boots',
-    count: '4,200+ items',
     img: '/categories/boots.jpg',
     tag: 'Most Popular',
     span: 'large',
@@ -25,7 +23,6 @@ const CATEGORIES: Category[] = [
   {
     id: 1,
     label: 'Match Kits',
-    count: '1,800+ items',
     img: '/categories/kits.jpeg',
     tag: 'New Season',
     span: 'small',
@@ -33,7 +30,6 @@ const CATEGORIES: Category[] = [
   {
     id: 2,
     label: 'Goalkeeper',
-    count: '620+ items',
     img: '/categories/goalkeeper.webp',
     tag: 'Pro Grade',
     span: 'small',
@@ -41,15 +37,13 @@ const CATEGORIES: Category[] = [
   {
     id: 3,
     label: 'Training Gear',
-    count: '2,100+ items',
-    img: '/categories/kits.jpeg',
+    img: '/training-gear.webp',
     tag: 'Trending',
     span: 'small',
   },
   {
     id: 4,
     label: 'Accessories',
-    count: '980+ items',
     img: '/categories/accessories.jpg',
     tag: 'Essentials',
     span: 'small',
@@ -182,17 +176,6 @@ function CategoryCard({ cat, large }: CategoryCardProps) {
           justifyContent: 'space-between',
           gap: 12,
         }}>
-          {/* Item Count */}
-          <span style={{
-            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: large ? 12 : 10.5, 
-            color: 'rgba(255, 255, 255, 0.5)', 
-            fontWeight: 500,
-            letterSpacing: '0.03em',
-          }}>
-            {cat.count}
-          </span>
-
           {/* Action Button */}
           <div style={{
             width: large ? 44 : 38, 

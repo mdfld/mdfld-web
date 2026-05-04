@@ -82,7 +82,7 @@ function DesktopView() {
               style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                padding: '40px 0', alignItems: 'center', pointerEvents: 'none',
+                padding: '84px 0 40px', alignItems: 'center', pointerEvents: 'none',
               }}
             >
               <div style={{
@@ -146,7 +146,7 @@ function MobileView() {
   const router = useRouter();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000', paddingTop: 72 }}>
       {CATEGORIES.map((cat, i) => {
         const isOpen = expanded === i;
 

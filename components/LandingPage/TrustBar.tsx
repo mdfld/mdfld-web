@@ -17,7 +17,7 @@ const ITEMS = [
   {
     type: 'brand',
     name: 'PUMA',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Puma_Logo.svg/320px-Puma_Logo.svg.png'
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Puma-logo-%28text%29.svg'
   },
   {
     type: 'brand',

@@ -75,7 +75,7 @@ export default function AboutPage() {
 
   const STATS = [
     { value: players > 0 ? players.toLocaleString() : "—", label: "Active Players" },
-    { value: "150+", label: "Countries Served" },
+    { value: "—", label: "Countries Served" },
     { value: products > 0 ? products.toLocaleString() : "—", label: "Verified Products" },
     { value: caps > 0 ? caps.toLocaleString() : "—", label: "Caps" },
   ];
