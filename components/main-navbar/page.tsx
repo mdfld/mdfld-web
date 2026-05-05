@@ -161,6 +161,7 @@ export default function MainNavbar() {
   const [searchOpen, setSearchOpen]       = useState(false);
   const [cartOpen, setCartOpen]           = useState(false);
   const [dropdownLocked, setDropdownLocked] = useState(false);
+  const [dropdownHover, setDropdownHover]   = useState(false);
   const [searchVal, setSearchVal]         = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname  = usePathname();
@@ -204,7 +205,7 @@ export default function MainNavbar() {
   }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); setDropdownHover(false); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -214,6 +215,7 @@ export default function MainNavbar() {
     const onClickOutside = (e: MouseEvent) => {
       if (avatarWrapRef.current && !avatarWrapRef.current.contains(e.target as Node)) {
         setDropdownLocked(false);
+        setDropdownHover(false);
       }
     };
     document.addEventListener('mousedown', onClickOutside);
@@ -320,11 +322,10 @@ export default function MainNavbar() {
           display: none; pointer-events: none;
         }
         .nb-dropdown::before {
-          content: ''; position: absolute; top: -10px; left: 0; right: 0;
-          height: 10px; background: transparent; display: block;
+          content: ''; position: absolute; top: -24px; left: -16px; right: -16px;
+          height: 32px; background: transparent; display: block;
         }
-        .nb-avatar-wrap:hover .nb-dropdown,
-        .nb-avatar-wrap.locked .nb-dropdown { display: block; pointer-events: auto; }
+        .nb-avatar-wrap.open .nb-dropdown { display: block; pointer-events: auto; }
         .nb-dropdown-header {
           padding: 10px 16px 8px;
           border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -494,7 +495,12 @@ export default function MainNavbar() {
                 {isPending ? (
                   <div className="nb-auth-skeleton" />
                 ) : authUser ? (
-                  <div className={`nb-avatar-wrap${dropdownLocked ? ' locked' : ''}`} ref={avatarWrapRef}>
+                  <div
+                    className={`nb-avatar-wrap${dropdownLocked || dropdownHover ? ' open' : ''}`}
+                    ref={avatarWrapRef}
+                    onMouseEnter={() => setDropdownHover(true)}
+                    onMouseLeave={() => setDropdownHover(false)}
+                  >
                     <div className="nb-avatar" onClick={() => setDropdownLocked(prev => !prev)}>{initials}</div>
                     <div className="nb-dropdown">
                       <div className="nb-dropdown-header">
