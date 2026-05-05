@@ -257,10 +257,11 @@ model BuyerProfile {
   chargebackCount Int   @default(0)
   returnRate      Float @default(0.0)
 
-  user    User       @relation(fields: [userId], references: [id])
-  orders  Order[]
-  reviews Review[]
-  cart    CartItem[]
+  user           User            @relation(fields: [userId], references: [id])
+  orders         Order[]
+  reviews        Review[]
+  cart           CartItem[]
+  returnRequests ReturnRequest[]
 
   @@map("buyer_profile")
 }
@@ -416,12 +417,13 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  buyer        BuyerProfile  @relation(fields: [buyerProfileId], references: [id])
-  seller       SellerProfile @relation(fields: [sellerProfileId], references: [id])
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  items        OrderItem[]
-  transactions Transaction[]
-  fraudAlerts  FraudAlert[]
+  buyer          BuyerProfile    @relation(fields: [buyerProfileId], references: [id])
+  seller         SellerProfile   @relation(fields: [sellerProfileId], references: [id])
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  items          OrderItem[]
+  transactions   Transaction[]
+  fraudAlerts    FraudAlert[]
+  returnRequests ReturnRequest[]
 
   @@index([buyerProfileId])
   @@index([sellerProfileId])
@@ -504,6 +506,24 @@ model FraudAlert {
   seller SellerProfile? @relation(fields: [sellerProfileId], references: [id])
 
   @@map("fraud_alert")
+}
+
+model ReturnRequest {
+  id             String       @id @default(cuid())
+  orderId        String
+  buyerProfileId String
+  reason         ReturnReason
+  details        String
+  status         ReturnStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  order       Order        @relation(fields: [orderId], references: [id])
+  buyer       BuyerProfile @relation(fields: [buyerProfileId], references: [id])
+
+  @@index([buyerProfileId])
+  @@index([orderId])
+  @@map("return_request")
 }
 
 model FraudReport {
@@ -1029,6 +1049,22 @@ enum PlayerVersion {
   REPLICA
   STADIUM
   MATCH
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  CHANGED_MIND
+  SIZE_ISSUE
+  OTHER
 }
 
 model ImportSession {
