@@ -1,13 +1,17 @@
 import { useSession } from "@/lib/auth-client";
 import { Icon } from "@iconify/react";
-import { Button } from "@heroui/react";
+import { Button, Modal, ModalContent, useDisclosure } from "@heroui/react";
 import { trpc } from "@/lib/trpc-client";
+import { useQueryClient } from "@tanstack/react-query";
+import OrganizationOnboarding from "./organizations/onboard/organization-onboarding";
 
 import { useRouter } from "next/navigation";
 
 export const WelcomeHero = () => {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const queryClient = useQueryClient();
   const { data: orgs, isLoading: orgsLoading } = trpc.organization.getMyOrganizations.useQuery(
     undefined,
     { enabled: !!session }
@@ -116,7 +120,7 @@ export const WelcomeHero = () => {
                 color="primary"
                 className="h-12 px-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                 startContent={<Icon icon="solar:shop-bold" width={20} />}
-                onPress={() => router.push("/dashboard/organization")}
+                onPress={onOpen}
               >
                 Create Store
               </Button>
@@ -124,6 +128,25 @@ export const WelcomeHero = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="5xl"
+        scrollBehavior="inside"
+        classNames={{ base: "max-h-[90vh]", body: "p-0" }}
+      >
+        <ModalContent>
+          {() => (
+            <OrganizationOnboarding
+              onComplete={() => {
+                queryClient.invalidateQueries({ queryKey: ["organization"] });
+                onClose();
+              }}
+            />
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
