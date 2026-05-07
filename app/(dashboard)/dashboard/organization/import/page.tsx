@@ -46,6 +46,22 @@ export default function ImportPage() {
     if (!activeOrganization && !sessionPending && session) router.push("/dashboard");
   }, [activeOrganization, sessionPending, session, router]);
 
+  // Handle OAuth errors from eBay redirect
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (!error) return;
+    const messages: Record<string, string> = {
+      invalid_state: "Connection attempt expired or was tampered with. Please try again.",
+      missing_params: "eBay did not return the expected data. Please try again.",
+      ebay_token_failed: "Could not connect to eBay — the authorisation code may have expired. Please try again.",
+      ebay_fetch_failed: "Connected to eBay but failed to fetch your listings. Please try again.",
+      ebay_no_listings: "No listings found in your eBay account. If you list through eBay's website rather than their API, export your listings as CSV from eBay and upload them below.",
+    };
+    setUploadError(messages[error] ?? "Something went wrong connecting to eBay. Please try again.");
+    router.replace("/dashboard/organization/import");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // Handle OAuth redirect with ?session= param
   useEffect(() => {
     const sid = searchParams.get("session");
