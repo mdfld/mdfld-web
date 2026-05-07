@@ -102,11 +102,11 @@ export const adminRouter = createTRPCRouter({
     };
   }),
 
-  // Task 5: Stores Management
+  // Stores Management
   listStores: adminProcedure
     .input(
       z.object({
-        status: z.enum(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]).optional(),
+        status: z.enum(["APPROVED", "SUSPENDED"]).optional(),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(100).default(20),
       })
@@ -119,7 +119,12 @@ export const adminRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
         include: {
           sellerProfile: { select: { storeName: true, totalSales: true, pendingBalance: true } },
-          members: { select: { userId: true, role: true } },
+          members: {
+            where: { role: "owner" },
+            include: { user: { select: { name: true, email: true } } },
+            take: 1,
+          },
+          _count: { select: { products: true } },
         },
       });
       let nextCursor: string | undefined;
@@ -129,18 +134,18 @@ export const adminRouter = createTRPCRouter({
       return { stores, nextCursor };
     }),
 
-  approveStore: adminProcedure
-    .input(z.object({ organizationId: z.string() }))
+  suspendStore: adminProcedure
+    .input(z.object({ organizationId: z.string(), suspend: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const org = await ctx.prisma.organization.update({
         where: { id: input.organizationId },
-        data: { storeStatus: "APPROVED", isVerified: true },
+        data: { storeStatus: input.suspend ? "SUSPENDED" : "APPROVED" },
       });
       await ctx.prisma.auditLog.create({
         data: {
           userId: ctx.user.id,
           organizationId: input.organizationId,
-          action: "STORE_APPROVED",
+          action: input.suspend ? "STORE_SUSPENDED" : "STORE_RESTORED",
           entityType: "Organization",
           entityId: input.organizationId,
         },
@@ -148,24 +153,20 @@ export const adminRouter = createTRPCRouter({
       return org;
     }),
 
-  rejectStore: adminProcedure
-    .input(z.object({ organizationId: z.string(), reason: z.string().optional() }))
+  deleteStore: adminProcedure
+    .input(z.object({ organizationId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const org = await ctx.prisma.organization.update({
-        where: { id: input.organizationId },
-        data: { storeStatus: "REJECTED", isVerified: false },
-      });
       await ctx.prisma.auditLog.create({
         data: {
           userId: ctx.user.id,
           organizationId: input.organizationId,
-          action: "STORE_REJECTED",
+          action: "STORE_DELETED",
           entityType: "Organization",
           entityId: input.organizationId,
-          newValues: { reason: input.reason },
         },
       });
-      return org;
+      await ctx.prisma.organization.delete({ where: { id: input.organizationId } });
+      return { success: true };
     }),
 
   // Task 6: Users, Products, Orders

@@ -130,7 +130,7 @@ model Organization {
   taxId           String?
   businessLicense String?
   isVerified      Boolean      @default(false)
-  storeStatus     StoreStatus  @default(PENDING)
+  storeStatus     StoreStatus  @default(APPROVED)
   trustScore      Float        @default(0.0)
 
   // Address fields
