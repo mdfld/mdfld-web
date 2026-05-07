@@ -1,14 +1,21 @@
 import { useSession } from "@/lib/auth-client";
 import { Icon } from "@iconify/react";
 import { Button } from "@heroui/react";
+import { trpc } from "@/lib/trpc-client";
 
 import { useRouter } from "next/navigation";
 
 export const WelcomeHero = () => {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const { data: orgs, isLoading: orgsLoading } = trpc.organization.getMyOrganizations.useQuery(
+    undefined,
+    { enabled: !!session }
+  );
 
-  if (isPending) return null;
+  if (isPending || orgsLoading) return null;
+
+  const hasStore = orgs && orgs.length > 0;
 
   return (
     <div className="m-4 relative overflow-hidden">
@@ -46,14 +53,14 @@ export const WelcomeHero = () => {
             <span className="text-sm font-medium text-default-500 mb-1 animate-[fadeInUp_0.6s_ease-out]">
               Welcome back
             </span>
-            <h1 className="text-2xl sm:text-4xl font-bold text-foreground animate-[fadeInUp_0.8s_ease-out_0.2s_both] break-words max-w-[200px] sm:max-w-none">
+            <h1 className="text-4xl font-bold text-foreground animate-[fadeInUp_0.8s_ease-out_0.2s_both]">
               {session?.user.name}
             </h1>
             <div className="w-12 h-1 bg-primary rounded-full mt-2 animate-[fadeInUp_1s_ease-out_0.4s_both]"></div>
           </div>
 
           {/* Status Indicator */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-content1/80 backdrop-blur-sm rounded-full border border-divider/30 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 bg-content1/80 backdrop-blur-sm rounded-full border border-divider/30">
             <Icon
               icon="svg-spinners:blocks-wave"
               width={16}
@@ -65,7 +72,7 @@ export const WelcomeHero = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 z-10 relative">
+        <div className="flex justify-between items-end z-10 relative">
           {/* CTA Text */}
           <div className="flex flex-col">
             <p className="text-lg font-medium text-foreground/90 mb-1 animate-[fadeInUp_0.8s_ease-out]">
@@ -79,13 +86,13 @@ export const WelcomeHero = () => {
           {/* Action Pills */}
           <div className="flex items-center gap-2">
             <Button
-              size="sm"
+              size="lg"
               variant="flat"
-              className="sm:h-12 sm:px-6 bg-content1/60 backdrop-blur-sm border border-divider/30 hover:bg-primary hover:text-primary-foreground hover:border-primary/30 transition-all duration-300 group"
+              className="h-12 px-6 bg-content1/60 backdrop-blur-sm border border-divider/30 hover:bg-primary hover:text-primary-foreground hover:border-primary/30 transition-all duration-300 group"
               startContent={
                 <Icon
                   icon="solar:heart-bold"
-                  width={18}
+                  width={20}
                   className="group-hover:scale-110 transition-transform"
                 />
               }
@@ -93,15 +100,27 @@ export const WelcomeHero = () => {
             >
               Wishlist
             </Button>
-            <Button
-              size="sm"
-              color="primary"
-              className="sm:h-12 sm:px-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-              startContent={<Icon icon="solar:add-circle-bold" width={18} />}
-              onPress={() => router.push("/dashboard/organization/listings")}
-            >
-              Add Item
-            </Button>
+            {hasStore ? (
+              <Button
+                size="lg"
+                color="primary"
+                className="h-12 px-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                startContent={<Icon icon="solar:add-circle-bold" width={20} />}
+                onPress={() => router.push("/dashboard/organization/listings")}
+              >
+                Add Item
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                color="primary"
+                className="h-12 px-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                startContent={<Icon icon="solar:shop-bold" width={20} />}
+                onPress={() => router.push("/dashboard/organization")}
+              >
+                Create Store
+              </Button>
+            )}
           </div>
         </div>
       </div>

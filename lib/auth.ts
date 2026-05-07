@@ -15,7 +15,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending password reset email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <noreply@mdfld.co>",
+          from: "Midfield Co <onboarding@resend.dev>",
           to: user.email,
           subject: "Reset your password",
           html: `
@@ -70,7 +70,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending verification email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <noreply@mdfld.co>",
+          from: "Midfield Co <onboarding@resend.dev>",
           to: user.email,
           subject: "Welcome aboard! | Verify your email address",
           html: `

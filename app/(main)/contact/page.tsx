@@ -44,10 +44,10 @@ export default function ContactPage() {
           border-color: rgba(0,212,182,0.25) !important;
         }
         @media (max-width: 768px) {
-          .ct-hero-mobile { padding: 80px clamp(20px,6vw,80px) 80px !important; }
+          .ct-hero-mobile { padding-top: 80px !important; }
           .ct-form-grid { grid-template-columns: 1fr !important; }
           .ct-sidebar { display: none !important; }
-          .ct-promise-section { display: none !important; }
+          .ct-promise-section { display: none; }
         }
       `}</style>
 

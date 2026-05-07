@@ -2,3 +2,9 @@
 @import "@daveyplate/better-auth-ui/css";
 
 @config "../tailwind.config.js";
+
+@media (max-width: 768px) {
+  .contact-form-name-email {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -72,13 +72,6 @@ export function ContactForm() {
 
   return (
     <div style={{ width: "100%" }}>
-      <style>{`
-        @media (max-width: 768px) {
-          .contact-form-name-email {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
       {/* Status banners */}
       {status === "success" && (
         <div
