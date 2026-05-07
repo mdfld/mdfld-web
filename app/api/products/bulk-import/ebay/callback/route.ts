@@ -11,7 +11,7 @@ const EBAY_TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const APP_BASE = process.env.NEXT_PUBLIC_BASE_URL!;
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(APP_BASE);
+  const { searchParams } = new URL(request.url);
   const state = searchParams.get("state");
   const code = searchParams.get("code");
 
