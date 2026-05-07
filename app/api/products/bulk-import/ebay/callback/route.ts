@@ -121,8 +121,9 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (!itemsRes.ok) {
+      const errCode = itemsRes.status === 403 ? "ebay_not_seller" : "ebay_fetch_failed";
       return NextResponse.redirect(
-        new URL(`/dashboard/organization/import?error=ebay_fetch_failed`, APP_BASE)
+        new URL(`/dashboard/organization/import?error=${errCode}`, APP_BASE)
       );
     }
 
