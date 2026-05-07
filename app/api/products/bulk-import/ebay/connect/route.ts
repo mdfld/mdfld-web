@@ -8,7 +8,7 @@ const EBAY_AUTH_URL = "https://auth.ebay.com/oauth2/authorize";
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return NextResponse.redirect(new URL("/auth/login", process.env.NEXT_PUBLIC_BASE_URL));
   }
 
   const state = crypto.randomUUID();

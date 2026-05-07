@@ -8,9 +8,10 @@ import { normaliseCondition } from "@/lib/import/normalise-condition";
 import { normaliseSize } from "@/lib/import/normalise-size";
 
 const EBAY_TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
+const APP_BASE = process.env.NEXT_PUBLIC_BASE_URL!;
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(APP_BASE);
   const state = searchParams.get("state");
   const code = searchParams.get("code");
 
@@ -20,19 +21,19 @@ export async function GET(request: NextRequest) {
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+      new URL(`/dashboard/organization/import?error=invalid_state`, APP_BASE)
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=missing_params`, request.url)
+      new URL(`/dashboard/organization/import?error=missing_params`, APP_BASE)
     );
   }
 
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return NextResponse.redirect(new URL("/auth/login", APP_BASE));
   }
 
   let sellerProfile: { id: string } | null;
@@ -69,14 +70,14 @@ export async function GET(request: NextRequest) {
 
     if (!tokenRes.ok) {
       return NextResponse.redirect(
-        new URL(`/dashboard/organization/import?error=ebay_token_failed`, request.url)
+        new URL(`/dashboard/organization/import?error=ebay_token_failed`, APP_BASE)
       );
     }
 
     tokens = await tokenRes.json();
   } catch {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=ebay_token_failed`, request.url)
+      new URL(`/dashboard/organization/import?error=ebay_token_failed`, APP_BASE)
     );
   }
 
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
 
     if (!listingsRes.ok) {
       return NextResponse.redirect(
-        new URL(`/dashboard/organization/import?error=ebay_fetch_failed`, request.url)
+        new URL(`/dashboard/organization/import?error=ebay_fetch_failed`, APP_BASE)
       );
     }
 
@@ -113,13 +114,13 @@ export async function GET(request: NextRequest) {
     inventoryItems = body.inventoryItems;
   } catch {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=ebay_fetch_failed`, request.url)
+      new URL(`/dashboard/organization/import?error=ebay_fetch_failed`, APP_BASE)
     );
   }
 
   if (!inventoryItems || inventoryItems.length === 0) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=ebay_no_listings`, request.url)
+      new URL(`/dashboard/organization/import?error=ebay_no_listings`, APP_BASE)
     );
   }
 
@@ -167,6 +168,6 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(
-    new URL(`/dashboard/organization/import?session=${importSession.id}`, request.url)
+    new URL(`/dashboard/organization/import?session=${importSession.id}`, APP_BASE)
   );
 }
