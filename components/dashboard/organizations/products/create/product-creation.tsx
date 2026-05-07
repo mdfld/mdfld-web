@@ -204,7 +204,7 @@ export default function ProductCreation({
       currentPage={page}
       onBack={onBack}
       onChangePage={onChangePage}
-      onNext={onNext}
+      onNext={page === 3 ? handleSubmit : onNext}
       onClose={onClose}
     >
       <div className="relative flex h-fit w-full flex-col pt-6 lg:h-full lg:justify-center lg:pt-0">

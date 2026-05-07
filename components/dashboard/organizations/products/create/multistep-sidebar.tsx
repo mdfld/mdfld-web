@@ -116,6 +116,19 @@ const MultiStepSidebar = React.forwardRef<
         </div>
         <div className="flex h-full w-full flex-col items-center gap-4 md:p-4 bg-zinc-900">
           <div className="rounded-large bg-zinc-800 shadow-small sticky top-0 z-10 w-full py-4 md:max-w-xl lg:hidden">
+          <div className="mb-3 flex items-center justify-end px-4">
+              {onClose && (
+                <Button
+                  className="bg-zinc-900 text-small text-zinc-400 font-medium border border-zinc-800"
+                  radius="full"
+                  size="sm"
+                  variant="flat"
+                  onPress={onClose}
+                >
+                  Close
+                </Button>
+              )}
+            </div>
             <div className="flex justify-center">
               {/* Mobile Steps */}
               <RowSteps
@@ -139,7 +152,7 @@ const MultiStepSidebar = React.forwardRef<
               />
             </div>
           </div>
-          <div className="h-full w-full p-4 sm:max-w-md md:max-w-lg">
+          <div className="h-full w-full overflow-y-auto p-4 sm:max-w-md md:max-w-lg">
             {children}
             <MultistepNavigationButtons
               backButtonProps={{ isDisabled: currentPage === 0 }}
