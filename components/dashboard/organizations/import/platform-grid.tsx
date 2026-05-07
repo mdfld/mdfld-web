@@ -87,9 +87,15 @@ const PLATFORMS: Platform[] = [
   {
     key: "ebay",
     name: "eBay",
-    type: "api",
+    type: "guide",
     icon: <EbayIcon />,
-    connectHref: "/api/products/bulk-import/ebay/connect",
+    guideSteps: [
+      "Go to your eBay Seller Hub at ebay.com/sh/lst/active",
+      "Check the box at the top to select all active listings",
+      "Click the 'Edit' dropdown and choose 'Export listings'",
+      "Select CSV as the format and download the file",
+      "Upload the CSV file here and we'll map everything automatically",
+    ],
   },
   {
     key: "depop",
