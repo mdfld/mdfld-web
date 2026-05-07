@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Find the user's organization so the callback can locate the right sellerProfile
-  const membership = await prisma.member.findFirst({
+  const membership = await prisma.organizationMember.findFirst({
     where: { userId: session.user.id, role: "owner" },
     select: { organizationId: true },
   });
