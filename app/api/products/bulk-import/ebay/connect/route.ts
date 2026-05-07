@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { cookies } from "next/headers";
 
 const EBAY_SCOPE = "https://api.ebay.com/oauth/api_scope/sell.inventory.readonly";
 const EBAY_AUTH_URL = "https://auth.ebay.com/oauth2/authorize";
@@ -12,13 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   const state = crypto.randomUUID();
-  const cookieStore = await cookies();
-  cookieStore.set("import_oauth_state_ebay", state, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 600,
-    path: "/",
-  });
 
   const params = new URLSearchParams({
     client_id: process.env.EBAY_CLIENT_ID!,
@@ -28,5 +20,13 @@ export async function GET(request: NextRequest) {
     state,
   });
 
-  return NextResponse.redirect(`${EBAY_AUTH_URL}?${params.toString()}`);
+  const response = NextResponse.redirect(`${EBAY_AUTH_URL}?${params.toString()}`);
+  response.cookies.set("import_oauth_state_ebay", state, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+  return response;
 }
