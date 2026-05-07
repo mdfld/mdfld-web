@@ -36,13 +36,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", APP_BASE));
   }
 
+  const orgId = cookieStore.get("import_ebay_org_id")?.value;
+  cookieStore.delete("import_ebay_org_id");
+
+  if (!orgId) {
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=no_organization`, APP_BASE)
+    );
+  }
+
   let sellerProfile: { id: string } | null;
   try {
     sellerProfile = await prisma.sellerProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { organizationId: orgId },
     });
     if (!sellerProfile) {
-      return NextResponse.json({ error: "No seller profile" }, { status: 403 });
+      return NextResponse.redirect(
+        new URL(`/dashboard/organization/import?error=no_seller_profile`, APP_BASE)
+      );
     }
   } catch {
     return NextResponse.json({ error: "Database error fetching seller profile" }, { status: 500 });

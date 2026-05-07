@@ -56,6 +56,8 @@ export default function ImportPage() {
       ebay_token_failed: "Could not connect to eBay — the authorisation code may have expired. Please try again.",
       ebay_fetch_failed: "Connected to eBay but failed to fetch your listings. Please try again.",
       ebay_no_listings: "No listings found in your eBay account. If you list through eBay's website rather than their API, export your listings as CSV from eBay and upload them below.",
+      no_organization: "You need to create a store before importing products.",
+      no_seller_profile: "Your store setup is incomplete. Please finish setting up your store first.",
     };
     setUploadError(messages[error] ?? "Something went wrong connecting to eBay. Please try again.");
     router.replace("/dashboard/organization/import");
