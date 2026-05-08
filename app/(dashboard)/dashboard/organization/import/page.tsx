@@ -59,6 +59,10 @@ export default function ImportPage() {
       no_organization: "You need to create a store before importing products.",
       no_seller_profile: "Your store setup is incomplete. Please finish setting up your store first.",
       ebay_not_seller: "This eBay account doesn't have an active seller account. Make sure you're signing in with your eBay seller account, not a buyer account.",
+      invalid_shop: "Invalid Shopify store domain. Make sure you enter it as yourstore.myshopify.com.",
+      shopify_token_failed: "Could not connect to your Shopify store. Please try again.",
+      shopify_fetch_failed: "Connected to Shopify but failed to fetch your products. Please try again.",
+      shopify_no_products: "No products found in your Shopify store.",
     };
     setUploadError(messages[error] ?? "Something went wrong connecting to eBay. Please try again.");
     router.replace("/dashboard/organization/import");

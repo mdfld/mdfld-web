@@ -198,14 +198,14 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
           <button
             key={platform.key}
             onClick={() => handleClick(platform)}
-            className="flex items-center gap-3 bg-content2 border border-divider rounded-lg px-3 py-2.5 text-left hover:border-default-400 transition-colors"
+            className="flex items-center gap-2 bg-content2 border border-divider rounded-lg px-3 py-2.5 text-left hover:border-default-400 transition-colors min-w-0"
           >
-            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
               {platform.icon}
             </div>
-            <span className="text-xs font-medium text-foreground flex-1">{platform.name}</span>
+            <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{platform.name}</span>
             <span
-              className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+              className={`flex-shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded ${
                 platform.type === "api"
                   ? "bg-success-50 text-success-700"
                   : "bg-default-100 text-default-400"
@@ -217,7 +217,7 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
         ))}
         <button
           onClick={() => setMoreOpen(true)}
-          className="flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors"
+          className="col-span-2 flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors"
         >
           More platforms
         </button>
