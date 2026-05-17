@@ -8,6 +8,7 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import ScoreDebugOverlay from "@/components/score-debug-overlay";
 
 export type ProductCardProps = Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -126,6 +127,16 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       addToWishlist.isPending || removeFromWishlist.isPending;
     const isAddingToBag = addToCart.isPending;
 
+    const [debugScore, setDebugScore] = React.useState<number | undefined>(undefined);
+    React.useEffect(() => {
+      if (process.env.NODE_ENV === "development") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("debug_scores") === "1") {
+          setDebugScore((product as any).__score as number | undefined);
+        }
+      }
+    }, [product]);
+
     return (
       <div
         ref={ref}
@@ -135,6 +146,9 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
         )}
         {...props}
       >
+        {process.env.NODE_ENV === "development" && (
+          <ScoreDebugOverlay score={debugScore} />
+        )}
         <Button
           isIconOnly
           className="bg-background/60 dark:bg-default-100/50 absolute top-3 right-3 z-20 backdrop-blur-md backdrop-saturate-150"
