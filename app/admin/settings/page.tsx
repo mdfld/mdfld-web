@@ -1,8 +1,8 @@
 "use client";
 
 import { Switch, Button } from "@heroui/react";
-import { Users, Building2, MessageSquare, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { Users, Building2, MessageSquare, DollarSign, SlidersHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc-client";
 
 const ACCENT = "#00d4b6";
@@ -11,6 +11,49 @@ const BLUE = "#0066ff";
 export default function AdminSettingsPage() {
 	const { data: platformSettings } = trpc.admin.getPlatformSettings.useQuery();
 	const updateSettings = trpc.admin.updatePlatformSettings.useMutation();
+
+	const [weights, setWeights] = useState({
+		recencyWeight: 0.35,
+		relevanceWeight: 0.30,
+		trustWeight: 0.20,
+		priceWeight: 0.15,
+	});
+	const [weightsSaved, setWeightsSaved] = useState(false);
+	const [weightsSaving, setWeightsSaving] = useState(false);
+	const weightsSum = +(
+		weights.recencyWeight +
+		weights.relevanceWeight +
+		weights.trustWeight +
+		weights.priceWeight
+	).toFixed(2);
+	const weightsSumValid = Math.abs(weightsSum - 1.0) < 0.001;
+
+	useEffect(() => {
+		fetch("/api/admin/scoring-weights")
+			.then((r) => r.json())
+			.then((data) => {
+				if (data.recencyWeight !== undefined) setWeights(data);
+			})
+			.catch(() => {});
+	}, []);
+
+	const handleSaveWeights = async () => {
+		if (!weightsSumValid) return;
+		setWeightsSaving(true);
+		try {
+			const res = await fetch("/api/admin/scoring-weights", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(weights),
+			});
+			if (res.ok) {
+				setWeightsSaved(true);
+				setTimeout(() => setWeightsSaved(false), 2000);
+			}
+		} finally {
+			setWeightsSaving(false);
+		}
+	};
 
 	const [commissionPct, setCommissionPct] = useState<string>("");
 	const [marketplaceFee, setMarketplaceFee] = useState<string>("");
@@ -216,6 +259,81 @@ export default function AdminSettingsPage() {
 						style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, background: feesSaved ? "#22c55e" : ACCENT, color: "#020a0a", border: "none" }}
 					>
 						{feesSaved ? "Saved!" : "Save Fees"}
+					</Button>
+				</div>
+			</div>
+
+			{/* Listing Scoring Weights */}
+			<div style={{
+				background: "#fff", border: "1px solid #e8e8e8",
+				borderRadius: 16, padding: 24, marginTop: 16,
+				boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+				animation: "fadeIn 0.5s ease 0.2s backwards",
+			}}>
+				<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: "2px solid #f1f5f9" }}>
+					<div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(139,92,246,0.1)", border: "1.5px solid rgba(139,92,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+						<SlidersHorizontal size={18} color="#8b5cf6" strokeWidth={2.5} />
+					</div>
+					<h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 17, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", margin: 0, textTransform: "uppercase" }}>
+						Listing Scoring Weights
+					</h3>
+				</div>
+
+				<div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+					{(
+						[
+							{ key: "recencyWeight", label: "Recency Weight", description: "How much to favor newer listings" },
+							{ key: "relevanceWeight", label: "Relevance Weight", description: "How much to favor category-matching listings" },
+							{ key: "trustWeight", label: "Trust Weight", description: "How much to favor verified sellers" },
+							{ key: "priceWeight", label: "Price Weight", description: "How much to favor competitively priced listings" },
+						] as const
+					).map(({ key, label, description }) => (
+						<div key={key}>
+							<div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+								<div>
+									<div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{label}</div>
+									<div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{description}</div>
+								</div>
+								<span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", minWidth: 36, textAlign: "right" }}>
+									{weights[key].toFixed(2)}
+								</span>
+							</div>
+							<input
+								type="range"
+								min={0}
+								max={1}
+								step={0.05}
+								value={weights[key]}
+								onChange={(e) => setWeights((w) => ({ ...w, [key]: parseFloat(e.target.value) }))}
+								style={{ width: "100%", accentColor: "#8b5cf6" }}
+							/>
+						</div>
+					))}
+				</div>
+
+				<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 20, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
+					<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+						<span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>Total:</span>
+						<span style={{
+							fontSize: 14, fontWeight: 700,
+							color: weightsSumValid ? "#22c55e" : "#ef4444",
+						}}>
+							{weightsSum.toFixed(2)}
+						</span>
+						{!weightsSumValid && (
+							<span style={{ fontSize: 12, color: "#ef4444", fontWeight: 500 }}>
+								Must equal 1.00
+							</span>
+						)}
+					</div>
+					<Button
+						color="primary"
+						onPress={handleSaveWeights}
+						isLoading={weightsSaving}
+						isDisabled={!weightsSumValid}
+						style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 13, background: weightsSaved ? "#22c55e" : "#8b5cf6", color: "#fff", border: "none" }}
+					>
+						{weightsSaved ? "Saved!" : "Save Weights"}
 					</Button>
 				</div>
 			</div>
