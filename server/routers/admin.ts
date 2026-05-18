@@ -279,7 +279,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  deleteProduct: superAdminProcedure
+  deleteProduct: adminProcedure
     .input(z.object({ productId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.auditLog.create({
@@ -294,7 +294,7 @@ export const adminRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  updateProduct: superAdminProcedure
+  updateProduct: adminProcedure
     .input(
       z.object({
         productId: z.string(),
