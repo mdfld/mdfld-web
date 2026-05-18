@@ -7,6 +7,8 @@ import { normaliseCategory } from "@/lib/import/normalise-category";
 import { normaliseCondition } from "@/lib/import/normalise-condition";
 import { normaliseSize } from "@/lib/import/normalise-size";
 
+const APP_BASE = process.env.NEXT_PUBLIC_BASE_URL!;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const state = searchParams.get("state");
@@ -15,13 +17,15 @@ export async function GET(request: NextRequest) {
 
   if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/.test(shop)) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=invalid_shop`, request.url)
+      new URL(`/dashboard/organization/import?error=invalid_shop`, APP_BASE)
     );
   }
 
   const cookieStore = await cookies();
   const rawCookie = cookieStore.get("import_oauth_state_shopify")?.value;
+  const orgId = cookieStore.get("import_shopify_org_id")?.value;
   cookieStore.delete("import_oauth_state_shopify");
+  cookieStore.delete("import_shopify_org_id");
 
   let savedState: string;
   let savedShop: string;
@@ -31,31 +35,31 @@ export async function GET(request: NextRequest) {
     savedShop = parsed.shop;
   } catch {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+      new URL(`/dashboard/organization/import?error=invalid_state`, APP_BASE)
     );
   }
 
-  if (!state || !savedState || state !== savedState) {
+  if (!state || !savedState || state !== savedState || shop !== savedShop) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
-    );
-  }
-
-  if (shop !== savedShop) {
-    return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=invalid_state`, request.url)
+      new URL(`/dashboard/organization/import?error=invalid_state`, APP_BASE)
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=missing_params`, request.url)
+      new URL(`/dashboard/organization/import?error=missing_params`, APP_BASE)
+    );
+  }
+
+  if (!orgId) {
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=no_organization`, APP_BASE)
     );
   }
 
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return NextResponse.redirect(new URL("/auth/login", APP_BASE));
   }
 
   // Exchange code for token
@@ -72,23 +76,29 @@ export async function GET(request: NextRequest) {
     });
 
     if (!tokenRes.ok) {
-      return NextResponse.json({ error: "Failed to exchange token" }, { status: 502 });
+      return NextResponse.redirect(
+        new URL(`/dashboard/organization/import?error=shopify_token_failed`, APP_BASE)
+      );
     }
 
     const body = await tokenRes.json();
     access_token = body.access_token;
   } catch {
-    return NextResponse.json({ error: "Failed to reach Shopify token endpoint" }, { status: 502 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=shopify_token_failed`, APP_BASE)
+    );
   }
 
-  // Store token on SellerProfile
+  // Look up sellerProfile by organizationId
   let sellerProfile: { id: string } | null;
   try {
     sellerProfile = await prisma.sellerProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { organizationId: orgId },
     });
     if (!sellerProfile) {
-      return NextResponse.json({ error: "No seller profile" }, { status: 403 });
+      return NextResponse.redirect(
+        new URL(`/dashboard/organization/import?error=no_seller_profile`, APP_BASE)
+      );
     }
 
     await prisma.sellerProfile.update({
@@ -100,7 +110,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch {
-    return NextResponse.json({ error: "Database error saving token" }, { status: 500 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=shopify_token_failed`, APP_BASE)
+    );
   }
 
   // Fetch products from Shopify
@@ -113,7 +125,7 @@ export async function GET(request: NextRequest) {
 
     if (!productsRes.ok) {
       return NextResponse.redirect(
-        new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, request.url)
+        new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, APP_BASE)
       );
     }
 
@@ -121,13 +133,19 @@ export async function GET(request: NextRequest) {
     products = body.products;
   } catch {
     return NextResponse.redirect(
-      new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, request.url)
+      new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, APP_BASE)
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=shopify_no_products`, APP_BASE)
     );
   }
 
   const rows = products.flatMap((product: any) =>
     product.variants.map((variant: any) => {
-      const category = normaliseCategory(product.product_type || "");
+      const category = normaliseCategory(product.product_type || product.title || "");
       const size = normaliseSize(variant.title !== "Default Title" ? variant.title : "");
       return {
         id: createId(),
@@ -136,14 +154,14 @@ export async function GET(request: NextRequest) {
         price: Number.isFinite(parseFloat(variant.price)) ? parseFloat(variant.price) : 0,
         category,
         condition: normaliseCondition(""),
-        brand: product.vendor,
+        brand: product.vendor || null,
         sku: variant.sku || undefined,
         inventory: variant.inventory_quantity ?? 0,
         images: product.images.map((i: any) => i.src),
-        tags: product.tags ? product.tags.split(",").map((t: string) => t.trim()) : [],
+        tags: product.tags ? product.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
         hasVariants: product.variants.length > 1,
         sizeValue: size?.sizeValue,
-        sizeSystem: size?.sizeSystem ?? null,
+        sizeSystem: size?.sizeSystem ?? (variant.title !== "Default Title" ? null : undefined),
         sizeDisplay: size?.sizeDisplay,
         status: !category ? "skip" : size === null && variant.title !== "Default Title" ? "fix_size" : "ready",
         sourcePlatform: "shopify",
@@ -152,7 +170,6 @@ export async function GET(request: NextRequest) {
     })
   );
 
-  // Store in ImportSession
   let importSession: { id: string };
   try {
     importSession = await prisma.importSession.create({
@@ -164,10 +181,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch {
-    return NextResponse.json({ error: "Database error creating import session" }, { status: 500 });
+    return NextResponse.redirect(
+      new URL(`/dashboard/organization/import?error=shopify_fetch_failed`, APP_BASE)
+    );
   }
 
   return NextResponse.redirect(
-    new URL(`/dashboard/organization/import?session=${importSession.id}`, request.url)
+    new URL(`/dashboard/organization/import?session=${importSession.id}`, APP_BASE)
   );
 }
