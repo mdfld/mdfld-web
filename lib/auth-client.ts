@@ -23,6 +23,7 @@ export const authClient = createAuthClient({
         phoneNumber: { type: "string", required: false },
         dateOfBirth: { type: "string", required: false },
         kycStatus: { type: "string", required: false },
+        role: { type: "string", required: false },
       },
     }),
   ],

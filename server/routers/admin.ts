@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, adminProcedure, protectedProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure, protectedProcedure, superAdminProcedure, publicProcedure } from "../trpc";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
@@ -277,6 +277,83 @@ export const adminRouter = createTRPCRouter({
         data: { featured: input.featured },
         select: { id: true, featured: true },
       });
+    }),
+
+  deleteProduct: superAdminProcedure
+    .input(z.object({ productId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PRODUCT_DELETED",
+          entityType: "Product",
+          entityId: input.productId,
+        },
+      });
+      await ctx.prisma.product.delete({ where: { id: input.productId } });
+      return { success: true };
+    }),
+
+  updateProduct: superAdminProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        price: z.number().positive().optional(),
+        inventory: z.number().int().min(0).optional(),
+        isActive: z.boolean().optional(),
+        category: z
+          .enum([
+            "JERSEYS",
+            "BOOTS",
+            "FOOTBALLS",
+            "TRADING_CARDS",
+            "GOALKEEPER_GLOVES",
+            "SHIN_GUARDS",
+            "TRAINING_EQUIPMENT",
+            "ACCESSORIES",
+          ])
+          .optional(),
+        subcategory: z.string().optional(),
+        condition: z
+          .enum([
+            "BRAND_NEW",
+            "NEW_WITH_TAGS",
+            "NEW_WITHOUT_TAGS",
+            "USED_LIKE_NEW",
+            "USED_GOOD",
+            "USED_FAIR",
+          ])
+          .optional(),
+        tier: z.enum(["ELITE", "PRO", "ACADEMY", "CLUB"]).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { productId, ...rest } = input;
+      const updateData = Object.fromEntries(
+        Object.entries(rest).filter(([, v]) => v !== undefined),
+      );
+
+      const previous = await ctx.prisma.product.findUnique({ where: { id: productId } });
+
+      const updated = await ctx.prisma.product.update({
+        where: { id: productId },
+        data: updateData as any,
+      });
+
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PRODUCT_UPDATED",
+          entityType: "Product",
+          entityId: productId,
+          oldValues: previous as any,
+          newValues: updateData,
+        },
+      });
+
+      return updated;
     }),
 
   listOrders: adminProcedure
