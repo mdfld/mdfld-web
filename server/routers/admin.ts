@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, adminProcedure, protectedProcedure, superAdminProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
