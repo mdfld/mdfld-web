@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fetch platform fee settings
+    const platformSettings = await prisma.platformSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton" },
+      update: {},
+    });
+
     // Group items by seller
     const itemsBySeller = items.reduce((acc: any, item: any) => {
       if (!acc[item.sellerId]) {
@@ -91,8 +98,10 @@ export async function POST(request: NextRequest) {
 
       for (const item of sellerItems) {
         const unitAmount = Math.round(Number(item.price) * 100); // Convert to cents
+        const commissionRate = seller.commissionRate ?? platformSettings.sellerCommissionPct;
         const applicationFeeAmount = calculateApplicationFee(
           unitAmount * item.quantity,
+          commissionRate,
         );
 
         lineItems.push({
@@ -120,6 +129,24 @@ export async function POST(request: NextRequest) {
           price: item.price,
           sellerId: seller.id,
           applicationFee: applicationFeeAmount / 100, // Convert back to dollars
+        });
+      }
+    }
+
+    // Add buyer marketplace fee line item if configured
+    if (platformSettings.buyerMarketplaceFee > 0) {
+      const subtotalCents = lineItems.reduce((sum: number, li: any) => {
+        return sum + li.price_data.unit_amount * li.quantity;
+      }, 0);
+      const marketplaceFeeAmount = Math.round(subtotalCents * platformSettings.buyerMarketplaceFee);
+      if (marketplaceFeeAmount > 0) {
+        lineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Marketplace Fee" },
+            unit_amount: marketplaceFeeAmount,
+          },
+          quantity: 1,
         });
       }
     }

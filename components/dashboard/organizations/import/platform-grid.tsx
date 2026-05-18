@@ -12,14 +12,14 @@ import {
   Button,
   Input,
 } from "@heroui/react";
-import GuideModal from "./guide-modal";
+import GuideModal, { type GuideStep } from "./guide-modal";
 
 type Platform = {
   key: string;
   name: string;
   type: "api" | "guide";
   icon: ReactNode;
-  guideSteps?: string[];
+  guideSteps?: GuideStep[];
   connectHref?: string;
 };
 
@@ -87,9 +87,15 @@ const PLATFORMS: Platform[] = [
   {
     key: "ebay",
     name: "eBay",
-    type: "api",
+    type: "guide",
     icon: <EbayIcon />,
-    connectHref: "/api/products/bulk-import/ebay/connect",
+    guideSteps: [
+      { text: "Go to your eBay Seller Hub and open your active listings.", url: "https://www.ebay.com/sh/lst/active" },
+      { text: "Check the box at the top to select all active listings." },
+      { text: "Click the 'Edit' dropdown and choose 'Export listings'." },
+      { text: "Select CSV as the format and download the file." },
+      { text: "Upload the CSV file here and we'll map everything automatically." },
+    ],
   },
   {
     key: "depop",
@@ -97,11 +103,11 @@ const PLATFORMS: Platform[] = [
     type: "guide",
     icon: <DepopIcon />,
     guideSteps: [
-      "Open the Depop app and go to your Profile",
-      "Tap the three-dot menu (⋯) in the top right",
-      "Select Settings → Privacy → Request my data",
-      "Depop will email you a CSV file within 24 hours",
-      "Download the CSV and upload it here",
+      { text: "Open the Depop app and go to your Profile." },
+      { text: "Tap the three-dot menu (⋯) in the top right." },
+      { text: "Select Settings → Privacy → Request my data.", url: "https://www.depop.com/privacy-hub/data-request/" },
+      { text: "Depop will email you a CSV file within 24 hours." },
+      { text: "Download the CSV and upload it here." },
     ],
   },
   {
@@ -110,11 +116,11 @@ const PLATFORMS: Platform[] = [
     type: "guide",
     icon: <VintedIcon />,
     guideSteps: [
-      "Log in to Vinted on desktop at vinted.com",
-      "Go to your Account Settings",
-      "Select Privacy → Download my data",
-      "You will receive an email with a CSV download link",
-      "Download the file and upload it here",
+      { text: "Log in to Vinted on desktop.", url: "https://www.vinted.com" },
+      { text: "Go to your Account Settings → Privacy.", url: "https://www.vinted.com/account/privacy" },
+      { text: "Select 'Download my data'." },
+      { text: "You will receive an email with a CSV download link." },
+      { text: "Download the file and upload it here." },
     ],
   },
   {
@@ -123,11 +129,11 @@ const PLATFORMS: Platform[] = [
     type: "guide",
     icon: <WixIcon />,
     guideSteps: [
-      "Log in to your Wix dashboard",
-      "Go to Stores → Products",
-      "Click the three-dot menu → Export Products",
-      "Download the CSV file",
-      "Upload it here",
+      { text: "Log in to your Wix dashboard.", url: "https://manage.wix.com" },
+      { text: "Go to Stores → Products." },
+      { text: "Click the three-dot menu → Export Products." },
+      { text: "Download the CSV file." },
+      { text: "Upload it here." },
     ],
   },
   {
@@ -136,11 +142,11 @@ const PLATFORMS: Platform[] = [
     type: "guide",
     icon: <WooIcon />,
     guideSteps: [
-      "Log in to your WordPress admin panel",
-      "Go to WooCommerce → Products",
-      "Click Export at the top of the page",
-      "Select All columns and click Generate CSV",
-      "Download and upload the file here",
+      { text: "Log in to your WordPress admin panel." },
+      { text: "Go to WooCommerce → Products.", url: "https://woocommerce.com/document/exporting-product-csv/" },
+      { text: "Click Export at the top of the page." },
+      { text: "Select All columns and click Generate CSV." },
+      { text: "Download and upload the file here." },
     ],
   },
   {
@@ -149,11 +155,11 @@ const PLATFORMS: Platform[] = [
     type: "guide",
     icon: <GodaddyIcon />,
     guideSteps: [
-      "Log in to your GoDaddy Online Store",
-      "Go to Products in your dashboard",
-      "Click Export → Export All Products",
-      "Download the CSV file that is emailed to you",
-      "Upload it here",
+      { text: "Log in to your GoDaddy account.", url: "https://account.godaddy.com" },
+      { text: "Open your Online Store dashboard." },
+      { text: "Go to Products and click Export → Export All Products." },
+      { text: "Download the CSV file that is emailed to you." },
+      { text: "Upload it here." },
     ],
   },
 ];
@@ -192,14 +198,14 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
           <button
             key={platform.key}
             onClick={() => handleClick(platform)}
-            className="flex items-center gap-3 bg-content2 border border-divider rounded-lg px-3 py-2.5 text-left hover:border-default-400 transition-colors"
+            className="flex items-center gap-2 bg-content2 border border-divider rounded-lg px-3 py-2.5 text-left hover:border-default-400 transition-colors min-w-0"
           >
-            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
               {platform.icon}
             </div>
-            <span className="text-xs font-medium text-foreground flex-1">{platform.name}</span>
+            <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{platform.name}</span>
             <span
-              className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+              className={`flex-shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded ${
                 platform.type === "api"
                   ? "bg-success-50 text-success-700"
                   : "bg-default-100 text-default-400"
@@ -211,7 +217,7 @@ export default function ImportPlatformGrid({ onFilePicked }: ImportPlatformGridP
         ))}
         <button
           onClick={() => setMoreOpen(true)}
-          className="flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors"
+          className="col-span-2 flex items-center justify-center gap-2 border border-dashed border-divider rounded-lg px-3 py-2.5 text-default-400 text-xs hover:border-default-400 transition-colors"
         >
           More platforms
         </button>

@@ -8,17 +8,15 @@ export const EmailCheckBanner = () => {
 
 	if (isPending) return null;
 
+	if (session?.user?.emailVerified) return null;
+
 	return (
 		<div className="m-4">
-			{session?.user?.emailVerified ? (
-				<DashBanner text="You're a verified user!" button="" href="#" />
-			) : (
-				<DashBanner
-					text="Please verify your email!"
-					button="Verify Email"
-					href="/auth/verify-email"
-				/>
-			)}
+			<DashBanner
+				text="Please verify your email!"
+				button="Verify Email"
+				href="/auth/verify-email"
+			/>
 		</div>
 	);
 };

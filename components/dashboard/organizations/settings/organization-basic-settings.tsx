@@ -23,6 +23,7 @@ import { cn } from "@heroui/react";
 import { useUploadThing } from "@/lib/uploadclient";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 const industries = [
   "Technology",
@@ -58,6 +59,7 @@ export default function OrganizationBasicSettings({
   organizationSlug: string;
 }) {
   const router = useRouter();
+  const { completeStep } = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
@@ -97,6 +99,7 @@ export default function OrganizationBasicSettings({
     onSuccess: () => {
       setSuccessMessage("Organization updated successfully!");
       refetch();
+      completeStep("org-name-bio", "seller");
     },
     onError: (error: any) => {
       setUpdateError(error.message || "Failed to update organization");
@@ -264,6 +267,7 @@ export default function OrganizationBasicSettings({
           });
           refetch();
           setSuccessMessage("Logo updated successfully!");
+          completeStep("org-logo", "seller");
         }
       }
     } catch (err) {

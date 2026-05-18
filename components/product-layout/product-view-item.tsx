@@ -99,6 +99,10 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
     const [isDescriptionExpanded, setIsDescriptionExpanded] =
       React.useState(false);
     const [isAddingToCart, setIsAddingToCart] = React.useState(false);
+    const [reportOpen, setReportOpen] = React.useState(false);
+    const [reportReason, setReportReason] = React.useState('');
+    const [reportSubmitting, setReportSubmitting] = React.useState(false);
+    const [reportDone, setReportDone] = React.useState(false);
 
     // Get wishlist data
     const { data: wishlistProducts } = trpc.user.getWishlist.useQuery(
@@ -204,6 +208,24 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
         } finally {
           setIsAddingToCart(false);
         }
+      }
+    };
+
+    const handleReport = async () => {
+      setReportSubmitting(true);
+      try {
+        await fetch(`/api/products/${props.id}/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reportReason }),
+        });
+        setReportDone(true);
+        setReportReason('');
+        setTimeout(() => { setReportOpen(false); setReportDone(false); }, 2000);
+      } catch {
+        toast.error('Failed to submit report');
+      } finally {
+        setReportSubmitting(false);
       }
     };
 
@@ -459,7 +481,63 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
               <Icon icon="solar:flag-linear" width={22} />
             </Button>
           </div>
+          <Button
+            variant="light"
+            size="sm"
+            startContent={<Icon icon="material-symbols:flag-outline" width={16} />}
+            onPress={() => setReportOpen(true)}
+            style={{ color: 'rgba(255,255,255,0.4)', marginTop: 8, alignSelf: 'flex-start' }}
+          >
+            Report listing
+          </Button>
         </div>
+        {reportOpen && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+          }} onClick={() => setReportOpen(false)}>
+            <div style={{
+              background: '#111', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8, padding: 32, maxWidth: 480, width: '100%',
+            }} onClick={e => e.stopPropagation()}>
+              <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Report this listing</h3>
+              {reportDone ? (
+                <p style={{ color: '#00d4b6', fontSize: 14 }}>Report submitted. Thank you.</p>
+              ) : (
+                <>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 20 }}>
+                    Why does this listing seem suspicious? (optional)
+                  </p>
+                  <textarea
+                    value={reportReason}
+                    onChange={e => setReportReason(e.target.value)}
+                    maxLength={500}
+                    placeholder="Describe the issue..."
+                    style={{
+                      width: '100%', minHeight: 100, background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4,
+                      color: '#fff', fontSize: 13, padding: 12, resize: 'vertical',
+                      fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+                    <Button
+                      color="danger"
+                      isLoading={reportSubmitting}
+                      onPress={handleReport}
+                      style={{ flex: 1 }}
+                    >
+                      Submit Report
+                    </Button>
+                    <Button variant="bordered" onPress={() => setReportOpen(false)} style={{ flex: 1 }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   },

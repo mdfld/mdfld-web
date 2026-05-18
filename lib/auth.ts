@@ -70,7 +70,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending verification email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <no-reply@mdfld.co>",
+          from: "Midfield Co <onboarding@resend.dev>",
           to: user.email,
           subject: "Welcome aboard! | Verify your email address",
           html: `
@@ -119,16 +119,34 @@ export const auth = betterAuth({
     },
   },
   socialProviders: {
-    // google: {
-    // 	clientId: process.env.GOOGLE_CLIENT_ID!,
-    // 	clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    // },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
   plugins: [username()],
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (!("username" in user) || !user.username) {
+            const base = ((user.email as string)?.split("@")[0] || "user")
+              .replace(/[^a-z0-9]/gi, "")
+              .toLowerCase()
+              .slice(0, 15);
+            const suffix = Math.random().toString(36).slice(2, 8);
+            const username = `${base}${suffix}`;
+            return { data: { ...user, username, displayUsername: username } };
+          }
+          return { data: user };
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       bio: {
@@ -160,6 +178,11 @@ export const auth = betterAuth({
       phoneNumber: {
         type: "string",
         required: false,
+      },
+      role: {
+        type: "string",
+        defaultValue: "BUYER",
+        input: false,
       },
     },
   },

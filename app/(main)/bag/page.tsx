@@ -17,6 +17,10 @@ import { toast } from "sonner";
 // Stripe redirect handled via checkout session URL
 import { useGuestCart } from "@/hooks/use-guest-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 
 
@@ -24,6 +28,18 @@ export default function BagPage() {
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
   const [promoCode, setPromoCode] = React.useState("");
+  const { shouldShowTour, markTourSeen } = useOnboarding();
+  const [tourActive, setTourActive] = React.useState(false);
+  const tour = getTour("bag");
+
+  React.useEffect(() => {
+    if (shouldShowTour("bag")) setTourActive(true);
+  }, [shouldShowTour]);
+
+  const handleTourEnd = async () => {
+    setTourActive(false);
+    await markTourSeen("bag");
+  };
 
   // Auth state
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -170,10 +186,11 @@ export default function BagPage() {
     );
   }
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
-  const shipping: number = 0; // Free shipping or calculate based on rules
-  const tax: number = subtotal * 0.08; // 8% tax rate (adjust as needed)
-  const total: number = subtotal + shipping + tax;
+  const shipping: number = 0;
+  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
+  const total: number = subtotal + shipping + marketplaceFee;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -185,6 +202,8 @@ export default function BagPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
+          <div data-onboarding="auth-badge" className="hidden" />
+          <div data-onboarding="buyer-protection" className="hidden" />
           {cartData.items.map((item: any) => {
             // Handle both guest and auth cart item structures
             const itemId = item.id || `${item.productId}-${item.variantId || 'no-variant'}`;
@@ -238,7 +257,7 @@ export default function BagPage() {
                           <Button
                             isIconOnly
                             size="sm"
-                            variant="flat"
+                            variant="bordered"
                             onPress={() =>
                               handleQuantityChange(
                                 itemId,
@@ -248,7 +267,7 @@ export default function BagPage() {
                               )
                             }
                           >
-                            <Icon icon="solar:minus-linear" />
+                            <Icon icon="solar:minus-linear" className="text-foreground" />
                           </Button>
                           <span className="w-12 text-center">
                             {item.quantity}
@@ -256,7 +275,7 @@ export default function BagPage() {
                           <Button
                             isIconOnly
                             size="sm"
-                            variant="flat"
+                            variant="bordered"
                             onPress={() =>
                               handleQuantityChange(
                                 itemId,
@@ -266,7 +285,7 @@ export default function BagPage() {
                               )
                             }
                           >
-                            <Icon icon="solar:add-linear" />
+                            <Icon icon="solar:add-linear" className="text-foreground" />
                           </Button>
                         </div>
                         <p className="font-medium">
@@ -302,10 +321,12 @@ export default function BagPage() {
                     {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-default-600">Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                {marketplaceFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-default-600">Marketplace Fee</span>
+                    <span>${marketplaceFee.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <Divider className="my-4" />
@@ -369,6 +390,14 @@ export default function BagPage() {
           </Card>
         </div>
       </div>
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }

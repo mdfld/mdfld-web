@@ -113,7 +113,7 @@ export function ContactForm() {
 
       <form onSubmit={handleSubmit}>
         {/* Name + Email */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        <div className="contact-form-name-email" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div>
             <label style={labelStyle}>Name *</label>
             <input

@@ -96,7 +96,7 @@ export default function App() {
       <TrustBar />
       <FeaturedCategories />
       <ProductGrid />
-      <PromoBanner />
+      {/* <PromoBanner /> */}
       {/* <ProAthletes /> */}
       {/* <RecentDrops /> */}
       {/* <Testimonials /> */}

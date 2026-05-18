@@ -36,6 +36,7 @@ export default function ImportPage() {
   const [importedCount, setImportedCount] = useState(0);
   const [sessionLoading, setSessionLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"store" | "social" | "csv">("store");
 
   useEffect(() => {
     if (!sessionPending && !session) router.push("/auth/login");
@@ -44,6 +45,29 @@ export default function ImportPage() {
   useEffect(() => {
     if (!activeOrganization && !sessionPending && session) router.push("/dashboard");
   }, [activeOrganization, sessionPending, session, router]);
+
+  // Handle OAuth errors from eBay redirect
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (!error) return;
+    const messages: Record<string, string> = {
+      invalid_state: "Connection attempt expired or was tampered with. Please try again.",
+      missing_params: "eBay did not return the expected data. Please try again.",
+      ebay_token_failed: "Could not connect to eBay — the authorisation code may have expired. Please try again.",
+      ebay_fetch_failed: "Connected to eBay but failed to fetch your listings. Please try again.",
+      ebay_no_listings: "No listings found in your eBay account. If you list through eBay's website rather than their API, export your listings as CSV from eBay and upload them below.",
+      no_organization: "You need to create a store before importing products.",
+      no_seller_profile: "Your store setup is incomplete. Please finish setting up your store first.",
+      ebay_not_seller: "This eBay account doesn't have an active seller account. Make sure you're signing in with your eBay seller account, not a buyer account.",
+      invalid_shop: "Invalid Shopify store domain. Make sure you enter it as yourstore.myshopify.com.",
+      shopify_token_failed: "Could not connect to your Shopify store. Please try again.",
+      shopify_fetch_failed: "Connected to Shopify but failed to fetch your products. Please try again.",
+      shopify_no_products: "No products found in your Shopify store.",
+    };
+    setUploadError(messages[error] ?? "Something went wrong connecting to eBay. Please try again.");
+    router.replace("/dashboard/organization/import");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Handle OAuth redirect with ?session= param
   useEffect(() => {
@@ -167,20 +191,53 @@ export default function ImportPage() {
 
         {!sessionLoading && stage === "landing" && (
           <>
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-2xl font-semibold text-foreground">Import Products</h1>
               <p className="text-sm text-default-500 mt-1">
                 Move your listings to MDFLD — whether you're on a marketplace, social media, or building from scratch.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <ImportPlatformGrid onFilePicked={handleCsvFile} />
-              <ImportSocialTrack />
+
+            {/* Mobile: tab bar */}
+            <div className="md:hidden">
+              <div className="flex border-b border-divider mb-4">
+                {(["store", "social", "csv"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2.5 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
+                      activeTab === tab
+                        ? "border-primary text-primary"
+                        : "border-transparent text-default-400"
+                    }`}
+                  >
+                    {tab === "store" ? "Store" : tab === "social" ? "Social" : "CSV"}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "store" && <ImportPlatformGrid onFilePicked={handleCsvFile} />}
+              {activeTab === "social" && <ImportSocialTrack />}
+              {activeTab === "csv" && (
+                <>
+                  <ImportCsvDropZone onParsed={handleCsvParsed} />
+                  {uploadError && (
+                    <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
+                  )}
+                </>
+              )}
             </div>
-            <ImportCsvDropZone onParsed={handleCsvParsed} />
-            {uploadError && (
-              <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
-            )}
+
+            {/* Desktop: original grid */}
+            <div className="hidden md:block">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <ImportPlatformGrid onFilePicked={handleCsvFile} />
+                <ImportSocialTrack />
+              </div>
+              <ImportCsvDropZone onParsed={handleCsvParsed} />
+              {uploadError && (
+                <p className="text-xs text-danger mt-2 text-center">{uploadError}</p>
+              )}
+            </div>
           </>
         )}
 
