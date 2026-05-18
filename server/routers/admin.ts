@@ -376,6 +376,16 @@ export const adminRouter = createTRPCRouter({
       return { sellers, nextCursor };
     }),
 
+  getPublicFees: publicProcedure.query(async ({ ctx }) => {
+    const settings = await ctx.prisma.platformSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton" },
+      update: {},
+      select: { buyerMarketplaceFee: true },
+    });
+    return { buyerMarketplaceFee: settings.buyerMarketplaceFee };
+  }),
+
   getPlatformSettings: adminProcedure.query(async ({ ctx }) => {
     return ctx.prisma.platformSettings.upsert({
       where: { id: "singleton" },

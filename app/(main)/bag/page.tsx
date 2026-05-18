@@ -186,10 +186,11 @@ export default function BagPage() {
     );
   }
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
-  const shipping: number = 0; // Free shipping or calculate based on rules
-  const tax: number = subtotal * 0.08; // 8% tax rate (adjust as needed)
-  const total: number = subtotal + shipping + tax;
+  const shipping: number = 0;
+  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
+  const total: number = subtotal + shipping + marketplaceFee;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -256,7 +257,7 @@ export default function BagPage() {
                           <Button
                             isIconOnly
                             size="sm"
-                            variant="flat"
+                            variant="bordered"
                             onPress={() =>
                               handleQuantityChange(
                                 itemId,
@@ -266,7 +267,7 @@ export default function BagPage() {
                               )
                             }
                           >
-                            <Icon icon="solar:minus-linear" />
+                            <Icon icon="solar:minus-linear" className="text-foreground" />
                           </Button>
                           <span className="w-12 text-center">
                             {item.quantity}
@@ -274,7 +275,7 @@ export default function BagPage() {
                           <Button
                             isIconOnly
                             size="sm"
-                            variant="flat"
+                            variant="bordered"
                             onPress={() =>
                               handleQuantityChange(
                                 itemId,
@@ -284,7 +285,7 @@ export default function BagPage() {
                               )
                             }
                           >
-                            <Icon icon="solar:add-linear" />
+                            <Icon icon="solar:add-linear" className="text-foreground" />
                           </Button>
                         </div>
                         <p className="font-medium">
@@ -320,10 +321,12 @@ export default function BagPage() {
                     {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-default-600">Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                {marketplaceFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-default-600">Marketplace Fee</span>
+                    <span>${marketplaceFee.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <Divider className="my-4" />

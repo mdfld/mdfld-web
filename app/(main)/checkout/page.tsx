@@ -163,10 +163,11 @@ export default function CheckoutPage() {
     );
   }
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
-  const shipping: number = 0; // Free shipping
-  const tax: number = subtotal * 0.08; // 8% tax rate
-  const total: number = subtotal + shipping + tax;
+  const shipping: number = 0;
+  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
+  const total: number = subtotal + shipping + marketplaceFee;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -325,10 +326,12 @@ export default function CheckoutPage() {
                     {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-default-600">Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                {marketplaceFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-default-600">Marketplace Fee</span>
+                    <span>${marketplaceFee.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <Divider />
