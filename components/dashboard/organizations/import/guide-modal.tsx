@@ -11,12 +11,14 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 
+export type GuideStep = { text: string; url?: string };
+
 interface GuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (file: File) => void;
   platform: string;
-  steps: string[];
+  steps: GuideStep[];
 }
 
 export default function GuideModal({ isOpen, onClose, onUpload, platform, steps }: GuideModalProps) {
@@ -44,7 +46,20 @@ export default function GuideModal({ isOpen, onClose, onUpload, platform, steps 
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-default-100 text-default-600 flex items-center justify-center text-xs font-semibold">
                   {i + 1}
                 </span>
-                <span className="text-default-700 pt-0.5">{step}</span>
+                <span className="text-default-700 pt-0.5">
+                  {step.text}
+                  {step.url && (
+                    <a
+                      href={step.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 inline-flex items-center gap-0.5 text-primary text-xs font-medium hover:underline"
+                    >
+                      Open
+                      <Icon icon="solar:arrow-right-up-linear" className="w-3 h-3" />
+                    </a>
+                  )}
+                </span>
               </li>
             ))}
           </ol>

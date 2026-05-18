@@ -10,6 +10,8 @@ import {
   SoleplateType,
   PlayerVersion,
 } from "@prisma/client";
+import { getScoringWeights } from "@/lib/scoring/getScoringWeights";
+import { applyScoring } from "@/lib/scoring/searchScoring";
 
 import { PRODUCT_CATEGORIES } from "@/lib/constants/product-categories";
 
@@ -469,6 +471,7 @@ export const productRouter = createTRPCRouter({
         minPrice: z.number().optional(),
         maxPrice: z.number().optional(),
         tags: z.array(z.string()).optional(),
+        featured: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -477,6 +480,10 @@ export const productRouter = createTRPCRouter({
       const where: any = {
         isActive: true,
       };
+
+      if (input.featured !== undefined) {
+        where.featured = input.featured;
+      }
 
       if (input.query) {
         where.OR = [
@@ -506,10 +513,9 @@ export const productRouter = createTRPCRouter({
         };
       }
 
-      const items = await ctx.prisma.product.findMany({
+      const candidates = await ctx.prisma.product.findMany({
         where,
-        take: input.limit + 1,
-        cursor: input.cursor ? { id: input.cursor } : undefined,
+        take: 200,
         orderBy: {
           createdAt: "desc",
         },
@@ -519,20 +525,30 @@ export const productRouter = createTRPCRouter({
               id: true,
               storeName: true,
               averageRating: true,
+              stripeOnboardingComplete: true,
             },
           },
         },
       });
 
-      let nextCursor: typeof input.cursor = undefined;
-      if (items.length > input.limit) {
-        const nextItem = items.pop();
-        nextCursor = nextItem!.id;
-      }
+      const weights = await getScoringWeights();
+
+      const context = {
+        buyerCategoryId: input.category,
+        buyerPriceMinCents: input.minPrice !== undefined ? Math.round(input.minPrice * 100) : undefined,
+        buyerPriceMaxCents: input.maxPrice !== undefined ? Math.round(input.maxPrice * 100) : undefined,
+      };
+
+      const items = applyScoring(
+        candidates,
+        context,
+        weights,
+        process.env.NODE_ENV === "development",
+      );
 
       return {
         items,
-        nextCursor,
+        nextCursor: undefined,
       };
     }),
 

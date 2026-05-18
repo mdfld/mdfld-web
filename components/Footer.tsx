@@ -1,7 +1,9 @@
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Instagram, Twitter, Linkedin, ShieldCheck, Zap, Globe } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 const ACCENT = '#00d4b6';
 
@@ -35,15 +37,34 @@ const DiscordIcon = () => (
 
 const SOCIALS = [
   { icon: <Instagram size={15} />, label: 'Instagram', href: 'https://www.instagram.com/mdfldmarketplace/' },
-  { icon: <Twitter size={15} />, label: 'Twitter', href: '#' },
-  { icon: <Linkedin size={15} />, label: 'LinkedIn', href: 'https://www.linkedin.com/company/mdfld/' },
-  { icon: <DiscordIcon />, label: 'Discord', href: '#' },
+  { icon: <Twitter size={15} />, label: 'X', href: 'https://x.com/mdfldmp' },
+  { icon: <Linkedin size={15} />, label: 'LinkedIn', href: 'https://www.linkedin.com/in/ayoolamorakinyo/' },
+  { icon: <Icon icon="ic:baseline-discord" width={15} />, label: 'Discord', href: 'https://discord.gg/pW87DDjZ' },
 ];
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!email.includes('@')) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      setSent(true);
+    } catch {
+      // fail silently — UI still shows success to avoid frustrating user
+      setSent(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <footer style={{
@@ -123,13 +144,6 @@ export default function Footer() {
       {/* Ambient glow */}
       <div style={{ position: 'absolute', top: 0, left: '10%', width: 400, height: 250, background: 'radial-gradient(ellipse, rgba(0,212,182,0.05) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
-      {/* Ghost wordmark */}
-      <div className="f-ghost" style={{
-        position: 'absolute', bottom: 50, right: '-2%',
-        fontSize: 'clamp(80px, 12vw, 160px)', fontWeight: 900, letterSpacing: '-0.06em',
-        color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.025)',
-        textTransform: 'uppercase', lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
-      }}>MIDFIELD</div>
 
       {/* Main body */}
       <div style={{ padding: 'clamp(40px, 5vw, 72px) clamp(16px, 4vw, 48px) 0', position: 'relative', zIndex: 2 }}>
@@ -139,9 +153,13 @@ export default function Footer() {
           <div className="f-brand-col">
             <div style={{ marginBottom: 20 }}>
               <Link href="/" style={{ textDecoration: 'none' }}>
-                <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 30, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#fff', lineHeight: 1 }}>
-                  MID<span style={{ color: ACCENT }}>FIELD</span>
-                </div>
+                <Image
+                  src="/mdfld-logo-v2.png"
+                  alt="MDFLD"
+                  width={80}
+                  height={40}
+                  style={{ marginBottom: 8, objectFit: 'contain' }}
+                />
               </Link>
               <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginTop: 4 }}>
                 The Apex of Football Culture
@@ -151,19 +169,6 @@ export default function Footer() {
             <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, fontWeight: 300, lineHeight: 1.8, color: 'rgba(255,255,255,0.30)', maxWidth: 240, marginBottom: 24 }}>
               Premium football boots, kits and gear — globally shipped, pro approved.
             </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 24 }}>
-              {[
-                { icon: <ShieldCheck size={11} />, text: 'Verified Authentic Products' },
-                { icon: <Globe size={11} />, text: '150+ Countries Shipped' },
-                { icon: <Zap size={11} />, text: 'Same-Day Dispatch Available' },
-              ].map((b, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: ACCENT, flexShrink: 0 }}>{b.icon}</span>
-                  <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.26)', letterSpacing: '0.05em' }}>{b.text}</span>
-                </div>
-              ))}
-            </div>
 
             {/* Socials */}
             <div style={{ display: 'flex', gap: 8 }}>
@@ -212,12 +217,13 @@ export default function Footer() {
                   style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: "'Barlow', sans-serif", fontSize: 12, color: '#fff', padding: '11px 14px', letterSpacing: '0.04em', width: '100%', boxSizing: 'border-box' }}
                 />
                 <button
-                  onClick={() => email.includes('@') && setSent(true)}
-                  style={{ background: ACCENT, border: 'none', color: '#020606', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }}
+                  onClick={handleSubscribe}
+                  disabled={submitting}
+                  style={{ background: ACCENT, border: 'none', color: '#020606', fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '10px 14px', cursor: submitting ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', opacity: submitting ? 0.7 : 1 }}
                   onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.08)')}
                   onMouseLeave={e => (e.currentTarget.style.filter = 'brightness(1)')}
                 >
-                  Subscribe <ArrowRight size={12} />
+                  {submitting ? 'Sending...' : 'Subscribe'} <ArrowRight size={12} />
                 </button>
               </div>
             )}
@@ -231,7 +237,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="f-bottom" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '16px clamp(16px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'relative', zIndex: 2 }}>
         <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-          © 2025 Midfield FC Ltd. All rights reserved.
+          © 2025 MDFLD LLC. All rights reserved.
         </span>
         <div className="f-legal-row" style={{ display: 'flex', gap: 20 }}>
           {NAV.Legal.map(l => (

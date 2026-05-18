@@ -127,7 +127,7 @@ const MultiStepSidebar = React.forwardRef<
               />
             </div>
           </div>
-          <div className="h-full w-full p-4 sm:max-w-md md:max-w-lg">
+          <div className="h-full w-full overflow-y-auto p-4 sm:max-w-md md:max-w-lg">
             {children}
             <MultistepNavigationButtons
               backButtonProps={{ isDisabled: currentPage === 0 }}

@@ -54,60 +54,43 @@ export default function ReturnsLayout() {
   const {
     data: ordersData,
     isLoading,
-    refetch,
   } = trpc.order.getMyOrders.useQuery({
     limit: 50,
     status: "delivered",
   }) as any;
 
-  // Mock return mutation - replace with actual API call when implemented
-  const requestReturnMutation = {
-    mutate: (_data: any) => {
-      // Simulate API call
-      setTimeout(() => {
-        toast.success("Return request submitted");
-        setIsReturnModalOpen(false);
-        setSelectedOrder(null);
-        setReturnReason("");
-        setReturnDetails("");
-        refetch();
-      }, 1000);
+  const {
+    data: returnsData,
+    isLoading: returnsLoading,
+    refetch: refetchReturns,
+  } = trpc.return.getMyReturns.useQuery({ limit: 50 }) as any;
+
+  const requestReturnMutation = trpc.return.create.useMutation({
+    onSuccess: () => {
+      toast.success("Return request submitted");
+      setIsReturnModalOpen(false);
+      setSelectedOrder(null);
+      setReturnReason("");
+      setReturnDetails("");
+      refetchReturns();
     },
-    isPending: false,
-  };
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to submit return request");
+    },
+  });
 
   const orders = ordersData?.items || [];
   const deliveredOrders = orders.filter(
     (order: any) => order.status === "DELIVERED",
   );
 
-  // Mock returns data - in production, this would come from the API
-  const mockReturns = [
-    {
-      id: "1",
-      orderNumber: "ORD-12345",
-      items: [{ title: "Nike Air Max 90", quantity: 1, price: 129.99 }],
-      status: "pending",
-      reason: "defective",
-      createdAt: new Date("2024-01-10"),
-      total: 129.99,
-    },
-    {
-      id: "2",
-      orderNumber: "ORD-12346",
-      items: [{ title: "Adidas Ultraboost", quantity: 1, price: 180.0 }],
-      status: "approved",
-      reason: "wrong_item",
-      createdAt: new Date("2024-01-08"),
-      total: 180.0,
-    },
-  ];
+  const returns = returnsData || [];
 
-  const filteredReturns = mockReturns.filter((ret) => {
+  const filteredReturns = returns.filter((ret: any) => {
     const matchesSearch =
-      ret.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ret.items.some((item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ret.order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ret.order.items.some((item: any) =>
+        item.product.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     const matchesStatus =
       selectedStatus === "all" || ret.status === selectedStatus;
@@ -133,12 +116,12 @@ export default function ReturnsLayout() {
 
     requestReturnMutation.mutate({
       orderId: selectedOrder.id,
-      reason: returnReason,
+      reason: returnReason as any,
       details: returnDetails,
     });
   };
 
-  if (isLoading) {
+  if (isLoading || returnsLoading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
         <Spinner size="lg" />
@@ -160,18 +143,18 @@ export default function ReturnsLayout() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div>
           <p className="text-sm text-default-500">Total Returns</p>
-          <p className="text-2xl font-medium mt-1">{mockReturns.length}</p>
+          <p className="text-2xl font-medium mt-1">{returns.length}</p>
         </div>
         <div>
           <p className="text-sm text-default-500">Pending</p>
           <p className="text-2xl font-medium mt-1">
-            {mockReturns.filter((r) => r.status === "pending").length}
+            {returns.filter((r: any) => r.status === "pending").length}
           </p>
         </div>
         <div>
           <p className="text-sm text-default-500">Approved</p>
           <p className="text-2xl font-medium mt-1">
-            {mockReturns.filter((r) => r.status === "approved").length}
+            {returns.filter((r: any) => r.status === "approved").length}
           </p>
         </div>
         <div>
@@ -225,20 +208,21 @@ export default function ReturnsLayout() {
               </div>
             ) : (
               <div className="space-y-4">
-                {paginatedReturns.map((ret) => (
+                {paginatedReturns.map((ret: any) => (
                   <Card key={ret.id} className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-mono text-sm text-default-600">
-                          {ret.orderNumber}
+                          {ret.order.orderNumber}
                         </p>
                         <p className="text-xs text-default-400 mt-1">
-                          Requested on {format(ret.createdAt, "MMM dd, yyyy")}
+                          Requested on{" "}
+                          {format(new Date(ret.createdAt), "MMM dd, yyyy")}
                         </p>
                         <div className="mt-3">
-                          {ret.items.map((item, idx) => (
+                          {ret.order.items.map((item: any, idx: number) => (
                             <p key={idx} className="text-sm">
-                              {item.title} x{item.quantity}
+                              {item.product.title} x{item.quantity}
                             </p>
                           ))}
                         </div>
@@ -269,7 +253,7 @@ export default function ReturnsLayout() {
                             ret.status.slice(1)}
                         </Chip>
                         <p className="text-sm font-medium">
-                          ${ret.total.toFixed(2)}
+                          ${Number(ret.order.total).toFixed(2)}
                         </p>
                       </div>
                     </div>

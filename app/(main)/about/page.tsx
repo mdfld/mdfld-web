@@ -1,48 +1,85 @@
+"use client";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const STATS = [
-  { value: "50K+", label: "Amount of Users" },
-  { value: "150+", label: "Countries Served" },
-  { value: "10K+", label: "All Products" },
-  { value: "98%", label: "CAPS" },
-];
+function useCountUp(target: number, duration = 1500) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (target === 0) return;
+    const steps = 60;
+    const increment = target / steps;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(interval);
+  }, [target, duration]);
+  return count;
+}
+
+function useLiveStats() {
+  const [stats, setStats] = useState({ salesCount: 0, userCount: 0, productCount: 0 });
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/meta/salesCount').then(r => r.json()),
+      fetch('/api/meta/userCount').then(r => r.json()),
+      fetch('/api/meta/productCount').then(r => r.json()),
+    ]).then(([sales, users, products]) => {
+      setStats({
+        salesCount: sales.salesCount ?? 0,
+        userCount: users.userCount ?? 0,
+        productCount: products.productCount ?? 0,
+      });
+    }).catch(() => {});
+  }, []);
+  return stats;
+}
 
 const VALUES = [
   {
     icon: "solar:shield-check-bold-duotone",
     title: "Authenticity First",
-    description:
-      "Every product listed on MDFLD goes through a rigorous multi-point verification process. No fakes. No compromises.",
   },
   {
     icon: "solar:users-group-rounded-bold-duotone",
     title: "Built for the Culture",
-    description:
-      "From grassroots players to elite pros — MDFLD exists to serve football culture at every level, globally.",
   },
   {
     icon: "solar:bolt-bold-duotone",
     title: "Fast. Seamless. Global.",
-    description:
-      "Same-day dispatch, real-time tracking, and shipping to 150+ countries. Your gear arrives when you need it.",
   },
   {
     icon: "solar:hand-shake-bold-duotone",
     title: "Fair for EVERYONE",
-    description:
-      "We give serious sellers the tools to reach a global audience — with transparent fees and no hidden costs.",
   },
 ];
 
 const TEAM = [
-  { initials: "AO", name: "Ayoola Morakinyo", role: "Founder & CEO" },
+  { initials: "AM", name: "Ayoola Morakinyo", role: "Founder & CEO" },
   { initials: "KB", name: "Kayla Bloom", role: "Co-Founder & CMO" },
   { initials: "RW", name: "Ryan Walden", role: "Board Advisor" },
-  { initials: "AR", name: "Aman Rathore", role: "Lead Engineer" },
 ];
 
 export default function AboutPage() {
+  const live = useLiveStats();
+  const caps = useCountUp(live.salesCount);
+  const players = useCountUp(live.userCount);
+  const products = useCountUp(live.productCount);
+
+  const STATS = [
+    { value: players > 0 ? players.toLocaleString() : "—", label: "Active Players" },
+    { value: "—", label: "Countries Served" },
+    { value: products > 0 ? products.toLocaleString() : "—", label: "Verified Products" },
+    { value: caps > 0 ? caps.toLocaleString() : "—", label: "Caps" },
+  ];
+
   return (
     <div
       className="w-full min-h-screen"
@@ -163,7 +200,7 @@ export default function AboutPage() {
         >
           {STATS.map((s) => (
             <div
-              key={s.value}
+              key={s.label}
               className="ab-stat-card"
               style={{
                 padding: "24px",
@@ -233,7 +270,7 @@ export default function AboutPage() {
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.8, color: "rgba(255,255,255,0.5)", fontWeight: 300, marginTop: 16 }}>
               Every listing is seller-verified and buyer-protected. From match
-              boots to training kits, if it's on MDFLD, it's real.
+              boots to training kits, if it&apos;s on MDFLD, it&apos;s real.
             </p>
           </div>
 
@@ -339,14 +376,11 @@ export default function AboutPage() {
                     letterSpacing: "0.04em",
                     textTransform: "uppercase",
                     color: "#fff",
-                    marginBottom: 10,
+                    marginBottom: 0,
                   }}
                 >
                   {v.title}
                 </h3>
-                <p style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>
-                  {v.description}
-                </p>
               </div>
             ))}
           </div>

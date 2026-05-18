@@ -22,6 +22,10 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import ProductCard from "@/components/product-card";
 import { useRouter } from "next/navigation";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 interface OrganizationProfileProps {
   organization: {
@@ -83,6 +87,28 @@ export function OrganizationProfileContent({
   } | null>(null);
   const [productsPage, setProductsPage] = useState(1);
 
+  const { shouldShowTour, markTourSeen } = useOnboarding();
+  const [tourActive, setTourActive] = useState(false);
+  const tour = getTour("org-profile");
+
+  const isOwner =
+    !!session?.user &&
+    (organization as any).members.some(
+      (member: any) =>
+        member.user.id === session.user.id && member.role === "owner",
+    );
+
+  useEffect(() => {
+    if (isOwner && shouldShowTour("org-profile")) {
+      setTourActive(true);
+    }
+  }, [isOwner, shouldShowTour]);
+
+  const handleTourEnd = () => {
+    markTourSeen("org-profile");
+    setTourActive(false);
+  };
+
   const formatLocation = () => {
     const parts = [
       organization.addressCity,
@@ -132,7 +158,7 @@ export function OrganizationProfileContent({
   return (
     <>
       {/* Full Width Banner */}
-      <div className="relative w-full h-80 md:h-96 lg:h-[28rem] -mt-8">
+      <div data-onboarding="storefront-header" className="relative w-full h-80 md:h-96 lg:h-[28rem] -mt-8">
         {organization.banner ? (
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -279,6 +305,15 @@ export function OrganizationProfileContent({
         </div>
       )}
 
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      {isOwner && <TourTrigger onTrigger={() => setTourActive(true)} />}
+
       {/* Tabs Section */}
       <div className="relative">
         <div className="flex flex-col w-full relative z-10">
@@ -326,7 +361,7 @@ export function OrganizationProfileContent({
                   </Card>
                 ) : (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div data-onboarding="listings-section" className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {products.map((product) => (
                         <ProductCard key={product.id} product={product} />
                       ))}

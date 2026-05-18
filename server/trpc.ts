@@ -81,3 +81,43 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
 });
 
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.session || !ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  const role = (ctx.user as { role?: string }).role;
+  if (!role || (role !== "SUPER_ADMIN" && role !== "ADMIN")) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Admin access required",
+    });
+  }
+  return next({
+    ctx: {
+      session: { ...ctx.session },
+      user: ctx.user,
+    },
+  });
+});
+
+export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
+
+const enforceUserIsSuperAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.session || !ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  const role = (ctx.user as { role?: string }).role;
+  if (role !== "SUPER_ADMIN") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Super admin access required" });
+  }
+  return next({
+    ctx: {
+      session: { ...ctx.session },
+      user: ctx.user,
+    },
+  });
+});
+
+export const superAdminProcedure = t.procedure.use(enforceUserIsSuperAdmin);
+export const createCallerFactory = t.createCallerFactory;

@@ -9,6 +9,7 @@ import { productRouter } from "./routers/product";
 import { cartRouter } from "./routers/cart";
 import { orderRouter } from "./routers/order";
 import { reviewRouter } from "./routers/review";
+import { returnRouter } from "./routers/return";
 
 export const appRouter = createTRPCRouter({
   chat: chatRouter,
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   cart: cartRouter,
   order: orderRouter,
   review: reviewRouter,
+  return: returnRouter,
 });
 
 export type AppRouter = typeof appRouter;

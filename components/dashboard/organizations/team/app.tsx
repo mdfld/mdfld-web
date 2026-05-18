@@ -204,7 +204,7 @@ export default function OrganizationTeamLayout({
   return (
     <div className="w-full">
       {/* Title */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-default-foreground text-3xl leading-9 font-bold">
             Team
@@ -217,6 +217,7 @@ export default function OrganizationTeamLayout({
           <Button
             color="primary"
             onPress={onOpen}
+            className="shrink-0 self-start sm:self-auto"
             startContent={<Icon icon="solar:add-circle-bold" width={20} />}
           >
             Invite Member
@@ -225,6 +226,7 @@ export default function OrganizationTeamLayout({
       </div>
 
       {/* Members Table */}
+      <div className="overflow-x-auto">
       <Table aria-label="Organization members">
         <TableHeader columns={columns}>
           {(column) => (
@@ -241,6 +243,8 @@ export default function OrganizationTeamLayout({
           )}
         </TableBody>
       </Table>
+
+      </div>
 
       {/* Invite Modal */}
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

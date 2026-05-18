@@ -16,12 +16,28 @@ import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { useGuestCart } from "@/hooks/use-guest-cart";
+import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
+import { TourTrigger } from "@/components/onboarding/tour-trigger";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { getTour } from "@/lib/onboarding-tours.config";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [isProcessing, setIsProcessing] = React.useState(false);
   const guestCart = useGuestCart();
+  const { shouldShowTour, markTourSeen, completeStep } = useOnboarding();
+  const [tourActive, setTourActive] = React.useState(false);
+  const tour = getTour("checkout");
+
+  useEffect(() => {
+    if (shouldShowTour("checkout")) setTourActive(true);
+  }, [shouldShowTour]);
+
+  const handleTourEnd = async () => {
+    setTourActive(false);
+    await markTourSeen("checkout");
+  };
 
   // Merge cart mutation
   const mergeCart = trpc.cart.mergeGuestCart.useMutation();
@@ -99,6 +115,10 @@ export default function CheckoutPage() {
 
       const { url } = await response.json();
 
+      // Complete onboarding steps before redirecting
+      await completeStep("understand-auth", "buyer");
+      await completeStep("place-order", "buyer");
+
       // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (error) {
@@ -143,10 +163,11 @@ export default function CheckoutPage() {
     );
   }
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
-  const shipping: number = 0; // Free shipping
-  const tax: number = subtotal * 0.08; // 8% tax rate
-  const total: number = subtotal + shipping + tax;
+  const shipping: number = 0;
+  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
+  const total: number = subtotal + shipping + marketplaceFee;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -305,10 +326,12 @@ export default function CheckoutPage() {
                     {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-default-600">Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                {marketplaceFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-default-600">Marketplace Fee</span>
+                    <span>${marketplaceFee.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <Divider />
@@ -341,6 +364,14 @@ export default function CheckoutPage() {
           </Card>
         </div>
       </div>
+      {tourActive && tour && (
+        <SpotlightTour
+          steps={tour.steps}
+          onComplete={handleTourEnd}
+          onSkip={handleTourEnd}
+        />
+      )}
+      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }

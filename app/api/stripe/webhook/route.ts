@@ -30,12 +30,6 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case "account.updated": {
-        const account = event.data.object as Stripe.Account;
-        await handleAccountUpdated(account);
-        break;
-      }
-
       case "account.application.authorized":
         break;
 
@@ -243,6 +237,25 @@ async function handleCheckoutSessionCompleted(
 
     createdOrderIds.push(order.id);
     console.log("[Webhook] Order created:", order.id, "for seller:", sellerId);
+
+    // MoR: track seller pending balance (total minus platform commission)
+    const commissionRate = sellerProfile.commissionRate ?? 0.10;
+    const sellerReceives = subtotal * (1 - commissionRate);
+    const applicationFeeAmount = subtotal * commissionRate;
+
+    await Promise.all([
+      prisma.sellerProfile.update({
+        where: { id: sellerId },
+        data: {
+          pendingBalance: { increment: sellerReceives },
+          totalSales: { increment: 1 },
+        },
+      }),
+      prisma.order.update({
+        where: { id: order.id },
+        data: { applicationFeeAmount },
+      }),
+    ]);
   }
 
   // ── Clear buyer's cart after orders created ───────────────────────────────
@@ -316,30 +329,6 @@ async function handleChargeSucceeded(charge: Stripe.Charge) {
     await prisma.order.updateMany({
       where: { stripePaymentIntentId: charge.payment_intent },
       data: { stripeChargeId: charge.id },
-    });
-  }
-}
-
-async function handleAccountUpdated(account: Stripe.Account) {
-  const sellerProfile = await prisma.sellerProfile.findUnique({
-    where: { stripeAccountId: account.id },
-  });
-
-  if (sellerProfile) {
-    await prisma.sellerProfile.update({
-      where: { id: sellerProfile.id },
-      data: {
-        stripeAccountStatus: account.charges_enabled ? "active" : "pending",
-        stripeChargesEnabled: account.charges_enabled,
-        stripePayoutsEnabled: account.payouts_enabled,
-        stripeDetailsSubmitted: account.details_submitted,
-        stripeRequirements: account.requirements as any,
-        stripeCapabilities: account.capabilities as any,
-        stripeOnboardingComplete:
-          account.charges_enabled &&
-          account.payouts_enabled &&
-          account.details_submitted,
-      },
     });
   }
 }

@@ -31,9 +31,11 @@ model User {
   phoneNumber      String?
   dateOfBirth      DateTime?
   kycStatus        KycStatus @default(PENDING)
+  role             UserRole  @default(BUYER)
 
   // Stripe customer fields
   stripeCustomerId String? @unique
+  onboardingState  Json?   @default("{\"buyer\":[],\"seller\":[],\"tours\":[]}")
 
   // Relationships
   sessions      Session[]
@@ -128,6 +130,7 @@ model Organization {
   taxId           String?
   businessLicense String?
   isVerified      Boolean      @default(false)
+  storeStatus     StoreStatus  @default(APPROVED)
   trustScore      Float        @default(0.0)
 
   // Address fields
@@ -210,6 +213,8 @@ model SellerProfile {
   
   // Commission settings
   commissionRate          Float     @default(0.10) // 10% default commission
+  pendingBalance          Decimal   @default(0.00)
+  settledBalance          Decimal   @default(0.00)
 
   // Fraud detection metrics
   fraudScore              Float     @default(0.0)
@@ -252,10 +257,11 @@ model BuyerProfile {
   chargebackCount Int   @default(0)
   returnRate      Float @default(0.0)
 
-  user    User       @relation(fields: [userId], references: [id])
-  orders  Order[]
-  reviews Review[]
-  cart    CartItem[]
+  user           User            @relation(fields: [userId], references: [id])
+  orders         Order[]
+  reviews        Review[]
+  cart           CartItem[]
+  returnRequests ReturnRequest[]
 
   @@map("buyer_profile")
 }
@@ -411,12 +417,13 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  buyer        BuyerProfile  @relation(fields: [buyerProfileId], references: [id])
-  seller       SellerProfile @relation(fields: [sellerProfileId], references: [id])
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  items        OrderItem[]
-  transactions Transaction[]
-  fraudAlerts  FraudAlert[]
+  buyer          BuyerProfile    @relation(fields: [buyerProfileId], references: [id])
+  seller         SellerProfile   @relation(fields: [sellerProfileId], references: [id])
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  items          OrderItem[]
+  transactions   Transaction[]
+  fraudAlerts    FraudAlert[]
+  returnRequests ReturnRequest[]
 
   @@index([buyerProfileId])
   @@index([sellerProfileId])
@@ -499,6 +506,24 @@ model FraudAlert {
   seller SellerProfile? @relation(fields: [sellerProfileId], references: [id])
 
   @@map("fraud_alert")
+}
+
+model ReturnRequest {
+  id             String       @id @default(cuid())
+  orderId        String
+  buyerProfileId String
+  reason         ReturnReason
+  details        String
+  status         ReturnStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  order       Order        @relation(fields: [orderId], references: [id])
+  buyer       BuyerProfile @relation(fields: [buyerProfileId], references: [id])
+
+  @@index([buyerProfileId])
+  @@index([orderId])
+  @@map("return_request")
 }
 
 model FraudReport {
@@ -660,6 +685,20 @@ enum KycStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum StoreStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 enum BusinessType {
@@ -1012,6 +1051,22 @@ enum PlayerVersion {
   MATCH
 }
 
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  CHANGED_MIND
+  SIZE_ISSUE
+  OTHER
+}
+
 model ImportSession {
   id        String   @id @default(cuid())
   sellerId  String
@@ -1059,4 +1114,20 @@ enum OrgConversationStatus {
   WAITING_ON_ORG
   RESOLVED
   CLOSED
+}
+
+model PlatformSettings {
+  id                  String   @id @default("singleton")
+  sellerCommissionPct Float    @default(0.10)
+  buyerMarketplaceFee Float    @default(0.00)
+  updatedAt           DateTime @updatedAt
+  updatedById         String?
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
 }

@@ -1,11 +1,13 @@
-import { Metadata } from "next";
-import ProductsPageClient from "../products/products-page-client";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Shop - MDFLD Marketplace",
-  description: "Browse our collection of authenticated football gear and merchandise",
-};
+import ProductsPageClient from "../products/products-page-client";
+import { ShopOnboarding } from "./shop-onboarding";
 
 export default function ShopPage() {
-  return <ProductsPageClient />;
+  return (
+    <>
+      <ShopOnboarding />
+      <ProductsPageClient />
+    </>
+  );
 }

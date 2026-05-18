@@ -7,7 +7,6 @@ const ACCENT = '#00d4b6';
 interface Category {
   id: number;
   label: string;
-  count: string;
   img: string;
   tag: string;
   span: 'large' | 'small';
@@ -17,40 +16,35 @@ const CATEGORIES: Category[] = [
   {
     id: 0,
     label: 'Football Boots',
-    count: '4,200+ items',
-    img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80&auto=format&fit=crop',
+    img: '/categories/boots.jpg',
     tag: 'Most Popular',
     span: 'large',
   },
   {
     id: 1,
     label: 'Match Kits',
-    count: '1,800+ items',
-    img: 'https://images.unsplash.com/photo-1626248801379-51a0748a5f96?w=800&q=80&auto=format&fit=crop',
+    img: '/categories/kits-v2.jpeg',
     tag: 'New Season',
     span: 'small',
   },
   {
     id: 2,
     label: 'Goalkeeper',
-    count: '620+ items',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80&auto=format&fit=crop',
+    img: '/categories/goalkeeper.webp',
     tag: 'Pro Grade',
     span: 'small',
   },
   {
     id: 3,
     label: 'Training Gear',
-    count: '2,100+ items',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80&auto=format&fit=crop',
+    img: '/training-gear.webp',
     tag: 'Trending',
     span: 'small',
   },
   {
     id: 4,
     label: 'Accessories',
-    count: '980+ items',
-    img: 'https://images.unsplash.com/photo-1614632537197-38a17061c2bd?w=800&q=80&auto=format&fit=crop',
+    img: '/categories/accessories.jpg',
     tag: 'Essentials',
     span: 'small',
   },
@@ -182,17 +176,6 @@ function CategoryCard({ cat, large }: CategoryCardProps) {
           justifyContent: 'space-between',
           gap: 12,
         }}>
-          {/* Item Count */}
-          <span style={{
-            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: large ? 12 : 10.5, 
-            color: 'rgba(255, 255, 255, 0.5)', 
-            fontWeight: 500,
-            letterSpacing: '0.03em',
-          }}>
-            {cat.count}
-          </span>
-
           {/* Action Button */}
           <div style={{
             width: large ? 44 : 38, 
