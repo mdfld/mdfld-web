@@ -214,7 +214,6 @@ export default function ProductCreation({
           className="hidden justify-start lg:flex"
           nextButtonProps={{
             children: page === 3 ? "Create Product" : "Continue",
-            onClick: page === 3 ? handleSubmit : onNext,
             isLoading: page === 3 && isLoading,
           }}
           onBack={onBack}
