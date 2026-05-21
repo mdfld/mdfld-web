@@ -161,7 +161,6 @@ export default function MainNavbar() {
   const [searchOpen, setSearchOpen]       = useState(false);
   const [cartOpen, setCartOpen]           = useState(false);
   const [dropdownLocked, setDropdownLocked] = useState(false);
-  const [dropdownHover, setDropdownHover]   = useState(false);
   const [searchVal, setSearchVal]         = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname  = usePathname();
@@ -205,7 +204,7 @@ export default function MainNavbar() {
   }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); setDropdownHover(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -215,7 +214,6 @@ export default function MainNavbar() {
     const onClickOutside = (e: MouseEvent) => {
       if (avatarWrapRef.current && !avatarWrapRef.current.contains(e.target as Node)) {
         setDropdownLocked(false);
-        setDropdownHover(false);
       }
     };
     document.addEventListener('mousedown', onClickOutside);
@@ -496,10 +494,8 @@ export default function MainNavbar() {
                   <div className="nb-auth-skeleton" />
                 ) : authUser ? (
                   <div
-                    className={`nb-avatar-wrap${dropdownLocked || dropdownHover ? ' open' : ''}`}
+                    className={`nb-avatar-wrap${dropdownLocked ? ' open' : ''}`}
                     ref={avatarWrapRef}
-                    onMouseEnter={() => setDropdownHover(true)}
-                    onMouseLeave={() => setDropdownHover(false)}
                   >
                     <div className="nb-avatar" onClick={() => setDropdownLocked(prev => !prev)}>{initials}</div>
                     <div className="nb-dropdown">
