@@ -104,39 +104,6 @@ export const productRouter = createTRPCRouter({
         });
       }
 
-      // Create Stripe product if seller has Stripe account
-      let stripeProductId: string | undefined;
-      let stripePriceId: string | undefined;
-
-      if (sellerProfile.stripeAccountId && sellerProfile.stripeChargesEnabled) {
-        try {
-          // Create product in Stripe
-          const stripeProduct = await stripe.products.create({
-            name: input.title,
-            description: input.description || undefined,
-            images: input.images.slice(0, 8), // Stripe allows max 8 images
-            metadata: {
-              sellerProfileId: input.sellerProfileId,
-              organizationId: input.organizationId || "",
-            },
-          });
-
-          stripeProductId = stripeProduct.id;
-
-          // Create price in Stripe
-          const stripePrice = await stripe.prices.create({
-            product: stripeProductId,
-            unit_amount: formatAmountForStripe(input.price),
-            currency: "usd",
-          });
-
-          stripePriceId = stripePrice.id;
-        } catch (error) {
-          // Error creating Stripe product
-          // Continue without Stripe - can be added later
-        }
-      }
-
       // Create product in database
       const product = await ctx.prisma.product.create({
         data: {
@@ -166,44 +133,10 @@ export const productRouter = createTRPCRouter({
           material: input.material,
           soleplateType: input.soleplateType,
           playerVersion: input.playerVersion,
-          stripeProductId,
-          stripePriceId,
-          // Create variants if provided
           variants:
             input.variants && input.hasVariants
               ? {
-                  create: await Promise.all(
-                    input.variants.map(async (variant) => {
-                      // Create Stripe price for each variant if seller has Stripe
-                      let variantStripePriceId: string | undefined;
-
-                      if (
-                        sellerProfile.stripeAccountId &&
-                        sellerProfile.stripeChargesEnabled &&
-                        stripeProductId
-                      ) {
-                        try {
-                          const stripePrice = await stripe.prices.create({
-                            product: stripeProductId,
-                            unit_amount: formatAmountForStripe(variant.price),
-                            currency: "usd",
-                            metadata: {
-                              size: variant.sizeValue,
-                              color: variant.color || "",
-                            },
-                          });
-                          variantStripePriceId = stripePrice.id;
-                        } catch (error) {
-                          // Error creating Stripe price for variant
-                        }
-                      }
-
-                      return {
-                        ...variant,
-                        stripePriceId: variantStripePriceId,
-                      };
-                    }),
-                  ),
+                  create: input.variants.map((variant) => ({ ...variant })),
                 }
               : undefined,
         },
@@ -431,24 +364,6 @@ export const productRouter = createTRPCRouter({
             orderBy: [{ sizeValue: "asc" }, { color: "asc" }],
           },
           sizeChart: true,
-          reviews: {
-            take: 5,
-            orderBy: {
-              createdAt: "desc",
-            },
-            include: {
-              buyer: {
-                select: {
-                  user: {
-                    select: {
-                      name: true,
-                      image: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
         },
       });
 
@@ -552,15 +467,9 @@ export const productRouter = createTRPCRouter({
       };
     }),
 
-  // Get categories
-  getCategories: publicProcedure.query(async ({ ctx }) => {
-    const categories = await ctx.prisma.product.findMany({
-      where: { isActive: true },
-      select: { category: true },
-      distinct: ["category"],
-    });
-
-    return categories.map((c) => c.category);
+  // Get categories — return statically from enum, no DB scan needed
+  getCategories: publicProcedure.query(() => {
+    return Object.keys(PRODUCT_CATEGORIES);
   }),
 
   // Create product variant

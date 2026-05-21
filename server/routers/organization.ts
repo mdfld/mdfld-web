@@ -36,23 +36,17 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Check if slug is already taken and generate a unique one if needed
+      // Find all existing slugs that start with the requested slug in one query
+      const conflicting = await prisma.organization.findMany({
+        where: { slug: { startsWith: input.slug } },
+        select: { slug: true },
+      });
+      const takenSlugs = new Set(conflicting.map((o) => o.slug));
       let finalSlug = input.slug;
-      let slugExists = true;
       let counter = 0;
-
-      while (slugExists) {
-        const existing = await prisma.organization.findUnique({
-          where: { slug: finalSlug },
-        });
-
-        if (!existing) {
-          slugExists = false;
-        } else {
-          counter++;
-          // Add a number suffix to make it unique
-          finalSlug = `${input.slug}-${counter}`;
-        }
+      while (takenSlugs.has(finalSlug)) {
+        counter++;
+        finalSlug = `${input.slug}-${counter}`;
       }
 
       // Create organization with the user as owner
@@ -84,18 +78,14 @@ export const organizationRouter = createTRPCRouter({
       });
 
       // Create seller profile automatically for the organization
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true },
-      });
-
+      // (email comes from ctx.user — no extra DB lookup needed)
       await prisma.sellerProfile.create({
         data: {
           organizationId: organization.id,
           storeName: input.name,
           storeDescription:
             input.description || `Official store for ${input.name}`,
-          businessEmail: user?.email || "",
+          businessEmail: ctx.user.email,
           shippingPolicy:
             "Standard shipping rates apply. Orders are processed within 1-2 business days.",
           returnPolicy:
@@ -1105,8 +1095,19 @@ export const organizationRouter = createTRPCRouter({
         });
       }
 
-      const sellerProfile = await prisma.sellerProfile.findUnique({
+      const organization = await prisma.organization.findUnique({
+        where: { id: input.organizationId },
+        select: { name: true },
+      });
+
+      const sellerProfile = await prisma.sellerProfile.upsert({
         where: { organizationId: input.organizationId },
+        update: {},
+        create: {
+          organizationId: input.organizationId,
+          storeName: organization?.name || "My Store",
+          businessEmail: ctx.user.email,
+        },
       });
 
       return sellerProfile;
