@@ -1,19 +1,13 @@
-const AFTERSHIP_API_URL = "https://api.aftership.com/v4";
+// EasyPost Tracker API — free tier, no upgrade required
+// Docs: https://www.easypost.com/docs/api#trackers
+const EASYPOST_API_URL = "https://api.easypost.com/v2";
 
-const CARRIER_SLUGS: Record<string, string> = {
-  UPS: "ups",
-  USPS: "usps",
-  FedEx: "fedex",
-  DHL: "dhl-express",
-};
-
-// Tags where the carrier has physically accepted the package
-const IN_TRANSIT_TAGS = new Set([
-  "InTransit",
-  "OutForDelivery",
-  "AttemptFail",
-  "Delivered",
-  "AvailableForPickup",
+// EasyPost statuses where the carrier has physically accepted the package
+const IN_TRANSIT_STATUSES = new Set([
+  "in_transit",
+  "out_for_delivery",
+  "delivered",
+  "available_for_pickup",
 ]);
 
 export type TrackingResult = {
@@ -25,38 +19,34 @@ export async function createOrGetTracking(
   trackingNumber: string,
   carrier: string,
 ): Promise<TrackingResult> {
-  const apiKey = process.env.AFTERSHIP_API_KEY;
+  const apiKey = process.env.EASYPOST_API_KEY;
   if (!apiKey) {
     // No API key configured — save tracking without verification
     return { tag: null, carrierConfirmed: false };
   }
 
-  const slug = CARRIER_SLUGS[carrier] ?? null;
+  // EasyPost uses HTTP Basic Auth: API key as username, empty password
+  const auth = Buffer.from(`${apiKey}:`).toString("base64");
 
-  const body: Record<string, unknown> = { tracking_number: trackingNumber };
-  if (slug) body.slug = slug;
-
-  // Try to create the tracking
-  let res = await fetch(`${AFTERSHIP_API_URL}/trackings`, {
+  const res = await fetch(`${EASYPOST_API_URL}/trackers`, {
     method: "POST",
     headers: {
-      "aftership-api-key": apiKey,
+      Authorization: `Basic ${auth}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ tracking: body }),
+    body: JSON.stringify({
+      tracker: {
+        tracking_code: trackingNumber,
+        carrier,
+      },
+    }),
   });
 
-  let data = await res.json();
-
-  // 409 = tracking already exists, fetch it instead
-  if (res.status === 409 && slug) {
-    res = await fetch(
-      `${AFTERSHIP_API_URL}/trackings/${slug}/${trackingNumber}`,
-      { headers: { "aftership-api-key": apiKey } },
-    );
-    data = await res.json();
+  if (!res.ok) {
+    return { tag: null, carrierConfirmed: false };
   }
 
-  const tag: string | null = data?.data?.tracking?.tag ?? null;
-  return { tag, carrierConfirmed: tag ? IN_TRANSIT_TAGS.has(tag) : false };
+  const data = await res.json();
+  const tag: string | null = data?.status ?? null;
+  return { tag, carrierConfirmed: tag ? IN_TRANSIT_STATUSES.has(tag) : false };
 }
