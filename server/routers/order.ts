@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { stripe } from "@/lib/stripe";
+import { createOrGetTracking } from "@/lib/aftership";
 
 export const orderRouter = createTRPCRouter({
   // Get user's orders
@@ -390,5 +391,155 @@ export const orderRouter = createTRPCRouter({
       ]);
 
       return updatedOrder;
+    }),
+
+  submitTracking: protectedProcedure
+    .input(
+      z.object({
+        orderId: z.string(),
+        trackingNumber: z.string().min(1),
+        trackingCarrier: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      const order = await ctx.prisma.order.findUnique({
+        where: { id: input.orderId },
+        include: {
+          seller: true,
+          buyer: { include: { user: true } },
+        },
+      });
+
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+      }
+
+      const isSeller =
+        (order.seller.userId && order.seller.userId === userId) ||
+        (order.seller.organizationId &&
+          (await ctx.prisma.organizationMember.findFirst({
+            where: {
+              organizationId: order.seller.organizationId,
+              userId,
+              role: { in: ["owner", "admin"] },
+            },
+          })));
+
+      if (!isSeller) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only sellers can submit tracking",
+        });
+      }
+
+      if (!["CONFIRMED", "PROCESSING", "SHIPPED"].includes(order.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Order must be confirmed or processing to add tracking",
+        });
+      }
+
+      // Call AfterShip to verify and get initial status
+      const { tag, carrierConfirmed } = await createOrGetTracking(
+        input.trackingNumber,
+        input.trackingCarrier,
+      );
+
+      const now = new Date();
+
+      const carrierConfirmedAt = carrierConfirmed ? now : order.carrierConfirmedAt;
+
+      await Promise.all([
+        ctx.prisma.order.update({
+          where: { id: input.orderId },
+          data: {
+            status: "SHIPPED",
+            trackingNumber: input.trackingNumber,
+            trackingCarrier: input.trackingCarrier,
+            trackingStatus: tag,
+            carrierConfirmedAt,
+          },
+        }),
+        ctx.prisma.notification.create({
+          data: {
+            userId: order.buyer.userId,
+            type: "ORDER_UPDATE",
+            title: "Your order has shipped",
+            content: `Order #${order.orderNumber} is on its way via ${input.trackingCarrier}. Tracking: ${input.trackingNumber}`,
+            metadata: {
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              trackingNumber: input.trackingNumber,
+              trackingCarrier: input.trackingCarrier,
+            },
+          },
+        }),
+      ]);
+
+      return {
+        orderId: input.orderId,
+        trackingNumber: input.trackingNumber,
+        trackingCarrier: input.trackingCarrier,
+        trackingStatus: tag,
+        carrierConfirmedAt: carrierConfirmedAt?.toISOString() ?? null,
+        carrierConfirmed,
+        message: carrierConfirmed
+          ? "Tracking confirmed. You can now request a withdrawal."
+          : "Tracking saved. Withdrawal will unlock once the carrier confirms pickup.",
+      };
+    }),
+
+  requestWithdrawal: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      const order = await ctx.prisma.order.findUnique({
+        where: { id: input.orderId },
+        include: { seller: true },
+      });
+
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+      }
+
+      const isSeller =
+        (order.seller.userId && order.seller.userId === userId) ||
+        (order.seller.organizationId &&
+          (await ctx.prisma.organizationMember.findFirst({
+            where: {
+              organizationId: order.seller.organizationId,
+              userId,
+              role: { in: ["owner", "admin"] },
+            },
+          })));
+
+      if (!isSeller) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only sellers can request withdrawals",
+        });
+      }
+
+      if (!order.carrierConfirmedAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Withdrawal is only available after the carrier confirms pickup",
+        });
+      }
+
+      if (order.withdrawalRequestedAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Withdrawal already requested for this order",
+        });
+      }
+
+      return ctx.prisma.order.update({
+        where: { id: input.orderId },
+        data: { withdrawalRequestedAt: new Date() },
+      });
     }),
 });

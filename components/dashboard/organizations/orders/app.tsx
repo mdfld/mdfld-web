@@ -62,6 +62,8 @@ export default function OrganizationOrdersLayout() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingCarrier, setTrackingCarrier] = useState("");
   const rowsPerPage = 10;
 
   const activeOrganization = useOrganizationStore(
@@ -93,6 +95,37 @@ export default function OrganizationOrdersLayout() {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update order status");
+    },
+  });
+
+  const submitTrackingMutation = trpc.order.submitTracking.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message);
+      setSelectedOrder((prev: any) => ({
+        ...prev,
+        status: "SHIPPED",
+        trackingNumber: result.trackingNumber,
+        trackingCarrier: result.trackingCarrier,
+        trackingStatus: result.trackingStatus,
+        carrierConfirmedAt: result.carrierConfirmedAt,
+      }));
+      setTrackingNumber("");
+      setTrackingCarrier("");
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to submit tracking");
+    },
+  });
+
+  const requestWithdrawalMutation = trpc.order.requestWithdrawal.useMutation({
+    onSuccess: () => {
+      toast.success("Withdrawal requested. Admin will process your payout shortly.");
+      setSelectedOrder((prev: any) => ({ ...prev, withdrawalRequestedAt: new Date().toISOString() }));
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to request withdrawal");
     },
   });
 
@@ -552,6 +585,107 @@ export default function OrganizationOrdersLayout() {
                         </div>
                       </CardBody>
                     </Card>
+
+                    {/* Tracking submission */}
+                    {["CONFIRMED", "PROCESSING", "SHIPPED"].includes(selectedOrder.status) && (
+                      <Card>
+                        <CardBody className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium">Shipping & Tracking</p>
+                            {selectedOrder.trackingNumber ? (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-xs text-default-500">
+                                  {selectedOrder.trackingCarrier} — {selectedOrder.trackingNumber}
+                                </p>
+                                {selectedOrder.trackingStatus && (
+                                  <Chip size="sm" variant="flat" color={
+                                    selectedOrder.trackingStatus === "Delivered" ? "success"
+                                      : selectedOrder.trackingStatus === "InTransit" || selectedOrder.trackingStatus === "OutForDelivery" ? "primary"
+                                      : "default"
+                                  }>
+                                    {selectedOrder.trackingStatus}
+                                  </Chip>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-default-400 mt-1">No tracking added yet</p>
+                            )}
+                          </div>
+
+                          {/* Tracking input — always show so seller can update */}
+                          <div className="space-y-3">
+                            <Select
+                              label="Carrier"
+                              placeholder="Select carrier"
+                              selectedKeys={trackingCarrier ? [trackingCarrier] : []}
+                              onSelectionChange={(keys) => setTrackingCarrier(Array.from(keys)[0] as string)}
+                              labelPlacement="outside"
+                              size="sm"
+                            >
+                              {["UPS", "USPS", "FedEx", "DHL", "Other"].map((c) => (
+                                <SelectItem key={c}>{c}</SelectItem>
+                              ))}
+                            </Select>
+                            <Input
+                              label="Tracking Number"
+                              placeholder="e.g. 1Z999AA10123456784"
+                              value={trackingNumber}
+                              onValueChange={setTrackingNumber}
+                              labelPlacement="outside"
+                              size="sm"
+                            />
+                            <Button
+                              size="sm"
+                              color="primary"
+                              isDisabled={!trackingNumber.trim() || !trackingCarrier}
+                              isLoading={submitTrackingMutation.isPending}
+                              onPress={() =>
+                                submitTrackingMutation.mutate({
+                                  orderId: selectedOrder.id,
+                                  trackingNumber: trackingNumber.trim(),
+                                  trackingCarrier,
+                                })
+                              }
+                            >
+                              {selectedOrder.trackingNumber ? "Update Tracking" : "Submit Tracking"}
+                            </Button>
+                          </div>
+
+                          {/* Withdrawal */}
+                          <div className="border-t pt-4">
+                            {selectedOrder.withdrawalRequestedAt ? (
+                              <div className="flex items-center gap-2">
+                                <Icon icon="solar:check-circle-bold" className="text-success w-4 h-4" />
+                                <p className="text-xs text-default-500">
+                                  Withdrawal requested — admin will process your payout shortly.
+                                </p>
+                              </div>
+                            ) : selectedOrder.carrierConfirmedAt ? (
+                              <div className="space-y-2">
+                                <p className="text-xs text-success">
+                                  Carrier confirmed pickup. You can now request your payout.
+                                </p>
+                                <Button
+                                  size="sm"
+                                  color="success"
+                                  variant="flat"
+                                  isLoading={requestWithdrawalMutation.isPending}
+                                  onPress={() =>
+                                    requestWithdrawalMutation.mutate({ orderId: selectedOrder.id })
+                                  }
+                                >
+                                  Request Withdrawal
+                                </Button>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-default-400">
+                                Withdrawal unlocks once your carrier confirms pickup.
+                              </p>
+                            )}
+                          </div>
+                        </CardBody>
+                      </Card>
+                    )}
 
                     <Card>
                       <CardBody>
