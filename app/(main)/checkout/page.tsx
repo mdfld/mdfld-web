@@ -42,6 +42,8 @@ export default function CheckoutPage() {
   // Merge cart mutation
   const mergeCart = trpc.cart.mergeGuestCart.useMutation();
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
+
   // Get cart data
   const { data: authCartData, isLoading: authLoading } = trpc.cart.get.useQuery(undefined, {
     enabled: !!session?.user,
@@ -163,7 +165,6 @@ export default function CheckoutPage() {
     );
   }
 
-  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
   const shipping: number = 0;
   const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
