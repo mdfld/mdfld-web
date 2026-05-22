@@ -54,16 +54,22 @@ export interface ProductFormData {
     height: number;
   };
   tags: string[];
+  shippingTerms: "CALCULATED" | "INCLUDED_DDP";
+  shippingCarrier: string;
+  estimatedDeliveryDays: number;
+  shipsFromCountry: string;
 }
 
 export default function ProductCreation({
   organizationId,
   sellerProfileId,
+  storeShipsFromCountry,
   onComplete,
   onClose,
 }: {
   organizationId: string;
   sellerProfileId: string;
+  storeShipsFromCountry?: string | null;
   onComplete?: () => void;
   onClose?: () => void;
 }) {
@@ -142,6 +148,10 @@ export default function ProductCreation({
         dimensions: formData.dimensions,
         tags: formData.tags || [],
         isActive: true,
+        shippingTerms: formData.shippingTerms || "CALCULATED",
+        shippingCarrier: formData.shippingCarrier || undefined,
+        estimatedDeliveryDays: formData.estimatedDeliveryDays || undefined,
+        shipsFromCountry: formData.shipsFromCountry || undefined,
       });
 
       toast.success("Product created successfully!");
@@ -167,7 +177,11 @@ export default function ProductCreation({
         break;
       case 2:
         component = (
-          <ProductPricingForm data={formData} onUpdate={updateFormData} />
+          <ProductPricingForm
+            data={formData}
+            onUpdate={updateFormData}
+            storeShipsFromCountry={storeShipsFromCountry}
+          />
         );
         break;
       case 3:

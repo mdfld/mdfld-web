@@ -209,6 +209,39 @@ export default function ProductReviewForm({ data }: ProductReviewFormProps) {
           </div>
         </div>
 
+        {/* Shipping */}
+        <div className="border-t pt-6">
+          <h3 className="text-sm font-medium text-default-700 mb-3">Shipping</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-xs text-default-500">Shipping Terms</span>
+              <p className="text-sm font-medium mt-1">
+                {data.shippingTerms === "INCLUDED_DDP"
+                  ? "Included in price (DDP)"
+                  : "Calculated at checkout"}
+              </p>
+            </div>
+            {data.shippingCarrier && (
+              <div>
+                <span className="text-xs text-default-500">Carrier</span>
+                <p className="text-sm font-medium mt-1">{data.shippingCarrier}</p>
+              </div>
+            )}
+            {data.estimatedDeliveryDays && (
+              <div>
+                <span className="text-xs text-default-500">Est. Delivery</span>
+                <p className="text-sm font-medium mt-1">Up to {data.estimatedDeliveryDays} days</p>
+              </div>
+            )}
+            {data.shipsFromCountry && (
+              <div>
+                <span className="text-xs text-default-500">Ships from</span>
+                <p className="text-sm font-medium mt-1">{data.shipsFromCountry}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Tags */}
         {data.tags && data.tags.length > 0 && (
           <div>

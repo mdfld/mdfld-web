@@ -69,6 +69,12 @@ const createProductSchema = z.object({
 
   // Variants array
   variants: z.array(productVariantSchema).optional(),
+
+  // Shipping fields
+  shippingTerms: z.enum(["CALCULATED", "INCLUDED_DDP"]).default("CALCULATED"),
+  shippingCarrier: z.string().optional(),
+  estimatedDeliveryDays: z.number().int().positive().optional(),
+  shipsFromCountry: z.string().optional(),
 });
 
 export { PRODUCT_CATEGORIES };
@@ -133,6 +139,10 @@ export const productRouter = createTRPCRouter({
           material: input.material,
           soleplateType: input.soleplateType,
           playerVersion: input.playerVersion,
+          shippingTerms: input.shippingTerms as any,
+          shippingCarrier: input.shippingCarrier,
+          estimatedDeliveryDays: input.estimatedDeliveryDays,
+          shipsFromCountry: input.shipsFromCountry,
           variants:
             input.variants && input.hasVariants
               ? {

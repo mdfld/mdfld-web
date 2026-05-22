@@ -444,6 +444,7 @@ export default function OrganizationListingsLayout() {
                 <ProductCreation
                   sellerProfileId={sellerProfileData.id}
                   organizationId={activeOrganization?.id || ""}
+                  storeShipsFromCountry={sellerProfileData.storeShipsFromCountry}
                   onComplete={() => {
                     setIsCreateModalOpen(false);
                     refetch();

@@ -1099,7 +1099,7 @@ export const organizationRouter = createTRPCRouter({
 
       const organization = await prisma.organization.findUnique({
         where: { id: input.organizationId },
-        select: { name: true },
+        select: { name: true, shipsFromCountry: true },
       });
 
       const sellerProfile = await prisma.sellerProfile.upsert({
@@ -1112,7 +1112,7 @@ export const organizationRouter = createTRPCRouter({
         },
       });
 
-      return sellerProfile;
+      return { ...sellerProfile, storeShipsFromCountry: organization?.shipsFromCountry ?? null };
     }),
 
   createSellerProfile: protectedProcedure

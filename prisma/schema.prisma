@@ -312,6 +312,12 @@ model Product {
   reportCount          Int       @default(0)
   isHighRisk           Boolean   @default(false)
 
+  // Shipping fields
+  shippingTerms        ShippingTerms @default(CALCULATED)
+  shippingCarrier      String?
+  estimatedDeliveryDays Int?
+  shipsFromCountry     String?       // overrides store default if set
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -994,6 +1000,11 @@ enum ProductSubcategory {
   EQUIPMENT_BAGS
   FIRST_AID
   COACHING_EQUIPMENT
+}
+
+enum ShippingTerms {
+  CALCULATED   // Buyer pays carrier rate at checkout
+  INCLUDED_DDP // Seller covers shipping + duties (Delivered Duty Paid)
 }
 
 enum VariantType {
