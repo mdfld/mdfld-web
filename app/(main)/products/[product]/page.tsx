@@ -6,6 +6,32 @@ import { BreadcrumbItem, Breadcrumbs, Spinner } from "@heroui/react";
 import ProductViewInfo from "@/components/product-layout/product-view-item";
 import { trpc } from "@/lib/trpc-client";
 
+function buildShippingItems(product: any): string[] {
+  const items: string[] = [];
+
+  const shipsFrom =
+    product.shipsFromCountry ?? product.seller.organization?.shipsFromCountry;
+  if (shipsFrom) items.push(`Ships from: ${shipsFrom}`);
+
+  if (product.shippingCarrier && product.estimatedDeliveryDays) {
+    items.push(`${product.shippingCarrier} · Up to ${product.estimatedDeliveryDays} days`);
+  } else if (product.shippingCarrier) {
+    items.push(`Carrier: ${product.shippingCarrier}`);
+  } else if (product.estimatedDeliveryDays) {
+    items.push(`Estimated delivery: up to ${product.estimatedDeliveryDays} days`);
+  }
+
+  if (product.shippingTerms === "INCLUDED_DDP") {
+    items.push("Shipping & duties included — no extra charges at delivery");
+  } else {
+    items.push("Shipping calculated at checkout");
+  }
+
+  return items.length > 1
+    ? items
+    : ["Standard shipping available. Contact seller for details."];
+}
+
 export default function ProductPage() {
   const params = useParams();
   const productId = params.product as string;
@@ -119,20 +145,16 @@ export default function ProductPage() {
         ],
       },
       {
-        title: "Shipping & Returns",
-        items: product.seller.shippingPolicy
-          ? product.seller.shippingPolicy
-              .split("\n")
-              .filter((line: string) => line.trim())
-          : ["Standard shipping available", "Contact seller for details"],
+        title: "Shipping",
+        items: buildShippingItems(product),
       },
       {
-        title: "Return Policy",
+        title: "Returns",
         items: product.seller.returnPolicy
           ? product.seller.returnPolicy
               .split("\n")
               .filter((line: string) => line.trim())
-          : ["Returns accepted within 30 days", "Contact seller for details"],
+          : ["No returns except for items not as described or authenticity disputes"],
       },
     ],
   };

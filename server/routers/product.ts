@@ -363,6 +363,7 @@ export const productRouter = createTRPCRouter({
                   name: true,
                   slug: true,
                   logo: true,
+                  shipsFromCountry: true,
                 },
               },
             },
