@@ -60,17 +60,20 @@ export default function ProductPage() {
     );
   }
 
+  // tRPC type inference drops relation fields at this depth — cast once here
+  const p: any = product;
+
   // Transform variants data
   const sizes: string[] =
-    product.hasVariants && product.variants
+    p.hasVariants && p.variants
       ? (Array.from(
-          new Set(product.variants.map((v: any) => v.sizeDisplay)),
+          new Set(p.variants.map((v: any) => v.sizeDisplay)),
         ).sort() as string[])
       : ["One Size"];
 
   const uniqueColors = new Map<string, { name: string; hex: string }>();
-  if (product.hasVariants && product.variants) {
-    product.variants.forEach((v: any) => {
+  if (p.hasVariants && p.variants) {
+    p.variants.forEach((v: any) => {
       if (v.color && !uniqueColors.has(v.color)) {
         uniqueColors.set(v.color, {
           name: v.color,
@@ -82,9 +85,9 @@ export default function ProductPage() {
   const colors = Array.from(uniqueColors.values());
 
   // Get all variant images
-  const allImages = Array.isArray(product.images) ? [...product.images] : [];
-  if (product.hasVariants && product.variants) {
-    product.variants.forEach((variant: any) => {
+  const allImages = Array.isArray(p.images) ? [...p.images] : [];
+  if (p.hasVariants && p.variants) {
+    p.variants.forEach((variant: any) => {
       if (variant.images && variant.images.length > 0) {
         allImages.push(...variant.images);
       }
@@ -96,9 +99,9 @@ export default function ProductPage() {
 
   // Transform the product data to match the ProductViewItem interface
   const productViewItem = {
-    id: product.id,
-    name: product.title,
-    description: product.description,
+    id: p.id,
+    name: p.title,
+    description: p.description,
     images:
       uniqueImages.length > 0
         ? uniqueImages
@@ -106,52 +109,52 @@ export default function ProductPage() {
             "https://nextuipro.nyc3.cdn.digitaloceanspaces.com/components-images/shoes/product-view/1.jpeg",
           ],
     price:
-      product.hasVariants && product.variants.length > 0
+      p.hasVariants && p.variants.length > 0
         ? Math.min(
-            ...product.variants.map((v: any) => parseFloat(v.price.toString())),
+            ...p.variants.map((v: any) => parseFloat(v.price.toString())),
           )
-        : parseFloat(product.price.toString()),
-    rating: product.seller.averageRating || 4.5,
-    ratingCount: (product as any).reviews?.length || 0,
+        : parseFloat(p.price.toString()),
+    rating: p.seller.averageRating || 4.5,
+    ratingCount: p.reviews?.length || 0,
     sizes: sizes,
-    isPopular: product.featured,
+    isPopular: p.featured,
     availableColors:
       colors.length > 0 ? colors : [{ name: "Default", hex: "#808080" }],
-    hasVariants: product.hasVariants,
-    variants: product.variants,
-    seller: product.seller,
+    hasVariants: p.hasVariants,
+    variants: p.variants,
+    seller: p.seller,
     details: [
       {
         title: "Product Details",
         items: [
-          `Category: ${product.category.replace(/_/g, " ").toLowerCase()}`,
-          `Condition: ${product.condition?.replace(/_/g, " ").toLowerCase() || "New"}`,
-          `Brand: ${product.brand || "Generic"}`,
-          `SKU: ${product.sku || product.id}`,
-          ...(product.year ? [`Year: ${product.year}`] : []),
-          ...(product.soleplateType
-            ? [`Soleplate: ${product.soleplateType}`]
+          `Category: ${p.category.replace(/_/g, " ").toLowerCase()}`,
+          `Condition: ${p.condition?.replace(/_/g, " ").toLowerCase() || "New"}`,
+          `Brand: ${p.brand || "Generic"}`,
+          `SKU: ${p.sku || p.id}`,
+          ...(p.year ? [`Year: ${p.year}`] : []),
+          ...(p.soleplateType
+            ? [`Soleplate: ${p.soleplateType}`]
             : []),
-          ...(product.tier ? [`Tier: ${product.tier}`] : []),
-          ...(product.material ? [`Material: ${product.material}`] : []),
+          ...(p.tier ? [`Tier: ${p.tier}`] : []),
+          ...(p.material ? [`Material: ${p.material}`] : []),
         ].filter(Boolean),
       },
       {
         title: "Seller Information",
         items: [
-          `Store: ${product.seller.storeName}`,
-          `Rating: ${product.seller.averageRating || "N/A"} stars`,
-          `Total Sales: ${product.seller.totalSales}`,
+          `Store: ${p.seller.storeName}`,
+          `Rating: ${p.seller.averageRating || "N/A"} stars`,
+          `Total Sales: ${p.seller.totalSales}`,
         ],
       },
       {
         title: "Shipping",
-        items: buildShippingItems(product),
+        items: buildShippingItems(p),
       },
       {
         title: "Returns",
-        items: product.seller.returnPolicy
-          ? product.seller.returnPolicy
+        items: p.seller.returnPolicy
+          ? p.seller.returnPolicy
               .split("\n")
               .filter((line: string) => line.trim())
           : ["No returns except for items not as described or authenticity disputes"],
@@ -160,7 +163,7 @@ export default function ProductPage() {
   };
 
   // Get category breadcrumb
-  const categoryName = product.category.replace(/_/g, " ").toLowerCase();
+  const categoryName = p.category.replace(/_/g, " ").toLowerCase();
 
   return (
     <div className="max-w-8xl h-full w-full px-2 lg:px-24">
@@ -169,7 +172,7 @@ export default function ProductPage() {
           <BreadcrumbItem href="/">Home</BreadcrumbItem>
           <BreadcrumbItem href="/products">Products</BreadcrumbItem>
           <BreadcrumbItem className="capitalize">{categoryName}</BreadcrumbItem>
-          <BreadcrumbItem>{product.title}</BreadcrumbItem>
+          <BreadcrumbItem>{p.title}</BreadcrumbItem>
         </Breadcrumbs>
       </nav>
       <ProductViewInfo {...productViewItem} />
