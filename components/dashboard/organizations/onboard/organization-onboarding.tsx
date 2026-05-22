@@ -41,6 +41,7 @@ export interface OrganizationFormData {
   website: string;
   taxId: string;
   businessLicense: string;
+  shipsFromCountry: string;
   address: {
     street: string;
     city: string;
@@ -123,6 +124,7 @@ export default function OrganizationOnboarding({
         website: formData.website || undefined,
         taxId: formData.taxId || undefined,
         businessLicense: formData.businessLicense || undefined,
+        shipsFromCountry: formData.shipsFromCountry || undefined,
         address: formData.address || undefined,
       });
 

@@ -139,6 +139,7 @@ model Organization {
   addressState    String?
   addressZip      String?
   addressCountry  String?
+  shipsFromCountry String?
 
   members       OrganizationMember[]
   invitations   OrganizationInvitation[]

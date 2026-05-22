@@ -87,12 +87,12 @@ const MultiStepSidebar = React.forwardRef<
                 description: "Name and description",
               },
               {
-                title: "Company Details",
-                description: "Business type and industry",
+                title: "Store Details",
+                description: "Optional info about your store",
               },
               {
-                title: "Business Address",
-                description: "Your official location",
+                title: "Location & Shipping",
+                description: "Where you ship from",
               },
               {
                 title: "Review & Create",
@@ -114,10 +114,10 @@ const MultiStepSidebar = React.forwardRef<
                     title: "Basic Info",
                   },
                   {
-                    title: "Details",
+                    title: "Store Info",
                   },
                   {
-                    title: "Address",
+                    title: "Location",
                   },
                   {
                     title: "Review",

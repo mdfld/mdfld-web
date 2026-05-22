@@ -31,6 +31,7 @@ export const organizationRouter = createTRPCRouter({
             country: z.string(),
           })
           .optional(),
+        shipsFromCountry: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -61,6 +62,7 @@ export const organizationRouter = createTRPCRouter({
           businessType: input.businessType || "INDIVIDUAL",
           taxId: input.taxId,
           businessLicense: input.businessLicense,
+          shipsFromCountry: input.shipsFromCountry,
           members: {
             create: {
               userId,
