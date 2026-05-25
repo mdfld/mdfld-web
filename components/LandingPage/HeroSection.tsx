@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 const CATEGORIES = [
   {
-    title: 'KITS',
+    title: 'JERSEYS',
     subtitle: 'Match-worn styles for every club.',
     img: '/categories/kits-v2.jpeg',
     color: '#111111',

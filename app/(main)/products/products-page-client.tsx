@@ -11,21 +11,29 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import ProductsGrid from "@/components/products-grid";
 import { Drawer, DrawerContent, DrawerHeader, DrawerBody } from "@heroui/react";
 import ProductFilters from "@/components/product-filters";
 
 export default function ProductsPageClient() {
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [sortBy, setSortBy] = React.useState<string>("newest");
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
-    [],
+    urlCategory ? [urlCategory] : [],
   );
   const [priceRange, setPriceRange] = React.useState<number[]>([0, 5000]);
   const [selectedConditions, setSelectedConditions] = React.useState<string[]>(
     [],
   );
+
+  React.useEffect(() => {
+    setSelectedCategories(urlCategory ? [urlCategory] : []);
+  }, [urlCategory]);
 
   // Fetch products using tRPC
   const { data, isLoading, fetchNextPage, hasNextPage } =
@@ -79,6 +87,7 @@ export default function ProductsPageClient() {
           </DrawerHeader>
           <DrawerBody>
             <ProductFilters
+              initialCategories={selectedCategories}
               onFiltersChange={(filters) => {
                 if (filters.categories)
                   setSelectedCategories(filters.categories);
@@ -112,6 +121,7 @@ export default function ProductsPageClient() {
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <ProductFilters
+                initialCategories={selectedCategories}
                 onFiltersChange={(filters) => {
                   if (filters.categories)
                     setSelectedCategories(filters.categories);

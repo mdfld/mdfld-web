@@ -15,6 +15,7 @@ import {
 } from "@/lib/constants/football-attributes";
 
 export type ProductFiltersProps = {
+  initialCategories?: string[];
   onFiltersChange?: (filters: any) => void;
   onReset?: () => void;
 };
@@ -101,11 +102,12 @@ const CARD_TYPES = [
 const CARD_YEARS = ["2024", "2023", "2022", "2021", "2020"];
 
 export default function ProductFilters({
+  initialCategories,
   onFiltersChange,
   onReset,
 }: ProductFiltersProps) {
   const [filters, setFilters] = React.useState({
-    categories: [] as string[],
+    categories: initialCategories ?? ([] as string[]),
     priceRange: [0, 5000] as number[],
     conditions: [] as string[],
     brands: [] as string[],
