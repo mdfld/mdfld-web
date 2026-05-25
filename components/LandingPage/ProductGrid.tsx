@@ -28,10 +28,19 @@ function ProductCard({ product, index }: { product: any; index: number }) {
     onSuccess: () => setLiked((l: boolean) => !l),
   });
 
+  const CONDITION_LABELS: Record<string, string> = {
+    BRAND_NEW: 'Brand New',
+    NEW_WITH_TAGS: 'New with Tags',
+    NEW_WITHOUT_TAGS: 'New w/o Tags',
+    USED_EXCELLENT: 'Used - Excellent',
+    USED_GOOD: 'Used - Good',
+    USED_FAIR: 'Used - Fair',
+  };
+
   const price = Number(product.price);
   const comparePrice = product.compareAtPrice ? Number(product.compareAtPrice) : null;
   const img = product.images?.[0] || FALLBACK_IMG;
-  const tag = product.tags?.[0] || product.condition || 'NEW';
+  const tag = product.condition ? (CONDITION_LABELS[product.condition] ?? product.condition) : null;
   const stock = product.inventory ?? 99;
   const lowStock = stock > 0 && stock <= 8;
 
@@ -61,7 +70,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
           <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8, zIndex: 10 }}>
             {tag && (
               <span style={{ background: '#fff', color: '#000', fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', borderRadius: 2 }}>
-                {String(tag).toUpperCase()}
+                {tag}
               </span>
             )}
             {lowStock && (

@@ -15,6 +15,7 @@ import {
 } from "@heroui/react";
 import { useSession, authClient } from "@/lib/auth-client";
 import { useUploadThing } from "@/lib/uploadclient";
+import { PROFILE_TEMPLATES } from "@/lib/profile-templates";
 
 interface ProfileSettingCardProps {
   className?: string;
@@ -170,6 +171,18 @@ const ProfileSetting = React.forwardRef<
     fileInputRef.current?.click();
   };
 
+  const handleTemplateSelect = async (url: string) => {
+    try {
+      setUploadError(null);
+      setAvatarUrl(`${url}?v=${Date.now()}`);
+      await authClient.updateUser({ image: url });
+      refetchSession();
+      setSuccessMessage("Avatar updated successfully!");
+    } catch {
+      setUploadError("Failed to apply template");
+    }
+  };
+
   const handleBannerButtonPress = () => {
     bannerInputRef.current?.click();
   };
@@ -283,6 +296,37 @@ const ProfileSetting = React.forwardRef<
             {successMessage}
           </p>
         )}
+      </div>
+
+      <Spacer y={4} />
+
+      {/* Template picker */}
+      <div>
+        <p className="text-default-700 text-base font-medium">Choose a Template</p>
+        <p className="text-default-400 mt-1 text-sm font-normal">
+          Select one of the MDFLD icons, or upload your own above.
+        </p>
+        <div className="mt-3 grid grid-cols-6 gap-2">
+          {PROFILE_TEMPLATES.map((url) => {
+            const isSelected = avatarUrl?.startsWith(url);
+            return (
+              <button
+                key={url}
+                onClick={() => handleTemplateSelect(url)}
+                className={cn(
+                  "rounded-full overflow-hidden border-2 transition-all",
+                  isSelected
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-transparent hover:border-default-300",
+                )}
+                style={{ aspectRatio: "1" }}
+                title={`Template ${url.split("/").pop()?.replace(".png", "")}`}
+              >
+                <img src={url} alt="template" className="w-full h-full object-cover" />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <Spacer y={4} />

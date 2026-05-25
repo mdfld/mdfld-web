@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { domAnimation, LazyMotion, m } from "framer-motion";
 
 import { trpc } from "@/lib/trpc-client";
+import { randomTemplate } from "@/lib/profile-templates";
 
 import { toast } from "sonner";
 
@@ -104,6 +105,7 @@ export default function OrganizationOnboarding({
       await createOrganization.mutateAsync({
         name: formData.name,
         slug: formData.slug,
+        logo: randomTemplate(),
         description: formData.description || undefined,
         industry: formData.industry || undefined,
         size: formData.size

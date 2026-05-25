@@ -166,7 +166,7 @@ export default function ProductPage() {
   const categoryName = p.category.replace(/_/g, " ").toLowerCase();
 
   return (
-    <div className="max-w-8xl h-full w-full px-2 lg:px-24">
+    <div className="max-w-8xl h-full w-full px-4 md:px-8 lg:px-24">
       <nav className="my-4 py-2">
         <Breadcrumbs>
           <BreadcrumbItem href="/">Home</BreadcrumbItem>

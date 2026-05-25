@@ -13,6 +13,7 @@ export const organizationRouter = createTRPCRouter({
         slug: z.string().min(1),
         description: z.string().optional(),
         website: z.string().optional(),
+        logo: z.string().optional(),
         industry: z.string().optional(),
         size: z
           .enum(["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"])
@@ -57,6 +58,7 @@ export const organizationRouter = createTRPCRouter({
           slug: finalSlug,
           description: input.description,
           website: input.website,
+          logo: input.logo,
           industry: input.industry,
           size: input.size,
           businessType: input.businessType || "INDIVIDUAL",

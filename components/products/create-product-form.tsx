@@ -14,6 +14,7 @@ import {
   Tag,
   ChevronRight,
   Image as ImageIcon,
+  Info,
 } from "lucide-react";
 import {
   Button,
@@ -147,6 +148,16 @@ export default function CreateProductForm({
   const [isDragging, setIsDragging] = useState(false);
   const [variants, setVariants] = useState<any[]>([]);
 
+  // Weight
+  const [weightValue, setWeightValue] = useState("");
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
+
+  // Dimensions
+  const [dimLength, setDimLength] = useState("");
+  const [dimWidth, setDimWidth] = useState("");
+  const [dimHeight, setDimHeight] = useState("");
+  const [dimUnit, setDimUnit] = useState<"cm" | "in">("cm");
+
   const {
     control,
     register,
@@ -215,6 +226,27 @@ export default function CreateProductForm({
   };
 
   const onSubmit = async (data: ProductFormData) => {
+    // Unit conversion — always store kg and cm
+    const weightKg = weightValue
+      ? weightUnit === "lbs"
+        ? parseFloat(weightValue) * 0.453592
+        : parseFloat(weightValue)
+      : undefined;
+
+    const toCm = (v: string) =>
+      v ? (dimUnit === "in" ? parseFloat(v) * 2.54 : parseFloat(v)) : undefined;
+
+    const dimensions =
+      dimLength || dimWidth || dimHeight
+        ? { length: toCm(dimLength), width: toCm(dimWidth), height: toCm(dimHeight) }
+        : undefined;
+
+    // Auto-tag REPS for replica jerseys
+    const tags: string[] = [];
+    if (data.category === "JERSEYS" && data.tier === "REPLICA") {
+      tags.push("REPS");
+    }
+
     const submitData = {
       sellerProfileId: sellerProfileId,
       organizationId: organizationId,
@@ -223,15 +255,17 @@ export default function CreateProductForm({
       price: data.price,
       category: data.category,
       brand: data.brand,
-      inventory: hasVariants ? 0 : 100, // Default inventory if no variants
+      inventory: hasVariants ? 0 : 100,
       images: uploadedImages,
-      tags: [],
+      tags,
       hasVariants: data.hasVariants,
       condition: data.condition,
       playerVersion: data.playerVersion,
       tier: data.tier,
       soleplateType: data.solelateType,
       variants: hasVariants ? variants : undefined,
+      weight: weightKg,
+      dimensions,
     };
     await createProduct.mutateAsync(submitData as any);
   };
@@ -456,13 +490,98 @@ export default function CreateProductForm({
                   <Textarea
                     {...register("description")}
                     label="Description"
-                    placeholder="Describe your product in detail..."
+                    placeholder="e.g. Size M, navy blue Arsenal home kit from the 2023/24 season. Worn twice, no stains or damage. Includes original tags."
                     variant="bordered"
                     isRequired
                     minRows={4}
                     errorMessage={errors.description?.message}
                     isInvalid={!!errors.description}
+                    description="Include size, color, team/season, and any notable condition details."
                   />
+
+                  {/* Weight */}
+                  <div className="flex gap-3 items-end">
+                    <Input
+                      label="Weight"
+                      placeholder="e.g. 0.8"
+                      variant="bordered"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={weightValue}
+                      onChange={(e) => setWeightValue(e.target.value)}
+                      className="flex-1"
+                      description="Helps calculate shipping costs."
+                    />
+                    <div className="flex border border-default-300 rounded-lg overflow-hidden mb-[22px]">
+                      {(["kg", "lbs"] as const).map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setWeightUnit(u)}
+                          className={cn(
+                            "px-3 py-2 text-sm font-medium transition-colors",
+                            weightUnit === u
+                              ? "bg-primary text-white"
+                              : "bg-default-100 text-default-600 hover:bg-default-200",
+                          )}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dimensions */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-medium text-default-700">Package Dimensions</p>
+                        <div className="group relative">
+                          <Info className="h-3.5 w-3.5 text-default-400 cursor-help" />
+                          <div className="absolute left-5 top-0 z-10 hidden group-hover:block w-56 bg-default-900 text-white text-xs rounded-lg p-2 shadow-lg">
+                            Enter the dimensions of the <strong>shipping package</strong>, not the product itself. Carriers use this to calculate volumetric weight.
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex border border-default-300 rounded-lg overflow-hidden">
+                        {(["cm", "in"] as const).map((u) => (
+                          <button
+                            key={u}
+                            type="button"
+                            onClick={() => setDimUnit(u)}
+                            className={cn(
+                              "px-3 py-1.5 text-xs font-medium transition-colors",
+                              dimUnit === u
+                                ? "bg-primary text-white"
+                                : "bg-default-100 text-default-600 hover:bg-default-200",
+                            )}
+                          >
+                            {u}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: `Length (${dimUnit})`, value: dimLength, set: setDimLength },
+                        { label: `Width (${dimUnit})`, value: dimWidth, set: setDimWidth },
+                        { label: `Height (${dimUnit})`, value: dimHeight, set: setDimHeight },
+                      ].map(({ label, value, set }) => (
+                        <Input
+                          key={label}
+                          label={label}
+                          placeholder="0"
+                          variant="bordered"
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={value}
+                          onChange={(e) => set(e.target.value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Category-specific fields */}
                   <AnimatePresence mode="wait">
@@ -503,26 +622,34 @@ export default function CreateProductForm({
                           name="tier"
                           control={control}
                           render={({ field }: any) => (
-                            <Select
-                              {...field}
-                              label="Tier"
-                              placeholder="Select tier"
-                              variant="bordered"
-                              selectedKeys={field.value ? [field.value] : []}
-                              onSelectionChange={(keys) => {
-                                const selected = Array.from(keys)[0];
-                                field.onChange(selected);
-                              }}
-                            >
-                              {tierOptions.map((option) => (
-                                <SelectItem key={option.value}>
-                                  <div className="flex items-center gap-2">
-                                    <span>{option.icon}</span>
-                                    <span>{option.label}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </Select>
+                            <div className="flex flex-col gap-1">
+                              <Select
+                                {...field}
+                                label="Tier"
+                                placeholder="Select tier"
+                                variant="bordered"
+                                selectedKeys={field.value ? [field.value] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0];
+                                  field.onChange(selected);
+                                }}
+                              >
+                                {tierOptions.map((option) => (
+                                  <SelectItem key={option.value}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{option.icon}</span>
+                                      <span>{option.label}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </Select>
+                              {field.value === "REPLICA" && (
+                                <p className="text-xs text-warning-500 flex items-center gap-1 mt-1">
+                                  <Info className="h-3 w-3 flex-shrink-0" />
+                                  This jersey will be tagged as <strong>REPS</strong> in search results.
+                                </p>
+                              )}
+                            </div>
                           )}
                         />
                       </motion.div>

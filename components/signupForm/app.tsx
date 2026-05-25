@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signUp, signIn } from "@/lib/auth-client";
+import { randomTemplate } from "@/lib/profile-templates";
 
 const ACCENT = "#00d4b6";
 
@@ -41,7 +42,7 @@ export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessPr
     setLoading(true);
     try {
       await signUp.email(
-        { name: form.name, email: form.email, password: form.password, username: form.username },
+        { name: form.name, email: form.email, password: form.password, username: form.username, image: randomTemplate() },
         {
           onSuccess: () => {
             setSuccess("Account created! Check your email to verify before signing in.");
