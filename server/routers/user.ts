@@ -1,5 +1,38 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc";
+import type { PrismaClient } from "@prisma/client";
+
+async function deleteUserById(prisma: PrismaClient, userId: string) {
+  await prisma.$transaction(async (tx) => {
+    // CartItems are tied to BuyerProfile, not User directly
+    const buyerProfile = await tx.buyerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (buyerProfile) {
+      await tx.cartItem.deleteMany({ where: { buyerProfileId: buyerProfile.id } });
+      await tx.buyerProfile.delete({ where: { id: buyerProfile.id } });
+    }
+    // Messages (MessageReceipts cascade from Message)
+    await tx.message.deleteMany({ where: { senderId: userId } });
+    // Fraud reports
+    await tx.fraudReport.deleteMany({ where: { reporterId: userId } });
+    // Notifications, addresses, audit logs, transactions
+    await tx.notification.deleteMany({ where: { userId } });
+    await tx.address.deleteMany({ where: { userId } });
+    await tx.auditLog.deleteMany({ where: { userId } });
+    await tx.transaction.deleteMany({ where: { userId } });
+    // Org memberships
+    await tx.organizationMember.deleteMany({ where: { userId } });
+    // SellerProfile — Products cascade from SellerProfile (onDelete: Cascade in schema)
+    await tx.sellerProfile.deleteMany({ where: { userId } });
+    // Sessions + accounts cascade via DB but delete explicitly
+    await tx.session.deleteMany({ where: { userId } });
+    await tx.account.deleteMany({ where: { userId } });
+    // User — Follow & ConversationParticipant cascade via onDelete: Cascade
+    await tx.user.delete({ where: { id: userId } });
+  });
+}
 
 export const userRouter = createTRPCRouter({
   // Search users by email or username
@@ -189,6 +222,26 @@ export const userRouter = createTRPCRouter({
         },
       });
 
+      return { success: true };
+    }),
+
+  // Delete the calling user's own account
+  deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+    await deleteUserById(ctx.prisma as unknown as PrismaClient, ctx.user.id);
+    return { success: true };
+  }),
+
+  // Super-admin: delete any user's account
+  adminDeleteAccount: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if ((ctx.user as any).role !== "SUPER_ADMIN") {
+        throw new Error("Unauthorized");
+      }
+      if (input.userId === ctx.user.id) {
+        throw new Error("Cannot delete your own account via admin panel");
+      }
+      await deleteUserById(ctx.prisma as unknown as PrismaClient, input.userId);
       return { success: true };
     }),
 
