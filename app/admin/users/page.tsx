@@ -80,10 +80,10 @@ export default function AdminUsersPage() {
 						{data?.users.map((user) => (
 							<tr key={user.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
 								<td style={{ padding: "12px" }}>
-									<strong>{user.name}</strong>
-									<div style={{ fontSize: 12, color: "#999" }}>@{user.username}</div>
+									<div style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{user.name}</div>
+									<div style={{ fontSize: 12, color: "#555" }}>@{user.username}</div>
 								</td>
-								<td style={{ padding: "12px", fontSize: 14 }}>{user.email}</td>
+								<td style={{ padding: "12px", fontSize: 14, color: "#1a1a1a" }}>{user.email}</td>
 								<td style={{ padding: "12px" }}>
 									<select
 										disabled={updatingId === user.id}
@@ -101,9 +101,9 @@ export default function AdminUsersPage() {
 										))}
 									</select>
 								</td>
-								<td style={{ padding: "12px", fontSize: 13 }}>{user.kycStatus}</td>
-								<td style={{ padding: "12px", fontSize: 13 }}>{user.isVerifiedSeller ? "✓" : "—"}</td>
-								<td style={{ padding: "12px", fontSize: 13, color: "#666" }}>
+								<td style={{ padding: "12px", fontSize: 13, color: "#1a1a1a", fontWeight: 500 }}>{user.kycStatus}</td>
+								<td style={{ padding: "12px", fontSize: 13, color: "#1a1a1a" }}>{user.isVerifiedSeller ? "✓" : "—"}</td>
+								<td style={{ padding: "12px", fontSize: 13, color: "#444" }}>
 									{new Date(user.createdAt).toLocaleDateString()}
 								</td>
 								<td style={{ padding: "12px" }}>
