@@ -146,9 +146,7 @@ export const auth = betterAuth({
             updates.displayUsername = updates.username;
           }
 
-          if (!user.image) {
-            updates.image = randomTemplate();
-          }
+          updates.image = randomTemplate();
 
           return { data: { ...user, ...updates } };
         },
