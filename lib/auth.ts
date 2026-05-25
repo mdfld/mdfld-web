@@ -150,6 +150,17 @@ export const auth = betterAuth({
 
           return { data: { ...user, ...updates } };
         },
+        // Google OAuth re-applies the provider image after `before`, overriding
+        // our template. The `after` hook fires once the row is committed and
+        // forces a MDFLD icon whenever the stored image is not one of ours.
+        after: async (user) => {
+          if (!user.image || !user.image.startsWith("/avatars/")) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { image: randomTemplate() },
+            });
+          }
+        },
       },
     },
   },
