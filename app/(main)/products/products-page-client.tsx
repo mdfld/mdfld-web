@@ -106,7 +106,7 @@ export default function ProductsPageClient() {
       </Drawer>
 
       {/* Page Content */}
-      <div className="mx-auto max-w-7xl px-4 lg:px-8 pt-24 pb-8 lg:pt-28">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8 pb-8 pt-4">
         {/* Breadcrumbs */}
         <nav className="mb-8">
           <Breadcrumbs size="sm">
