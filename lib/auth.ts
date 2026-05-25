@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { resend } from "./resend";
 import { betterAuth } from "better-auth";
+import { randomTemplate } from "./profile-templates";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -133,16 +134,23 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
+          const updates: Record<string, unknown> = {};
+
           if (!("username" in user) || !user.username) {
             const base = ((user.email as string)?.split("@")[0] || "user")
               .replace(/[^a-z0-9]/gi, "")
               .toLowerCase()
               .slice(0, 15);
             const suffix = Math.random().toString(36).slice(2, 8);
-            const username = `${base}${suffix}`;
-            return { data: { ...user, username, displayUsername: username } };
+            updates.username = `${base}${suffix}`;
+            updates.displayUsername = updates.username;
           }
-          return { data: user };
+
+          if (!user.image) {
+            updates.image = randomTemplate();
+          }
+
+          return { data: { ...user, ...updates } };
         },
       },
     },
