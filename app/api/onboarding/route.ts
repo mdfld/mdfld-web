@@ -11,6 +11,7 @@ function parseState(raw: unknown): OnboardingState {
     buyer: Array.isArray(s.buyer) ? s.buyer : [],
     seller: Array.isArray(s.seller) ? s.seller : [],
     tours: Array.isArray(s.tours) ? s.tours : [],
+    sellerOptIn: typeof s.sellerOptIn === "boolean" ? s.sellerOptIn : false,
   };
 }
 
@@ -35,10 +36,11 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { step, stepType, tour } = body as {
+  const { step, stepType, tour, sellerOptIn } = body as {
     step?: string;
     stepType?: "buyer" | "seller";
     tour?: string;
+    sellerOptIn?: boolean;
   };
 
   const user = await prisma.user.findUnique({
@@ -56,6 +58,9 @@ export async function PATCH(request: NextRequest) {
   }
   if (tour && !state.tours.includes(tour as any)) {
     state.tours = [...state.tours, tour as any];
+  }
+  if (sellerOptIn === true) {
+    state.sellerOptIn = true;
   }
 
   await prisma.user.update({

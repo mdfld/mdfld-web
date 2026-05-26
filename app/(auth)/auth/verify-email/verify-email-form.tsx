@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 import { Card, CardBody, Button, Input } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sendVerificationEmail, useSession } from "@/lib/auth-client";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 export default function VerifyEmailForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +18,7 @@ export default function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const { completeStep } = useOnboarding();
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -46,6 +48,7 @@ export default function VerifyEmailForm() {
 
       if (response.ok) {
         setSuccess(true);
+        completeStep("verify-email", "buyer");
         // Auto-redirect after verification
         setTimeout(() => {
           router.push("/dashboard");

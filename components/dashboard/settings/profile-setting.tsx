@@ -16,6 +16,8 @@ import {
 import { useSession, authClient } from "@/lib/auth-client";
 import { useUploadThing } from "@/lib/uploadclient";
 import { PROFILE_TEMPLATES } from "@/lib/profile-templates";
+import { ProfileCompletenessBar } from "@/components/dashboard/settings/profile-completeness-bar";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 interface ProfileSettingCardProps {
   className?: string;
@@ -30,6 +32,7 @@ const ProfileSetting = React.forwardRef<
     useUploadThing("avatarUploader");
   const { startUpload: startBannerUpload, isUploading: isBannerUploading } =
     useUploadThing("bannerUploader");
+  const { completeStep } = useOnboarding();
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const bannerInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -37,7 +40,6 @@ const ProfileSetting = React.forwardRef<
   const [formData, setFormData] = React.useState({
     location: "",
     bio: "",
-    website: "",
   });
   const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(
     undefined,
@@ -57,7 +59,6 @@ const ProfileSetting = React.forwardRef<
       setFormData({
         location: session.user.location || "",
         bio: session.user.bio || "",
-        website: session.user.website || "",
       });
       if (session.user.image) {
         setAvatarUrl(`${session.user.image}?v=${Date.now()}`);
@@ -107,9 +108,6 @@ const ProfileSetting = React.forwardRef<
       if (formData.location !== session?.user?.location) {
         updateData.location = formData.location || null;
       }
-      if (formData.website !== session?.user?.website) {
-        updateData.website = formData.website || null;
-      }
 
       if (Object.keys(updateData).length === 0) {
         setSuccessMessage("No changes to save");
@@ -119,8 +117,11 @@ const ProfileSetting = React.forwardRef<
       await authClient.updateUser(updateData);
       refetchSession();
       setSuccessMessage("Profile updated successfully!");
+
+      if (formData.bio && formData.location) {
+        await completeStep("complete-profile", "buyer");
+      }
     } catch (error) {
-      // Failed to update profile
       setUpdateError(
         error instanceof Error
           ? error.message
@@ -225,6 +226,13 @@ const ProfileSetting = React.forwardRef<
 
   return (
     <div ref={ref} className={cn("p-2", className)} {...props}>
+      <ProfileCompletenessBar
+        imageUrl={avatarUrl}
+        bio={formData.bio}
+        location={formData.location}
+        bannerUrl={bannerUrl}
+      />
+
       {/* Profile */}
       <div>
         <p className="text-default-700 text-base font-medium">Profile</p>
@@ -384,8 +392,13 @@ const ProfileSetting = React.forwardRef<
 
       {/* Location */}
       <div>
-        <p className="text-default-700 text-base font-medium">Location</p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-default-700 text-base font-medium">Location</p>
+          {!formData.location && (
+            <span className="text-xs bg-warning text-white px-2 py-0.5 rounded-full">recommended</span>
+          )}
+        </div>
+        <p className="text-default-400 mt-0 text-sm font-normal">
           Set your current location.
         </p>
         <Input
@@ -393,50 +406,41 @@ const ProfileSetting = React.forwardRef<
           placeholder="e.g Buenos Aires, Argentina"
           value={formData.location}
           onChange={handleInputChange("location")}
+          classNames={{
+            inputWrapper: !formData.location ? "border-warning border-dashed" : "",
+          }}
         />
-      </div>
-
-      <Spacer y={4} />
-
-      {/* Website */}
-      <div>
-        <p className="text-default-700 text-base font-medium">Website</p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
-          Add your personal website or portfolio URL.
-        </p>
-        <Input
-          className="mt-2"
-          placeholder="e.g https://yourwebsite.com"
-          type="url"
-          value={formData.website}
-          onChange={handleInputChange("website")}
-          startContent={
-            <Icon
-              className="text-default-400 pointer-events-none flex-shrink-0"
-              icon="solar:link-outline"
-              width={18}
-            />
-          }
-        />
+        {!formData.location && (
+          <p className="text-xs text-default-400 mt-1">Helps buyers know where their order ships from.</p>
+        )}
       </div>
 
       <Spacer y={4} />
 
       {/* Biography */}
       <div>
-        <p className="text-default-700 text-base font-medium">Biography</p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-default-700 text-base font-medium">Biography</p>
+          {!formData.bio && (
+            <span className="text-xs bg-warning text-white px-2 py-0.5 rounded-full">recommended</span>
+          )}
+        </div>
+        <p className="text-default-400 mt-0 text-sm font-normal">
           Tell us a bit about yourself.
         </p>
         <Textarea
           className="mt-2"
           classNames={{
             input: cn("min-h-[115px]"),
+            inputWrapper: !formData.bio ? "border-warning border-dashed" : "",
           }}
-          placeholder="e.g., 'Kate Moore - Acme.com Support Specialist. Passionate about solving tech issues, loves hiking and volunteering.'"
+          placeholder="e.g., Boot collector based in Atlanta. Specialising in Nike CTR360 and adidas Predator."
           value={formData.bio}
           onChange={handleInputChange("bio")}
         />
+        {!formData.bio && (
+          <p className="text-xs text-default-400 mt-1">Profiles with a bio get more trust from buyers.</p>
+        )}
       </div>
 
       <Button

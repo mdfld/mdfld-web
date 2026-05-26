@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { BreadcrumbItem, Breadcrumbs, Spinner } from "@heroui/react";
 import ProductViewInfo from "@/components/product-layout/product-view-item";
 import { trpc } from "@/lib/trpc-client";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 function buildShippingItems(product: any): string[] {
   const items: string[] = [];
@@ -43,6 +44,14 @@ export default function ProductPage() {
   } = trpc.product.getById.useQuery({
     id: productId,
   });
+
+  const { completeStep, state } = useOnboarding();
+
+  useEffect(() => {
+    if (!state.buyer.includes("understand-auth")) {
+      completeStep("understand-auth", "buyer");
+    }
+  }, []);
 
   if (isLoading) {
     return (

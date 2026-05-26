@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { WelcomeModalController } from "@/components/onboarding/welcome-modal-controller";
 
 export default async function DashboardLayout({
   children,
@@ -15,5 +16,10 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <WelcomeModalController />
+    </>
+  );
 }

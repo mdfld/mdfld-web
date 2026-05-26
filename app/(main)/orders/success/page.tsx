@@ -6,6 +6,7 @@ import { Button, Card, CardBody, Spinner } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { authClient } from "@/lib/auth-client";
 import confetti from "canvas-confetti";
+import { useOnboarding } from "@/contexts/onboarding-context";
 
 function SuccessPageContent() {
   const router = useRouter();
@@ -15,6 +16,7 @@ function SuccessPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [orderIds, setOrderIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { completeStep, state } = useOnboarding();
 
   useEffect(() => {
     if (!sessionId) {
@@ -41,6 +43,10 @@ function SuccessPageContent() {
 
           // Fire confetti only on fresh order creation
           if (!data.alreadyFulfilled) {
+            if (!state.buyer.includes("place-order")) {
+              completeStep("place-order", "buyer");
+            }
+
             const duration = 3 * 1000;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
