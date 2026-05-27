@@ -1,18 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 import { useOnboarding } from "@/contexts/onboarding-context";
+import { useAuth } from "@/hooks/use-auth";
 
 export function WelcomeModalController() {
-  const { shouldShowTour, isLoading } = useOnboarding();
+  const { state, isLoading } = useOnboarding();
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const checked = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && shouldShowTour("signup")) {
+    if (isLoading || !isAuthenticated || checked.current) return;
+    checked.current = true;
+    if (!state.tours.includes("signup" as any)) {
       setIsOpen(true);
     }
-  }, [isLoading, shouldShowTour]);
+  }, [isLoading, isAuthenticated, state.tours]);
 
   if (!isOpen) return null;
 

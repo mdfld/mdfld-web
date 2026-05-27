@@ -36,6 +36,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setIsLoading(false);
       return;
     }
+    setIsLoading(true);
     fetch("/api/onboarding")
       .then((r) => r.json())
       .then((data: OnboardingState) => setState(data))
