@@ -79,7 +79,7 @@ export const auth = betterAuth({
         console.log(`[Auth] Sending password reset email to: ${user.email}`);
         const firstName = user.name?.split(" ")[0] || "there";
         const result = await resend.emails.send({
-          from: "Midfield Co <noreply@mdfld.co>",
+          from: "noreply@mdfld.co",
           to: user.email,
           subject: "Reset your MDFLD password",
           html: emailShell({
@@ -114,7 +114,7 @@ export const auth = betterAuth({
         console.log(`[Auth] Sending verification email to: ${user.email}`);
         const firstName = user.name?.split(" ")[0] || "there";
         const result = await resend.emails.send({
-          from: "Midfield Co <noreply@mdfld.co>",
+          from: "noreply@mdfld.co",
           to: user.email,
           subject: "Welcome to MDFLD — verify your email",
           html: emailShell({
@@ -224,7 +224,7 @@ export const auth = betterAuth({
           console.log(`[Auth] Sending change email confirmation to: ${newEmail}`);
           const firstName = user.name?.split(" ")[0] || "there";
           const result = await resend.emails.send({
-            from: "Midfield Co <noreply@mdfld.co>",
+            from: "noreply@mdfld.co",
             to: newEmail,
             subject: "Confirm your new email — MDFLD",
             html: emailShell({
