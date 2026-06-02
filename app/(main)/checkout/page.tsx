@@ -118,7 +118,6 @@ export default function CheckoutPage() {
       const { url } = await response.json();
 
       // Complete onboarding steps before redirecting
-      await completeStep("understand-auth", "buyer");
       await completeStep("place-order", "buyer");
 
       // Redirect to Stripe Checkout

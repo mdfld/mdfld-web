@@ -10,7 +10,6 @@ export type BuyerStepId =
   | 'complete-profile'
   | 'browse-shop'
   | 'first-wishlist'
-  | 'understand-auth'
   | 'place-order';
 
 export type SellerStepId =
@@ -50,12 +49,11 @@ export interface TourDefinition {
 }
 
 export const BUYER_CHECKLIST: ChecklistStep[] = [
-  { id: 'verify-email',     label: 'Verify Email',                   href: '/dashboard/settings?tab=account' },
-  { id: 'complete-profile', label: 'Complete Your Profile',          href: '/dashboard/settings?tab=profile' },
-  { id: 'browse-shop',      label: 'Browse the Shop',                href: '/shop' },
-  { id: 'first-wishlist',   label: 'Save a Boot to Wishlist',        href: '/shop' },
-  { id: 'understand-auth',  label: 'Learn How Authentication Works', href: '/shop' },
-  { id: 'place-order',      label: 'Place Your First Order',         href: '/shop', optional: true },
+  { id: 'verify-email',     label: 'Verify Email',         href: '/auth/verify-email' },
+  { id: 'complete-profile', label: 'Complete Your Profile', href: '/dashboard/settings?tab=profile' },
+  { id: 'browse-shop',      label: 'Browse the Shop',       href: '/shop' },
+  { id: 'first-wishlist',   label: 'Save an Item to Wishlist', href: '/shop' },
+  { id: 'place-order',      label: 'Place Your First Order', href: '/shop', optional: true },
 ];
 
 export const SELLER_CHECKLIST: ChecklistStep[] = [
