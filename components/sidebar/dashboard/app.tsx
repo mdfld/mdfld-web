@@ -293,6 +293,7 @@ export default function SidebarWrapper({
                 )
               }
               variant="light"
+              onPress={() => router.push("/help")}
             >
               {isCompact ? (
                 <Icon
