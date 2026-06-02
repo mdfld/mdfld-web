@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Send to support inbox
     const { error } = await resend.emails.send({
-      from: "Midfield Co <onboarding@resend.dev>",
+      from: "Midfield Co <noreply@mdfld.co>",
       to: ["ayoola@mdfld.co"], // test mode: must be account owner's email
       replyTo: email,
       subject: `[CONTACT] ${subjectLabel} — ${name}`,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Auto-reply to sender (non-blocking — don't fail if this fails)
     resend.emails.send({
-      from: "Midfield Co <onboarding@resend.dev>",
+      from: "Midfield Co <noreply@mdfld.co>",
       to: [email],
       subject: "We've received your message — mdfld",
       html: `

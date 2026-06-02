@@ -38,9 +38,8 @@ export default function VerifyEmailForm() {
     setError(null);
 
     try {
-      // BetterAuth handles email verification through the main auth endpoint
       const response = await fetch(
-        `/api/auth/email-verification/verify?token=${token}`,
+        `/api/auth/verify-email?token=${token}`,
         {
           method: "GET",
         },

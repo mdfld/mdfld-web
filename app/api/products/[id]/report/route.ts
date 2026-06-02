@@ -45,7 +45,7 @@ export async function POST(
 
     // Send notification email (non-blocking)
     resend.emails.send({
-      from: "Midfield Co <onboarding@resend.dev>",
+      from: "Midfield Co <noreply@mdfld.co>",
       to: ["ayoola@mdfld.co"],
       subject: `[REPORT] Product flagged: ${product.title}`,
       html: `

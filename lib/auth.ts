@@ -16,7 +16,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending password reset email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <onboarding@resend.dev>",
+          from: "Midfield Co <noreply@mdfld.co>",
           to: user.email,
           subject: "Reset your password",
           html: `
@@ -71,7 +71,7 @@ export const auth = betterAuth({
       try {
         console.log(`[Auth] Sending verification email to: ${user.email}`);
         const result = await resend.emails.send({
-          from: "Midfield Co <onboarding@resend.dev>",
+          from: "Midfield Co <noreply@mdfld.co>",
           to: user.email,
           subject: "Welcome aboard! | Verify your email address",
           html: `
@@ -115,6 +115,7 @@ export const auth = betterAuth({
         console.log(`[Auth] Verification email sent successfully! ID: ${emailId}`);
       } catch (error) {
         console.error(`[Auth] Exception sending verification email:`, error);
+        throw error;
       }
     },
   },
@@ -170,7 +171,7 @@ export const auth = betterAuth({
         try {
           console.log(`[Auth] Sending change email confirmation to: ${newEmail}`);
           const result = await resend.emails.send({
-            from: "Midfield Co <onboarding@resend.dev>",
+            from: "Midfield Co <noreply@mdfld.co>",
             to: newEmail,
             subject: "Confirm your new email address",
             html: `
