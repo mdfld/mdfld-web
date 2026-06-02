@@ -164,6 +164,60 @@ export const auth = betterAuth({
     },
   },
   user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }: { user: { name?: string | null; email: string }; newEmail: string; url: string; token: string }) => {
+        try {
+          console.log(`[Auth] Sending change email confirmation to: ${newEmail}`);
+          const result = await resend.emails.send({
+            from: "Midfield Co <onboarding@resend.dev>",
+            to: newEmail,
+            subject: "Confirm your new email address",
+            html: `
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta charset="utf-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>Confirm Email Change - Midfield Co</title>
+						</head>
+						<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+							<div style="max-width: 600px; margin: 40px auto; background-color: white; border-radius: 8px; border: 1px solid #eaeaea; padding: 20px;">
+								<div style="text-align: center; margin-bottom: 32px;">
+									<img src="${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/logo.png" alt="Midfield Co Logo" width="40" height="37" style="margin: 0 auto;">
+								</div>
+								<h1 style="text-align: center; color: #000; font-size: 24px; font-weight: normal; margin: 30px 0;">Confirm your <strong>new email</strong></h1>
+								<p style="color: #000; font-size: 14px; line-height: 24px;">Hi ${user.name || "there"},</p>
+								<p style="color: #000; font-size: 14px; line-height: 24px;">Click the button below to confirm <strong>${newEmail}</strong> as your new email address for your Midfield Co account.</p>
+								<div style="text-align: center; margin: 32px 0;">
+									<a href="${url}" style="background-color: #000; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 12px; display: inline-block;">Confirm New Email</a>
+								</div>
+								<p style="color: #000; font-size: 14px; line-height: 24px;">
+									or copy and paste this URL into your browser: <a href="${url}" style="color: #0066cc; text-decoration: none;">${url}</a>
+								</p>
+								<hr style="border: none; border-top: 1px solid #eaeaea; margin: 26px 0;">
+								<p style="color: #666; font-size: 12px; line-height: 24px;">
+									If you did not request this change, you can safely ignore this email. This link will expire in 1 hour.
+								</p>
+							</div>
+						</body>
+						</html>
+					`,
+          });
+
+          if (result.error) {
+            console.error(`[Auth] Failed to send change email confirmation:`, result.error);
+            throw new Error(`Failed to send change email confirmation: ${JSON.stringify(result.error)}`);
+          }
+
+          const emailId = 'data' in result && result.data ? result.data.id : result.id;
+          console.log(`[Auth] Change email confirmation sent successfully! ID: ${emailId}`);
+        } catch (error) {
+          console.error(`[Auth] Exception sending change email confirmation:`, error);
+          throw error;
+        }
+      },
+    },
     additionalFields: {
       bio: {
         type: "string",
