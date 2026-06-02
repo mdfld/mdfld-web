@@ -12,13 +12,13 @@ function SearchResults({ query }: { query: string }) {
     return React.createElement(
       "div",
       { className: "py-10 text-center text-default-500 text-sm" },
-      `No results for "${query}" — try a different term or contact us`,
-      " ",
+      `No results for "${query}" — try a different term or `,
       React.createElement(
         Link,
         { href: "/contact", className: "text-primary underline" },
         "contact us"
-      )
+      ),
+      "."
     );
   }
 
