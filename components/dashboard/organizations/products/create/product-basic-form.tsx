@@ -16,6 +16,7 @@ const categories = [
   { key: "BOOTS", label: "Boots" },
   { key: "FOOTBALLS", label: "Footballs" },
   { key: "TRADING_CARDS", label: "Trading Cards" },
+  { key: "STICKERS", label: "Stickers" },
   { key: "GOALKEEPER_GLOVES", label: "Goalkeeper Gloves" },
   { key: "SHIN_GUARDS", label: "Shin Guards" },
   { key: "TRAINING_EQUIPMENT", label: "Training Equipment" },

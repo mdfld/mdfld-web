@@ -351,6 +351,7 @@ export const productRouter = createTRPCRouter({
           seller: {
             select: {
               id: true,
+              userId: true,
               storeName: true,
               storeDescription: true,
               averageRating: true,

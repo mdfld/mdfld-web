@@ -124,6 +124,7 @@ export default function ProductPage() {
     hasVariants: p.hasVariants,
     variants: p.variants,
     seller: p.seller,
+    sellerId: p.seller?.userId,
     details: [
       {
         title: "Product Details",

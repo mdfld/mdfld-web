@@ -20,6 +20,7 @@ import { trpc } from "@/lib/trpc-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useGuestCart } from "@/hooks/use-guest-cart";
 
+import { resolveSellerAction } from "@/lib/seller-action";
 import ColorRadioItem from "./color-radio-item";
 import StarRatingDisplay from "./star-rating-display";
 import TagGroupRadioItem from "./tag-group-radio-item";
@@ -39,6 +40,7 @@ export type ProductViewItem = {
   ratingCount?: number;
   sizes?: string[];
   isPopular?: boolean;
+  sellerId?: string;
   details?: {
     title: string;
     items: string[];
@@ -83,6 +85,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
       hasVariants,
       variants,
       seller,
+      sellerId,
       ...props
     },
     ref,
@@ -147,6 +150,28 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
         toast.error(error.message || "Failed to add to bag");
       },
     });
+
+    const createConversation = trpc.chat.createConversation.useMutation({
+      onSuccess: (conversation) => {
+        router.push(`/dashboard/inbox?conversation=${conversation.id}`);
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to start conversation");
+      },
+    });
+
+    const sellerAction = resolveSellerAction(user?.id, sellerId);
+
+    const handleMessageSeller = () => {
+      if (sellerAction === "guest") {
+        const callbackUrl = encodeURIComponent(window.location.pathname);
+        router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+        return;
+      }
+      if (sellerAction === "message" && sellerId) {
+        createConversation.mutate({ participantIds: [sellerId], type: "DIRECT" });
+      }
+    };
 
     const handleWishlistToggle = () => {
       if (!user) {
@@ -304,22 +329,35 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
 
           {/* Store Link */}
           {seller && seller.organization && (
-            <Link
-              href={`/orgs/${seller.organization.slug}`}
-              className="inline-flex items-center gap-2 text-default-600 hover:text-primary transition-colors mt-2"
-            >
-              {seller.organization.logo && (
-                <Image
-                  src={seller.organization.logo}
-                  alt={seller.organization.name}
-                  className="w-6 h-6 rounded-full"
-                />
+            <div className="flex items-center justify-between mt-2">
+              <Link
+                href={`/orgs/${seller.organization.slug}`}
+                className="inline-flex items-center gap-2 text-default-600 hover:text-primary transition-colors"
+              >
+                {seller.organization.logo && (
+                  <Image
+                    src={seller.organization.logo}
+                    alt={seller.organization.name}
+                    className="w-6 h-6 rounded-full"
+                  />
+                )}
+                <span className="text-sm font-medium">
+                  {seller.organization.name}
+                </span>
+                <Icon icon="solar:arrow-right-up-linear" width={14} />
+              </Link>
+              {sellerAction === "message" && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  startContent={<Icon icon="solar:chat-line-linear" width={14} />}
+                  onPress={handleMessageSeller}
+                  isLoading={createConversation.isPending}
+                >
+                  Message
+                </Button>
               )}
-              <span className="text-sm font-medium">
-                {seller.organization.name}
-              </span>
-              <Icon icon="solar:arrow-right-up-linear" width={14} />
-            </Link>
+            </div>
           )}
 
           <div className="my-2 flex items-center gap-2">
@@ -481,6 +519,27 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
               <Icon icon="solar:flag-linear" width={22} />
             </Button>
           </div>
+          {sellerAction !== "hidden" && (
+            <Button
+              fullWidth
+              className="text-medium font-medium mt-1"
+              size="lg"
+              variant="bordered"
+              startContent={
+                sellerAction === "edit"
+                  ? <Icon icon="solar:pen-linear" width={20} />
+                  : <Icon icon="solar:chat-line-linear" width={20} />
+              }
+              onPress={
+                sellerAction === "edit"
+                  ? () => router.push("/dashboard/organization/listings")
+                  : handleMessageSeller
+              }
+              isLoading={sellerAction === "message" && createConversation.isPending}
+            >
+              {sellerAction === "edit" ? "Edit Listing" : "Message Seller"}
+            </Button>
+          )}
           <Button
             variant="light"
             size="sm"

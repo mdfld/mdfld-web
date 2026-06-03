@@ -14,7 +14,7 @@ interface Category {
   href: string;
 }
 
-const CATEGORIES: Category[] = [
+export const CATEGORIES: Category[] = [
   {
     id: 0,
     label: 'Football Boots',
@@ -33,11 +33,11 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 2,
-    label: 'Goalkeeper',
-    img: '/categories/goalkeeper.webp',
-    tag: 'Pro Grade',
+    label: 'Stickers',
+    img: '/hero-stickers.webp',
+    tag: 'World Cup 2026',
     span: 'small',
-    href: '/shop?category=GOALKEEPER_GLOVES',
+    href: '/shop?category=STICKERS',
   },
   {
     id: 3,
