@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "@/server/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/trpc";
 import type { PrismaClient } from "@prisma/client";
 
 async function deleteUserById(prisma: PrismaClient, userId: string) {
@@ -35,6 +35,33 @@ async function deleteUserById(prisma: PrismaClient, userId: string) {
 }
 
 export const userRouter = createTRPCRouter({
+  // Search users by name or username (unauthenticated)
+  publicSearch: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(2),
+        limit: z.number().min(1).max(10).optional().default(5),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const users = await ctx.prisma.user.findMany({
+        where: {
+          OR: [
+            { name: { contains: input.query, mode: "insensitive" } },
+            { username: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          image: true,
+        },
+        take: input.limit,
+      });
+      return users;
+    }),
+
   // Search users by email or username
   search: protectedProcedure
     .input(
