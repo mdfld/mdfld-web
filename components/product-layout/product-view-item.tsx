@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useGuestCart } from "@/hooks/use-guest-cart";
 
 import { resolveSellerAction } from "@/lib/seller-action";
+import ProposeTradeModal from "@/components/product/propose-trade-modal";
 import ColorRadioItem from "./color-radio-item";
 import StarRatingDisplay from "./star-rating-display";
 import TagGroupRadioItem from "./tag-group-radio-item";
@@ -570,7 +571,15 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
             Report listing
           </Button>
         </div>
-        {/* ProposeTradeModal rendered here — wired in Task 10 */}
+        {tradeModalOpen && (
+          <ProposeTradeModal
+            isOpen={tradeModalOpen}
+            onClose={() => setTradeModalOpen(false)}
+            requestedProductId={props.id}
+            requestedProductName={name}
+            requestedProductImage={images[0]}
+          />
+        )}
         {reportOpen && (
           <div style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
