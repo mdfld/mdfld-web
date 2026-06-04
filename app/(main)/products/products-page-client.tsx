@@ -20,6 +20,7 @@ import ProductFilters from "@/components/product-filters";
 export default function ProductsPageClient() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
+  const urlQuery = searchParams.get("q") ?? undefined;
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [sortBy, setSortBy] = React.useState<string>("newest");
@@ -41,6 +42,7 @@ export default function ProductsPageClient() {
     trpc.product.search.useInfiniteQuery(
       {
         limit: 20,
+        query: urlQuery,
         category:
           selectedCategories.length > 0 ? selectedCategories[0] : undefined,
         minPrice: priceRange[0],
@@ -165,7 +167,9 @@ export default function ProductsPageClient() {
                 </Button>
 
                 <p className="text-sm text-default-500">
-                  {products.length} products
+                  {urlQuery
+                    ? `${sortedProducts.length} result${sortedProducts.length !== 1 ? "s" : ""} for "${urlQuery}"`
+                    : `${products.length} products`}
                 </p>
               </div>
 

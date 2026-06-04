@@ -6,6 +6,7 @@ import {
   VariantType,
   SizeSystem,
   ProductCondition,
+  ProductCategory,
   ProductTier,
   SoleplateType,
   PlayerVersion,
@@ -423,10 +424,36 @@ export const productRouter = createTRPCRouter({
       }
 
       if (input.query) {
+        const q = input.query;
+        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+
+        const matchedCategories = Object.values(ProductCategory).filter((cat) =>
+          cat.replace(/_/g, " ").toLowerCase().includes(q.toLowerCase()),
+        );
+        const matchedConditions = Object.values(ProductCondition).filter((cond) =>
+          cond.replace(/_/g, " ").toLowerCase().includes(q.toLowerCase()),
+        );
+
         where.OR = [
-          { title: { contains: input.query, mode: "insensitive" } },
-          { description: { contains: input.query, mode: "insensitive" } },
-          { brand: { contains: input.query, mode: "insensitive" } },
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { brand: { contains: q, mode: "insensitive" } },
+          { material: { contains: q, mode: "insensitive" } },
+          { season: { contains: q, mode: "insensitive" } },
+          { tags: { hasSome: words } },
+          ...(matchedCategories.length > 0 ? [{ category: { in: matchedCategories } }] : []),
+          ...(matchedConditions.length > 0 ? [{ condition: { in: matchedConditions } }] : []),
+          {
+            variants: {
+              some: {
+                OR: [
+                  { sizeValue: { contains: q, mode: "insensitive" } },
+                  { sizeDisplay: { contains: q, mode: "insensitive" } },
+                  { color: { contains: q, mode: "insensitive" } },
+                ],
+              },
+            },
+          },
         ];
       }
 

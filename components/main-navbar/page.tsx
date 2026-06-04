@@ -185,6 +185,12 @@ export default function MainNavbar() {
     { enabled: debouncedVal.length >= 2 }
   );
 
+  const { data: productSearchData, isFetching: productFetching } = trpc.product.search.useQuery(
+    { query: debouncedVal, limit: 4 },
+    { enabled: debouncedVal.length >= 2 }
+  );
+  const productResults = productSearchData?.items ?? [];
+
   // ── Mobile detection ──────────────────────────────────────
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -559,7 +565,68 @@ export default function MainNavbar() {
                 </button>
               </div>
             </form>
-            {debouncedVal.length >= 2 && (
+            {/* ── Live product results ── */}
+            {debouncedVal.length >= 2 && (productFetching || productResults.length > 0) && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+                    Products
+                  </span>
+                  {productFetching && (
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>
+                      Searching...
+                    </span>
+                  )}
+                </div>
+                {productResults.map((p: any) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      router.push(`/products/${p.id}`);
+                      setSearchOpen(false);
+                      setSearchVal('');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      width: '100%', background: 'transparent', border: 'none',
+                      padding: '8px 0', cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, flexShrink: 0,
+                      background: 'rgba(255,255,255,0.05)',
+                      overflow: 'hidden',
+                    }}>
+                      {p.images?.[0] ? (
+                        <img src={p.images[0]} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)' }} />
+                      )}
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 11, color: ACCENT, marginTop: 2 }}>
+                        ${Number(p.price).toFixed(2)}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {!productFetching && productResults.length > 0 && (
+                  <button
+                    onClick={() => { router.push(`/shop?q=${encodeURIComponent(debouncedVal)}`); setSearchOpen(false); setSearchVal(''); }}
+                    style={{ marginTop: 8, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.35)', fontFamily: "'Barlow',sans-serif", fontSize: 11, letterSpacing: '0.08em', cursor: 'pointer', padding: '4px 0', textDecoration: 'underline' }}
+                  >
+                    See all results for &ldquo;{debouncedVal}&rdquo;
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ── Live people results ── */}
+            {debouncedVal.length >= 2 && (userFetching || userResults.length > 0) && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
