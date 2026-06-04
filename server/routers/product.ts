@@ -75,6 +75,7 @@ const createProductSchema = z.object({
   shippingCarrier: z.string().optional(),
   estimatedDeliveryDays: z.number().int().positive().optional(),
   shipsFromCountry: z.string().optional(),
+  tradeEnabled: z.boolean().default(false),
 });
 
 export { PRODUCT_CATEGORIES };
@@ -143,6 +144,7 @@ export const productRouter = createTRPCRouter({
           shippingCarrier: input.shippingCarrier,
           estimatedDeliveryDays: input.estimatedDeliveryDays,
           shipsFromCountry: input.shipsFromCountry,
+          tradeEnabled: input.tradeEnabled,
           variants:
             input.variants && input.hasVariants
               ? {
@@ -691,4 +693,15 @@ export const productRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  getMyListings: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.product.findMany({
+      where: {
+        seller: { userId: ctx.user.id },
+        isActive: true,
+      },
+      select: { id: true, title: true, price: true, images: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }),
 });
