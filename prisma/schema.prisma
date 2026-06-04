@@ -57,6 +57,8 @@ model User {
   conversations        ConversationParticipant[]
   messages             Message[]
   messageReceipts      MessageReceipt[]
+  tradeOffersProposed TradeOffer[] @relation("TradeProposer")
+  tradeOffersReceived TradeOffer[] @relation("TradeRecipient")
 
   @@map("user")
 }
@@ -311,6 +313,7 @@ model Product {
   lastPriceChange      DateTime?
   reportCount          Int       @default(0)
   isHighRisk           Boolean   @default(false)
+  tradeEnabled             Boolean   @default(false)
 
   // Shipping fields
   shippingTerms        ShippingTerms @default(CALCULATED)
@@ -329,6 +332,8 @@ model Product {
   fraudReports FraudReport[]
   variants     ProductVariant[]
   sizeChart    SizeChart?
+  tradeOfferRequests  TradeOffer[] @relation("RequestedProduct")
+  tradeOffersMade     TradeOffer[] @relation("OfferedProduct")
 
   @@index([sellerProfileId])
   @@index([organizationId])
@@ -845,6 +850,11 @@ enum NotificationType {
   SYSTEM_ANNOUNCEMENT
   NEW_MESSAGE
   MESSAGE_READ
+  TRADE_OFFER_RECEIVED
+  TRADE_OFFER_ACCEPTED
+  TRADE_OFFER_DECLINED
+  TRADE_OFFER_SHIPPED
+  TRADE_OFFER_COMPLETED
 }
 
 // Chat Models
@@ -860,6 +870,7 @@ model Conversation {
   participants    ConversationParticipant[]
   messages        Message[]
   orgConversation OrgConversation?
+  tradeOffer      TradeOffer?
 
   @@map("conversation")
 }
@@ -926,6 +937,7 @@ enum ConversationType {
   SUPPORT
   ORDER
   ORGANIZATION
+  TRADE
 }
 
 enum MessageType {
@@ -1125,6 +1137,52 @@ enum ConversationPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+enum TradeOfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  SHIPPING
+  COMPLETED
+  EXPIRED
+  DISPUTED
+}
+
+model TradeOffer {
+  id                      String           @id @default(cuid())
+  conversationId          String           @unique
+  proposerId              String
+  recipientId             String
+  requestedProductId      String
+  offeredProductId        String?
+  cashAmount              Decimal?
+  cashFromProposer        Boolean          @default(true)
+  status                  TradeOfferStatus @default(PENDING)
+
+  proposerTrackingNumber  String?
+  recipientTrackingNumber String?
+  proposerShippedAt       DateTime?
+  recipientShippedAt      DateTime?
+
+  expiresAt               DateTime?
+  completedAt             DateTime?
+  cancelledAt             DateTime?
+
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  conversation            Conversation     @relation(fields: [conversationId], references: [id])
+  proposer                User             @relation("TradeProposer", fields: [proposerId], references: [id])
+  recipient               User             @relation("TradeRecipient", fields: [recipientId], references: [id])
+  requestedProduct        Product          @relation("RequestedProduct", fields: [requestedProductId], references: [id])
+  offeredProduct          Product?         @relation("OfferedProduct", fields: [offeredProductId], references: [id])
+
+  @@index([proposerId])
+  @@index([recipientId])
+  @@index([status])
+  @@map("trade_offer")
 }
 
 enum OrgConversationStatus {
