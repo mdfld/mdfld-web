@@ -54,6 +54,9 @@ describe("user.publicSearch", () => {
     const caller = createCaller(publicCtx);
     const result = await caller.publicSearch({ query: "test" });
     expect((result[0] as any).email).toBeUndefined();
+    // Verify the DB query itself does not select email
+    const callArg = mockUserFindMany.mock.calls[0][0];
+    expect(callArg.select).not.toHaveProperty("email");
   });
 
   it("rejects query shorter than 2 chars", async () => {
