@@ -125,6 +125,7 @@ export default function ProductPage() {
     variants: p.variants,
     seller: p.seller,
     sellerId: p.seller?.userId,
+    tradeEnabled: p.tradeEnabled ?? false,
     details: [
       {
         title: "Product Details",

@@ -41,6 +41,7 @@ export type ProductViewItem = {
   sizes?: string[];
   isPopular?: boolean;
   sellerId?: string;
+  tradeEnabled?: boolean;
   details?: {
     title: string;
     items: string[];
@@ -86,6 +87,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
       variants,
       seller,
       sellerId,
+      tradeEnabled,
       ...props
     },
     ref,
@@ -106,6 +108,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
     const [reportReason, setReportReason] = React.useState('');
     const [reportSubmitting, setReportSubmitting] = React.useState(false);
     const [reportDone, setReportDone] = React.useState(false);
+    const [tradeModalOpen, setTradeModalOpen] = React.useState(false);
 
     // Get wishlist data
     const { data: wishlistProducts } = trpc.user.getWishlist.useQuery(
@@ -540,6 +543,23 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
               {sellerAction === "edit" ? "Edit Listing" : "Message Seller"}
             </Button>
           )}
+          {tradeEnabled && (sellerAction === "message" || sellerAction === "guest") && (
+            <Button
+              variant="bordered"
+              size="lg"
+              fullWidth
+              startContent={<Icon icon="solar:transfer-horizontal-linear" width={18} />}
+              onPress={() => {
+                if (sellerAction === "guest") {
+                  router.push(`/auth/signin?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+                } else {
+                  setTradeModalOpen(true);
+                }
+              }}
+            >
+              Propose Trade
+            </Button>
+          )}
           <Button
             variant="light"
             size="sm"
@@ -550,6 +570,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
             Report listing
           </Button>
         </div>
+        {/* ProposeTradeModal rendered here — wired in Task 10 */}
         {reportOpen && (
           <div style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
