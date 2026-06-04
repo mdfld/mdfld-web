@@ -162,6 +162,7 @@ export default function MainNavbar() {
   const [cartOpen, setCartOpen]           = useState(false);
   const [dropdownLocked, setDropdownLocked] = useState(false);
   const [searchVal, setSearchVal]         = useState('');
+  const [debouncedVal, setDebouncedVal] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname  = usePathname();
   const router    = useRouter();
@@ -178,6 +179,11 @@ export default function MainNavbar() {
   const { data: wishlistData } = trpc.user.getWishlist.useQuery(undefined, { enabled: !!authUser });
   const cartCount  = authUser ? (cartData?.itemCount ?? 0) : 0;
   const wishCount  = authUser ? (wishlistData?.length ?? 0) : 0;
+
+  const { data: userResults = [], isFetching: userFetching } = trpc.user.publicSearch.useQuery(
+    { query: debouncedVal },
+    { enabled: debouncedVal.length >= 2 }
+  );
 
   // ── Mobile detection ──────────────────────────────────────
   const [isMobile, setIsMobile] = useState(false);
@@ -219,6 +225,11 @@ export default function MainNavbar() {
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [dropdownLocked]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedVal(searchVal), 300);
+    return () => clearTimeout(t);
+  }, [searchVal]);
 
   // ── Logout ────────────────────────────────────────────────
   const handleLogout = async () => {
@@ -548,6 +559,68 @@ export default function MainNavbar() {
                 </button>
               </div>
             </form>
+            {debouncedVal.length >= 2 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+                    People
+                  </span>
+                  {userFetching && (
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>
+                      Searching...
+                    </span>
+                  )}
+                </div>
+                {!userFetching && userResults.length === 0 && (
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontFamily: "'Barlow',sans-serif" }}>
+                    No users found
+                  </span>
+                )}
+                {userResults.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => {
+                      if (!u.username) return;
+                      router.push(`/users/${u.username}`);
+                      setSearchOpen(false);
+                      setSearchVal('');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      width: '100%', background: 'transparent', border: 'none',
+                      padding: '8px 0', cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                      background: 'rgba(0,212,182,0.15)',
+                      border: '1px solid rgba(0,212,182,0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}>
+                      {u.image ? (
+                        <img src={u.image} alt={u.name ?? ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 900, color: ACCENT }}>
+                          {(u.name ?? u.username ?? '?')[0].toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, fontWeight: 600, color: '#fff' }}>
+                        {u.name ?? u.username}
+                      </div>
+                      {u.username && (
+                        <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em' }}>
+                          @{u.username}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Popular</span>
               {['Mercurial', 'Predator', 'Copa Pure', 'Phantom GX', 'Dri-FIT Kit'].map(t => (
