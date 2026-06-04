@@ -4,6 +4,7 @@ import React from "react";
 import {
   Avatar,
   Badge,
+  Chip,
   ScrollShadow,
   Listbox,
   ListboxItem,
@@ -252,6 +253,26 @@ const MessageChatInbox = React.forwardRef<
                           <div className="text-small text-default-400 flex-shrink-0 ml-2">
                             {formatTime(conversation.lastMessageAt)}
                           </div>
+                          {conversation.type === "TRADE" && (conversation as any).tradeOffer && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color={
+                                (conversation as any).tradeOffer.status === "PENDING"    ? "warning"
+                                : (conversation as any).tradeOffer.status === "ACCEPTED" ? "primary"
+                                : (conversation as any).tradeOffer.status === "SHIPPING" ? "secondary"
+                                : (conversation as any).tradeOffer.status === "COMPLETED"? "success"
+                                : "default"
+                              }
+                              className="text-tiny ml-1 flex-shrink-0"
+                            >
+                              {(conversation as any).tradeOffer.status === "PENDING"    ? "Pending"
+                              : (conversation as any).tradeOffer.status === "ACCEPTED"  ? "Accepted"
+                              : (conversation as any).tradeOffer.status === "SHIPPING"  ? "Shipping"
+                              : (conversation as any).tradeOffer.status === "COMPLETED" ? "Complete"
+                              : (conversation as any).tradeOffer.status}
+                            </Chip>
+                          )}
                         </div>
                       </ListboxItem>
                     );
