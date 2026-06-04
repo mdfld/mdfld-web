@@ -42,6 +42,8 @@ CREATE UNIQUE INDEX "trade_offer_conversationId_key" ON "trade_offer"("conversat
 CREATE INDEX "trade_offer_proposerId_idx" ON "trade_offer"("proposerId");
 CREATE INDEX "trade_offer_recipientId_idx" ON "trade_offer"("recipientId");
 CREATE INDEX "trade_offer_status_idx" ON "trade_offer"("status");
+CREATE INDEX "trade_offer_requestedProductId_idx" ON "trade_offer"("requestedProductId");
+CREATE INDEX "trade_offer_status_expiresAt_idx" ON "trade_offer"("status", "expiresAt");
 
 -- AddForeignKey
 ALTER TABLE "trade_offer" ADD CONSTRAINT "trade_offer_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "conversation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

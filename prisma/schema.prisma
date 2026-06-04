@@ -1182,6 +1182,8 @@ model TradeOffer {
   @@index([proposerId])
   @@index([recipientId])
   @@index([status])
+  @@index([requestedProductId])
+  @@index([status, expiresAt])
   @@map("trade_offer")
 }
 
