@@ -210,7 +210,7 @@ export default function MainNavbar() {
   }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); setSearchVal(''); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -542,7 +542,7 @@ export default function MainNavbar() {
 
       {/* ═══ SEARCH OVERLAY ═══ */}
       {searchOpen && (
-        <div className="nb-search-overlay" onClick={() => setSearchOpen(false)}>
+        <div className="nb-search-overlay" onClick={() => { setSearchOpen(false); setSearchVal(''); }}>
           <div className="nb-search-box" onClick={e => e.stopPropagation()}>
             <form onSubmit={handleSearch}>
               <div className="nb-search-input-wrap">
@@ -554,7 +554,7 @@ export default function MainNavbar() {
                   value={searchVal}
                   onChange={e => setSearchVal(e.target.value)}
                 />
-                <button type="button" className="nb-icon" style={{ flexShrink: 0, width: 44, height: 44 }} onClick={() => setSearchOpen(false)}>
+                <button type="button" className="nb-icon" style={{ flexShrink: 0, width: 44, height: 44 }} onClick={() => { setSearchOpen(false); setSearchVal(''); }}>
                   <X size={22} />
                 </button>
               </div>
@@ -571,7 +571,7 @@ export default function MainNavbar() {
                     </span>
                   )}
                 </div>
-                {userResults.slice(0, 5).map((u) => (
+                {userResults.map((u) => (
                   <button
                     key={u.id}
                     onClick={() => {
