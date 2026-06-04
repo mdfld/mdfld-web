@@ -58,6 +58,7 @@ export interface ProductFormData {
   shippingCarrier: string;
   estimatedDeliveryDays: number;
   shipsFromCountry: string;
+  tradeEnabled: boolean;
 }
 
 export default function ProductCreation({
@@ -76,7 +77,9 @@ export default function ProductCreation({
   const [[page, direction], setPage] = React.useState([0, 0]);
 
   const createProduct = trpc.product.create.useMutation();
-  const [formData, setFormData] = useState<Partial<ProductFormData>>({});
+  const [formData, setFormData] = useState<Partial<ProductFormData>>({
+    tradeEnabled: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { completeStep } = useOnboarding();
 
@@ -152,6 +155,7 @@ export default function ProductCreation({
         shippingCarrier: formData.shippingCarrier || undefined,
         estimatedDeliveryDays: formData.estimatedDeliveryDays || undefined,
         shipsFromCountry: formData.shipsFromCountry || undefined,
+        tradeEnabled: formData.tradeEnabled ?? false,
       });
 
       toast.success("Product created successfully!");

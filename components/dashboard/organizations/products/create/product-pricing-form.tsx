@@ -2,7 +2,7 @@
 
 import type { InputProps } from "@heroui/react";
 import React from "react";
-import { Input, Card, CardBody, RadioGroup, Radio, Select, SelectItem } from "@heroui/react";
+import { Input, Card, CardBody, RadioGroup, Radio, Select, SelectItem, Switch } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
 import countries from "../../onboard/countries";
 
@@ -196,6 +196,22 @@ export default function ProductPricingForm({
               <SelectItem key={country.code}>{country.name}</SelectItem>
             )}
           </Select>
+        </div>
+
+        <div className="col-span-12 border-t border-zinc-700 pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-small font-medium text-default-700">Accept trade offers</p>
+              <p className="text-xs text-default-400 mt-0.5">
+                Allow buyers to propose item swaps or cash offers for this listing
+              </p>
+            </div>
+            <Switch
+              isSelected={data.tradeEnabled ?? false}
+              onValueChange={(val) => onUpdate({ tradeEnabled: val })}
+              size="sm"
+            />
+          </div>
         </div>
 
       </form>
