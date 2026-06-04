@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Icon } from "@iconify/react";
 import {
   Accordion,
   AccordionItem,
@@ -8,6 +9,7 @@ import {
   Checkbox,
   CheckboxGroup,
   Slider,
+  Switch,
 } from "@heroui/react";
 import {
   FOOTBALL_BRANDS,
@@ -18,6 +20,7 @@ export type ProductFiltersProps = {
   initialCategories?: string[];
   onFiltersChange?: (filters: any) => void;
   onReset?: () => void;
+  initialTradeEnabled?: boolean;
 };
 
 const CONDITIONS = [
@@ -105,6 +108,7 @@ export default function ProductFilters({
   initialCategories,
   onFiltersChange,
   onReset,
+  initialTradeEnabled,
 }: ProductFiltersProps) {
   const [filters, setFilters] = React.useState({
     categories: initialCategories ?? ([] as string[]),
@@ -119,6 +123,7 @@ export default function ProductFilters({
     seasons: [] as string[],
     cardTypes: [] as string[],
     cardYears: [] as string[],
+    tradeEnabled: initialTradeEnabled ?? false,
   });
 
   const updateFilter = (key: string, value: any) => {
@@ -141,6 +146,7 @@ export default function ProductFilters({
       seasons: [],
       cardTypes: [],
       cardYears: [],
+      tradeEnabled: false,
     };
     setFilters(resetFilters);
     onReset?.();
@@ -150,6 +156,7 @@ export default function ProductFilters({
     if (key === "priceRange" && Array.isArray(value)) {
       return (value[0] as number) > 0 || (value[1] as number) < 5000;
     }
+    if (key === "tradeEnabled") return value === true;
     return Array.isArray(value) && value.length > 0;
   });
 
@@ -518,6 +525,18 @@ export default function ProductFilters({
             Clear all
           </Button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between py-2 border-b border-divider mb-1">
+        <div className="flex items-center gap-1.5">
+          <Icon icon="solar:transfer-horizontal-linear" width={14} className="text-default-500" />
+          <span className="text-sm text-default-600">Trades Accepted</span>
+        </div>
+        <Switch
+          isSelected={filters.tradeEnabled}
+          onValueChange={(val) => updateFilter("tradeEnabled", val)}
+          size="sm"
+        />
       </div>
 
       <Accordion

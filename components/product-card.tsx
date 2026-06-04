@@ -24,6 +24,7 @@ export type ProductCardProps = Omit<
     category: string;
     condition: string;
     isActive: boolean;
+    tradeEnabled?: boolean;
     seller?: {
       id: string;
       storeName: string;
@@ -148,6 +149,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       >
         {process.env.NODE_ENV === "development" && (
           <ScoreDebugOverlay score={debugScore} />
+        )}
+        {product.tradeEnabled && (
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-1 rounded-full bg-background/60 px-2 py-1 backdrop-blur-md backdrop-saturate-150">
+            <Icon icon="solar:transfer-horizontal-linear" width={12} className="text-primary" />
+            <span className="text-[10px] font-medium text-primary leading-none">Trade</span>
+          </div>
         )}
         <Button
           isIconOnly

@@ -30,6 +30,7 @@ export default function ProductsPageClient() {
   const [selectedConditions, setSelectedConditions] = React.useState<string[]>(
     [],
   );
+  const [tradeEnabled, setTradeEnabled] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     setSelectedCategories(urlCategory ? [urlCategory] : []);
@@ -44,6 +45,7 @@ export default function ProductsPageClient() {
           selectedCategories.length > 0 ? selectedCategories[0] : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
+        tradeEnabled: tradeEnabled || undefined,
       },
       {
         getNextPageParam: (lastPage: any) => lastPage.nextCursor,
@@ -94,11 +96,13 @@ export default function ProductsPageClient() {
                 if (filters.priceRange) setPriceRange(filters.priceRange);
                 if (filters.conditions)
                   setSelectedConditions(filters.conditions);
+                setTradeEnabled(filters.tradeEnabled ?? false);
               }}
               onReset={() => {
                 setSelectedCategories([]);
                 setPriceRange([0, 5000]);
                 setSelectedConditions([]);
+                setTradeEnabled(false);
               }}
             />
           </DrawerBody>

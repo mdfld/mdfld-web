@@ -309,6 +309,7 @@ export const adminRouter = createTRPCRouter({
             "BOOTS",
             "FOOTBALLS",
             "TRADING_CARDS",
+            "STICKERS",
             "GOALKEEPER_GLOVES",
             "SHIN_GUARDS",
             "TRAINING_EQUIPMENT",

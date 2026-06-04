@@ -401,6 +401,7 @@ export const productRouter = createTRPCRouter({
         maxPrice: z.number().optional(),
         tags: z.array(z.string()).optional(),
         featured: z.boolean().optional(),
+        tradeEnabled: z.boolean().optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -412,6 +413,10 @@ export const productRouter = createTRPCRouter({
 
       if (input.featured !== undefined) {
         where.featured = input.featured;
+      }
+
+      if (input.tradeEnabled) {
+        where.tradeEnabled = true;
       }
 
       if (input.query) {

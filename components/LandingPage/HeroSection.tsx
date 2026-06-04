@@ -27,11 +27,11 @@ const CATEGORIES = [
     href: '/shop?category=ACCESSORIES',
   },
   {
-    title: 'GOALKEEPER',
-    subtitle: 'Gear built for the last line.',
-    img: '/categories/goalkeeper.webp',
+    title: 'STICKERS',
+    subtitle: 'Collect every kit. WC 2026.',
+    img: '/categories/hero-stickers.webp',
     color: '#050505',
-    href: '/shop?category=GOALKEEPER_GLOVES',
+    href: '/shop?category=STICKERS',
   },
 ];
 
