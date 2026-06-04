@@ -138,4 +138,110 @@ export const tradeRouter = createTRPCRouter({
 
       return { tradeOfferId: tradeOffer.id, conversationId: conversation.id };
     }),
+
+  respondToOffer: protectedProcedure
+    .input(z.object({ tradeOfferId: z.string(), response: z.enum(["ACCEPTED", "DECLINED"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
+      if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
+      if (offer.recipientId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the recipient can respond" });
+      if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Offer is no longer pending" });
+      const updated = await ctx.prisma.tradeOffer.update({ where: { id: input.tradeOfferId }, data: { status: input.response } });
+      await ctx.prisma.notification.create({
+        data: {
+          userId: offer.proposerId,
+          type: input.response === "ACCEPTED" ? "TRADE_OFFER_ACCEPTED" : "TRADE_OFFER_DECLINED",
+          title: input.response === "ACCEPTED" ? "Trade offer accepted!" : "Trade offer declined",
+          content: input.response === "ACCEPTED" ? "Your trade offer was accepted. Time to ship!" : "Your trade offer was declined.",
+          metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+        },
+      });
+      return updated;
+    }),
+
+  cancelOffer: protectedProcedure
+    .input(z.object({ tradeOfferId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
+      if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
+      if (offer.proposerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can cancel" });
+      if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending offers can be cancelled" });
+      return ctx.prisma.tradeOffer.update({ where: { id: input.tradeOfferId }, data: { status: "CANCELLED", cancelledAt: new Date() } });
+    }),
+
+  uploadTracking: protectedProcedure
+    .input(z.object({ tradeOfferId: z.string(), trackingNumber: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
+      if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
+      const isProposer = offer.proposerId === ctx.user.id;
+      const isRecipient = offer.recipientId === ctx.user.id;
+      if (!isProposer && !isRecipient) throw new TRPCError({ code: "FORBIDDEN", message: "Not a participant in this trade" });
+      if (offer.status !== "ACCEPTED" && offer.status !== "SHIPPING") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Tracking can only be uploaded once the offer is accepted" });
+      }
+      const trackingUpdate = isProposer
+        ? { proposerTrackingNumber: input.trackingNumber, proposerShippedAt: new Date() }
+        : { recipientTrackingNumber: input.trackingNumber, recipientShippedAt: new Date() };
+      const proposerTracking = isProposer ? input.trackingNumber : offer.proposerTrackingNumber;
+      const recipientTracking = isRecipient ? input.trackingNumber : offer.recipientTrackingNumber;
+      const bothShipped = !!proposerTracking && !!recipientTracking;
+      const updated = await ctx.prisma.tradeOffer.update({
+        where: { id: input.tradeOfferId },
+        data: { ...trackingUpdate, status: bothShipped ? "COMPLETED" : "SHIPPING", ...(bothShipped && { completedAt: new Date() }) },
+      });
+      const otherId = isProposer ? offer.recipientId : offer.proposerId;
+      await ctx.prisma.notification.create({
+        data: {
+          userId: otherId,
+          type: bothShipped ? "TRADE_OFFER_COMPLETED" : "TRADE_OFFER_SHIPPED",
+          title: bothShipped ? "Trade complete!" : "Your trade partner has shipped",
+          content: bothShipped ? "Both items have shipped. Trade complete!" : `${ctx.user.name} has shipped their item.`,
+          metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+        },
+      });
+      if (bothShipped) {
+        await ctx.prisma.notification.create({
+          data: {
+            userId: ctx.user.id,
+            type: "TRADE_OFFER_COMPLETED",
+            title: "Trade complete!",
+            content: "Both items have shipped. Trade complete!",
+            metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+          },
+        });
+      }
+      return updated;
+    }),
+
+  getMyOffers: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.tradeOffer.findMany({
+      where: { OR: [{ proposerId: ctx.user.id }, { recipientId: ctx.user.id }] },
+      include: {
+        requestedProduct: { select: { id: true, title: true, price: true, images: true } },
+        offeredProduct: { select: { id: true, title: true, price: true, images: true } },
+        proposer: { select: { id: true, name: true, image: true } },
+        recipient: { select: { id: true, name: true, image: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }),
+
+  getOfferByConversation: protectedProcedure
+    .input(z.object({ conversationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const participant = await ctx.prisma.conversationParticipant.findUnique({
+        where: { conversationId_userId: { conversationId: input.conversationId, userId: ctx.user.id } },
+      });
+      if (!participant) throw new TRPCError({ code: "FORBIDDEN", message: "Not a participant" });
+      return ctx.prisma.tradeOffer.findUnique({
+        where: { conversationId: input.conversationId },
+        include: {
+          requestedProduct: { select: { id: true, title: true, price: true, images: true } },
+          offeredProduct: { select: { id: true, title: true, price: true, images: true } },
+          proposer: { select: { id: true, name: true, image: true } },
+          recipient: { select: { id: true, name: true, image: true } },
+        },
+      });
+    }),
 });

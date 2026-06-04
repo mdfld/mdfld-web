@@ -7,6 +7,10 @@ const {
   mockNotificationCreate,
   mockTransaction,
   mockMessageCreate,
+  mockTradeOfferFindUnique,
+  mockTradeOfferUpdate,
+  mockTradeOfferFindMany,
+  mockConversationParticipantFindUnique,
 } = vi.hoisted(() => {
   const convCreate = vi.fn().mockResolvedValue({ id: "conv-1" });
   const offerCreate = vi.fn().mockResolvedValue({ id: "offer-1", conversationId: "conv-1" });
@@ -18,16 +22,21 @@ const {
     mockTransaction: vi.fn().mockImplementation(async (fn: any) =>
       fn({ conversation: { create: convCreate }, tradeOffer: { create: offerCreate } })
     ),
+    mockTradeOfferFindUnique: vi.fn(),
+    mockTradeOfferUpdate: vi.fn().mockResolvedValue({ id: "offer-1", status: "ACCEPTED" }),
+    mockTradeOfferFindMany: vi.fn().mockResolvedValue([]),
+    mockConversationParticipantFindUnique: vi.fn().mockResolvedValue({ userId: "user-1" }),
   };
 });
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     product: { findUnique: mockProductFindUnique },
-    tradeOffer: { findFirst: mockTradeOfferFindFirst },
+    tradeOffer: { findFirst: mockTradeOfferFindFirst, findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate, findMany: mockTradeOfferFindMany },
     notification: { create: mockNotificationCreate },
     message: { create: mockMessageCreate },
     $transaction: mockTransaction,
+    conversationParticipant: { findUnique: mockConversationParticipantFindUnique },
   },
 }));
 
@@ -155,5 +164,138 @@ describe("trade.proposeOffer", () => {
     await expect(
       caller.proposeOffer({ requestedProductId: "product-1" })
     ).rejects.toThrow(TRPCError);
+  });
+});
+
+const recipientCtx = {
+  req: {} as any,
+  res: {} as any,
+  session: { session: {} as any, user: { id: "seller-1", name: "Seller" } } as any,
+  user: { id: "seller-1", name: "Seller" } as any,
+  prisma: {
+    tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate, findFirst: mockTradeOfferFindFirst },
+    notification: { create: mockNotificationCreate },
+  } as any,
+};
+
+describe("trade.respondToOffer", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("recipient can accept — status becomes ACCEPTED", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1", status: "PENDING",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "ACCEPTED" });
+    const caller = createCaller(recipientCtx);
+    const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" });
+    expect(result.status).toBe("ACCEPTED");
+  });
+
+  it("recipient can decline — status becomes DECLINED", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1", status: "PENDING",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "DECLINED" });
+    const caller = createCaller(recipientCtx);
+    const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "DECLINED" });
+    expect(result.status).toBe("DECLINED");
+  });
+
+  it("proposer cannot call respondToOffer", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1", status: "PENDING",
+    });
+    const caller = createCaller(buyerCtx);
+    await expect(
+      caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" })
+    ).rejects.toThrow(TRPCError);
+  });
+});
+
+describe("trade.cancelOffer", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("proposer can cancel PENDING offer", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1", status: "PENDING",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "CANCELLED" });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: { ...buyerCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate } } as any,
+    });
+    const result = await caller.cancelOffer({ tradeOfferId: "offer-1" });
+    expect(result.status).toBe("CANCELLED");
+  });
+});
+
+describe("trade.uploadTracking", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("proposer upload sets SHIPPING status", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "ACCEPTED", proposerTrackingNumber: null, recipientTrackingNumber: null,
+      conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "SHIPPING", proposerTrackingNumber: "TRACK123" });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: { ...buyerCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate }, notification: { create: mockNotificationCreate } } as any,
+    });
+    const result = await caller.uploadTracking({ tradeOfferId: "offer-1", trackingNumber: "TRACK123" });
+    expect(result.status).toBe("SHIPPING");
+  });
+
+  it("when both legs uploaded, status becomes COMPLETED", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "SHIPPING", proposerTrackingNumber: "TRACK123", recipientTrackingNumber: null,
+      conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "COMPLETED", proposerTrackingNumber: "TRACK123", recipientTrackingNumber: "TRACK456" });
+    const caller = createCaller({
+      ...buyerCtx,
+      user: { id: "seller-1", name: "Seller" } as any,
+      session: { session: {} as any, user: { id: "seller-1", name: "Seller" } } as any,
+      prisma: { ...buyerCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate }, notification: { create: mockNotificationCreate } } as any,
+    });
+    const result = await caller.uploadTracking({ tradeOfferId: "offer-1", trackingNumber: "TRACK456" });
+    expect(result.status).toBe("COMPLETED");
+  });
+});
+
+describe("trade.getMyOffers", () => {
+  it("returns offers for current user as both proposer and recipient", async () => {
+    mockTradeOfferFindMany.mockResolvedValue([
+      { id: "offer-1", proposerId: "user-1" },
+      { id: "offer-2", recipientId: "user-1" },
+    ]);
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: { ...buyerCtx.prisma, tradeOffer: { findMany: mockTradeOfferFindMany } } as any,
+    });
+    const result = await caller.getMyOffers();
+    expect(mockTradeOfferFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { OR: [{ proposerId: "user-1" }, { recipientId: "user-1" }] } }),
+    );
+    expect(result).toHaveLength(2);
+  });
+});
+
+describe("trade.getOfferByConversation", () => {
+  it("returns trade offer for a participant", async () => {
+    mockConversationParticipantFindUnique.mockResolvedValue({ userId: "user-1" });
+    mockTradeOfferFindUnique.mockResolvedValue({ id: "offer-1", conversationId: "conv-1" });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        conversationParticipant: { findUnique: mockConversationParticipantFindUnique },
+        tradeOffer: { findUnique: mockTradeOfferFindUnique },
+      } as any,
+    });
+    const result = await caller.getOfferByConversation({ conversationId: "conv-1" });
+    expect(result).toHaveProperty("id", "offer-1");
   });
 });
