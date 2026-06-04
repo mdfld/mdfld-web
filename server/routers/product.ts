@@ -367,6 +367,9 @@ export const productRouter = createTRPCRouter({
                   slug: true,
                   logo: true,
                   shipsFromCountry: true,
+                  members: {
+                    select: { userId: true, role: true },
+                  },
                 },
               },
             },

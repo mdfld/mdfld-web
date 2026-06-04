@@ -512,6 +512,24 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
                 <Icon icon="solar:heart-linear" width={24} />
               )}
             </Button>
+            {tradeEnabled && (sellerAction === "message" || sellerAction === "guest") && (
+              <Button
+                isIconOnly
+                className="text-default-600"
+                size="lg"
+                variant="flat"
+                title="Propose a trade"
+                onPress={() => {
+                  if (sellerAction === "guest") {
+                    router.push(`/auth/signin?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+                  } else {
+                    setTradeModalOpen(true);
+                  }
+                }}
+              >
+                <Icon icon="solar:transfer-horizontal-linear" width={22} />
+              </Button>
+            )}
             <Button
               isIconOnly
               className="text-default-400"

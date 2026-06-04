@@ -124,7 +124,7 @@ export default function ProductPage() {
     hasVariants: p.hasVariants,
     variants: p.variants,
     seller: p.seller,
-    sellerId: p.seller?.userId,
+    sellerId: p.seller?.userId ?? p.seller?.organization?.members?.[0]?.userId,
     tradeEnabled: p.tradeEnabled ?? false,
     details: [
       {
