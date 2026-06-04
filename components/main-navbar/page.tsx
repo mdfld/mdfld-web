@@ -571,12 +571,7 @@ export default function MainNavbar() {
                     </span>
                   )}
                 </div>
-                {!userFetching && userResults.length === 0 && (
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontFamily: "'Barlow',sans-serif" }}>
-                    No users found
-                  </span>
-                )}
-                {userResults.map((u) => (
+                {userResults.slice(0, 5).map((u) => (
                   <button
                     key={u.id}
                     onClick={() => {
