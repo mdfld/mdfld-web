@@ -21,14 +21,14 @@ const CATEGORIES = [
   },
   {
     title: 'ACCESSORIES',
-    subtitle: 'Complete your kit.',
+    subtitle: 'Complete your collection.',
     img: '/categories/accessories.jpg',
     color: '#161616',
     href: '/shop?category=ACCESSORIES',
   },
   {
     title: 'STICKERS',
-    subtitle: 'Collect every kit. WC 2026.',
+    subtitle: 'Collect every one. WC 2026.',
     img: '/categories/hero-stickers.webp',
     color: '#050505',
     href: '/shop?category=STICKERS',
