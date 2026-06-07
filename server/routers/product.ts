@@ -413,6 +413,7 @@ export const productRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const where: any = {
         isActive: true,
+        inventory: { gt: 0 },
       };
 
       if (input.featured !== undefined) {

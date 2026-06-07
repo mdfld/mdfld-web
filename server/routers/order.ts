@@ -53,7 +53,11 @@ export const orderRouter = createTRPCRouter({
           orderNumber: true,
           status: true,
           paymentStatus: true,
+          subtotal: true,
+          shipping: true,
+          tax: true,
           total: true,
+          shippingAddress: true,
           createdAt: true,
           seller: {
             select: {
@@ -360,17 +364,19 @@ export const orderRouter = createTRPCRouter({
           },
         }),
         Promise.all(
-          order.items.map((item) =>
-            item.variantId
-              ? ctx.prisma.productVariant.update({
-                  where: { id: item.variantId },
-                  data: { inventory: { increment: item.quantity } },
-                })
-              : ctx.prisma.product.update({
-                  where: { id: item.productId },
-                  data: { inventory: { increment: item.quantity } },
-                }),
-          ),
+          order.items.map(async (item) => {
+            if (item.variantId) {
+              return ctx.prisma.productVariant.update({
+                where: { id: item.variantId },
+                data: { inventory: { increment: item.quantity } },
+              });
+            }
+            const updated = await ctx.prisma.product.update({
+              where: { id: item.productId },
+              data: { inventory: { increment: item.quantity }, isActive: true },
+            });
+            return updated;
+          }),
         ),
         notifyUserId
           ? ctx.prisma.notification.create({

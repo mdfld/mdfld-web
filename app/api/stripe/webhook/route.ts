@@ -255,7 +255,35 @@ async function handleCheckoutSessionCompleted(
         where: { id: order.id },
         data: { applicationFeeAmount },
       }),
+      // Decrement inventory for each purchased item
+      ...items.map((item) =>
+        item.variantId
+          ? prisma.productVariant.update({
+              where: { id: item.variantId },
+              data: { inventory: { decrement: item.quantity } },
+            })
+          : prisma.product.update({
+              where: { id: item.productId },
+              data: { inventory: { decrement: item.quantity } },
+            }),
+      ),
     ]);
+
+    // Mark product inactive if inventory is now 0
+    for (const item of items) {
+      if (!item.variantId) {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { inventory: true },
+        });
+        if (product && product.inventory <= 0) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { isActive: false },
+          });
+        }
+      }
+    }
   }
 
   // ── Clear buyer's cart after orders created ───────────────────────────────
