@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure, superAdminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
@@ -279,7 +279,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  deleteProduct: adminProcedure
+  deleteProduct: superAdminProcedure
     .input(z.object({ productId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.auditLog.create({
@@ -294,7 +294,7 @@ export const adminRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  updateProduct: adminProcedure
+  updateProduct: superAdminProcedure
     .input(
       z.object({
         productId: z.string(),
