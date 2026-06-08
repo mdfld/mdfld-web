@@ -287,17 +287,63 @@ describe("trade.respondToOffer", () => {
 describe("trade.cancelOffer", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("proposer can cancel PENDING offer", async () => {
+  it("proposer cancels PENDING offer — offered product restored", async () => {
     mockTradeOfferFindUnique.mockResolvedValue({
-      id: "offer-1", proposerId: "user-1", recipientId: "seller-1", status: "PENDING",
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "PENDING", offeredProductId: "offered-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "CANCELLED" });
+    mockProductUpdate.mockResolvedValue({ id: "offered-1", isActive: true });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        product: { update: mockProductUpdate },
+      } as any,
+    });
+    const result = await caller.cancelOffer({ tradeOfferId: "offer-1" });
+    expect(result.status).toBe("CANCELLED");
+    expect(mockProductUpdate).toHaveBeenCalledWith({
+      where: { id: "offered-1" },
+      data: { isActive: true },
+    });
+  });
+
+  it("proposer cancels AWAITING_PAYMENT offer — allowed", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "AWAITING_PAYMENT", offeredProductId: null,
     });
     mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "CANCELLED" });
     const caller = createCaller({
       ...buyerCtx,
-      prisma: { ...buyerCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate } } as any,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        product: { update: mockProductUpdate },
+      } as any,
     });
     const result = await caller.cancelOffer({ tradeOfferId: "offer-1" });
     expect(result.status).toBe("CANCELLED");
+  });
+
+  it("cancel with no offeredProduct does not call product.update", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "PENDING", offeredProductId: null,
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "CANCELLED" });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        product: { update: mockProductUpdate },
+      } as any,
+    });
+    await caller.cancelOffer({ tradeOfferId: "offer-1" });
+    expect(mockProductUpdate).not.toHaveBeenCalled();
   });
 });
 

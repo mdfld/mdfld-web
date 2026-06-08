@@ -250,8 +250,17 @@ export const tradeRouter = createTRPCRouter({
       const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
       if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
       if (offer.proposerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can cancel" });
-      if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending offers can be cancelled" });
-      return ctx.prisma.tradeOffer.update({ where: { id: input.tradeOfferId }, data: { status: "CANCELLED", cancelledAt: new Date() } });
+      if (offer.status !== "PENDING" && offer.status !== "AWAITING_PAYMENT") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending offers can be cancelled" });
+      }
+      const updated = await ctx.prisma.tradeOffer.update({
+        where: { id: input.tradeOfferId },
+        data: { status: "CANCELLED", cancelledAt: new Date() },
+      });
+      if (offer.offeredProductId) {
+        await ctx.prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: true } });
+      }
+      return updated;
     }),
 
   uploadTracking: protectedProcedure
