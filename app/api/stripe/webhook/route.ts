@@ -3,6 +3,7 @@ import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
+import { handleTradeCashPayment } from "@/lib/trade-webhook";
 
 export async function POST(request: NextRequest) {
   let event: Stripe.Event;
@@ -79,6 +80,12 @@ async function handleCheckoutSessionCompleted(
   console.log("[Webhook] checkout.session.completed:", checkoutSession.id);
 
   const metadata = checkoutSession.metadata || {};
+
+  if (metadata.type === "TRADE_CASH_PAYMENT") {
+    await handleTradeCashPayment(checkoutSession);
+    return;
+  }
+
   const userId = metadata.userId;
 
   if (!userId) {
