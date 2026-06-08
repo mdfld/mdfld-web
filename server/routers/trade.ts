@@ -186,6 +186,9 @@ export const tradeRouter = createTRPCRouter({
           select: { stripeCustomerId: true },
         });
 
+        // Stripe session is created before the DB update. If the update fails, the session is
+        // orphaned (active but points to a PENDING offer). The webhook no-ops a non-AWAITING_PAYMENT
+        // offer, so any payment on an orphaned session requires a manual refund. Sessions expire after 24h.
         const baseUrl = process.env.NEXT_PUBLIC_BETTER_AUTH_URL!;
         const session = await stripe.checkout.sessions.create({
           customer: proposer?.stripeCustomerId ?? undefined,
@@ -259,6 +262,14 @@ export const tradeRouter = createTRPCRouter({
       });
       if (offer.offeredProductId) {
         await ctx.prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: true } });
+      }
+      // Expire the Stripe session so the buyer cannot pay a cancelled trade
+      if (offer.status === "AWAITING_PAYMENT" && offer.cashStripeSessionId) {
+        try {
+          await stripe.checkout.sessions.expire(offer.cashStripeSessionId);
+        } catch {
+          // Session may already be expired or paid — not fatal, webhook no-ops a non-AWAITING_PAYMENT offer
+        }
       }
       return updated;
     }),

@@ -15,6 +15,7 @@ const {
   mockUserFindUnique,
   mockProductUpdate,
   mockStripeSessionCreate,
+  mockStripeSessionExpire,
 } = vi.hoisted(() => {
   const convCreate = vi.fn().mockResolvedValue({ id: "conv-1" });
   const offerCreate = vi.fn().mockResolvedValue({ id: "offer-1", conversationId: "conv-1" });
@@ -37,6 +38,7 @@ const {
       id: "sess_test",
       url: "https://checkout.stripe.com/pay/sess_test",
     }),
+    mockStripeSessionExpire: vi.fn().mockResolvedValue({}),
   };
 });
 
@@ -66,7 +68,7 @@ vi.mock("@/lib/aes-e2ee", () => ({
   },
 }));
 vi.mock("@/lib/stripe", () => ({
-  stripe: { checkout: { sessions: { create: mockStripeSessionCreate } } },
+  stripe: { checkout: { sessions: { create: mockStripeSessionCreate, expire: mockStripeSessionExpire } } },
 }));
 
 import { createCallerFactory } from "@/server/trpc";
@@ -310,10 +312,10 @@ describe("trade.cancelOffer", () => {
     });
   });
 
-  it("proposer cancels AWAITING_PAYMENT offer — allowed", async () => {
+  it("proposer cancels AWAITING_PAYMENT offer — expires Stripe session", async () => {
     mockTradeOfferFindUnique.mockResolvedValue({
       id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
-      status: "AWAITING_PAYMENT", offeredProductId: null,
+      status: "AWAITING_PAYMENT", offeredProductId: null, cashStripeSessionId: "sess_test",
     });
     mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "CANCELLED" });
     const caller = createCaller({
@@ -326,6 +328,7 @@ describe("trade.cancelOffer", () => {
     });
     const result = await caller.cancelOffer({ tradeOfferId: "offer-1" });
     expect(result.status).toBe("CANCELLED");
+    expect(mockStripeSessionExpire).toHaveBeenCalledWith("sess_test");
   });
 
   it("cancel with no offeredProduct does not call product.update", async () => {
