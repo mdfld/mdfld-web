@@ -53,6 +53,7 @@ const STATUS_CHIP: Record<
   CANCELLED: { color: "default", label: "Cancelled" },
   EXPIRED: { color: "default", label: "Expired" },
   DISPUTED: { color: "danger", label: "Disputed" },
+  AWAITING_PAYMENT: { color: "warning", label: "Payment Pending" },
 };
 
 export default function TradeOfferCard({ offer, currentUserId, onUpdate }: TradeOfferCardProps) {
@@ -90,6 +91,13 @@ export default function TradeOfferCard({ offer, currentUserId, onUpdate }: Trade
       toast.success("Tracking uploaded!");
       setShowTrackingInput(false);
       onUpdate?.();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const paymentLinkMutation = trpc.trade.getPaymentLink.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
     },
     onError: (e) => toast.error(e.message),
   });
@@ -212,6 +220,22 @@ export default function TradeOfferCard({ offer, currentUserId, onUpdate }: Trade
             <div className="flex items-center gap-1 text-xs text-success">
               <Icon icon="solar:check-circle-bold" width={14} />
               Tracking uploaded
+            </div>
+          )}
+          {actions.canPay && (
+            <Button
+              size="sm"
+              color="primary"
+              isLoading={paymentLinkMutation.isPending}
+              onPress={() => paymentLinkMutation.mutate({ tradeOfferId: offer.id })}
+            >
+              Complete Payment
+            </Button>
+          )}
+          {actions.isAwaitingPayment && (
+            <div className="flex items-center gap-1 text-xs text-default-400">
+              <Icon icon="solar:clock-circle-linear" width={14} />
+              Waiting for buyer payment
             </div>
           )}
         </div>

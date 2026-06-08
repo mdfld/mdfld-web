@@ -16,6 +16,7 @@ vi.mock("@/lib/trpc-client", () => ({
       respondToOffer: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
       cancelOffer: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
       uploadTracking: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      getPaymentLink: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
     },
   },
 }));
