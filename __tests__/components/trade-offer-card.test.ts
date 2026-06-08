@@ -100,4 +100,18 @@ describe("TradeOfferCard", () => {
     expect(result).toContain("Trade Complete");
     expect(result).not.toContain("Upload Tracking");
   });
+
+  it("proposer sees Complete Payment when AWAITING_PAYMENT", () => {
+    const result = JSON.stringify(
+      TradeOfferCard({ offer: { ...baseOffer, status: "AWAITING_PAYMENT" } as any, currentUserId: "user-1" }),
+    );
+    expect(result).toContain("Complete Payment");
+  });
+
+  it("recipient sees waiting label when AWAITING_PAYMENT", () => {
+    const result = JSON.stringify(
+      TradeOfferCard({ offer: { ...baseOffer, status: "AWAITING_PAYMENT" } as any, currentUserId: "seller-1" }),
+    );
+    expect(result).toContain("Waiting for buyer payment");
+  });
 });
