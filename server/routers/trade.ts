@@ -263,6 +263,54 @@ export const tradeRouter = createTRPCRouter({
       return updated;
     }),
 
+  getPaymentLink: protectedProcedure
+    .input(z.object({ tradeOfferId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
+      if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
+      if (offer.proposerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can get the payment link" });
+      if (offer.status !== "AWAITING_PAYMENT") throw new TRPCError({ code: "BAD_REQUEST", message: "Trade is not awaiting payment" });
+
+      const cashAmount = Number(offer.cashAmount);
+      const settings = await ctx.prisma.platformSettings.upsert({
+        where: { id: "singleton" },
+        create: { id: "singleton" },
+        update: {},
+        select: { buyerMarketplaceFee: true },
+      });
+      const fee = settings.buyerMarketplaceFee ?? 0;
+      const chargeAmount = Math.ceil(cashAmount * (1 + fee) * 100);
+
+      const proposer = await ctx.prisma.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { stripeCustomerId: true },
+      });
+
+      const baseUrl = process.env.NEXT_PUBLIC_BETTER_AUTH_URL!;
+      const session = await stripe.checkout.sessions.create({
+        customer: proposer?.stripeCustomerId ?? undefined,
+        mode: "payment",
+        line_items: [{
+          price_data: {
+            currency: "gbp",
+            product_data: { name: "Cash sweetener" },
+            unit_amount: chargeAmount,
+          },
+          quantity: 1,
+        }],
+        metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId, type: "TRADE_CASH_PAYMENT" },
+        success_url: `${baseUrl}/dashboard/trades?payment=success`,
+        cancel_url: `${baseUrl}/dashboard/inbox?conversation=${offer.conversationId}`,
+      });
+
+      await ctx.prisma.tradeOffer.update({
+        where: { id: input.tradeOfferId },
+        data: { cashStripeSessionId: session.id },
+      });
+
+      return { url: session.url! };
+    }),
+
   uploadTracking: protectedProcedure
     .input(z.object({ tradeOfferId: z.string(), trackingNumber: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {

@@ -417,3 +417,66 @@ describe("trade.getOfferByConversation", () => {
     expect(result).toHaveProperty("id", "offer-1");
   });
 });
+
+describe("trade.getPaymentLink", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPlatformSettingsUpsert.mockResolvedValue({ buyerMarketplaceFee: 0.0 });
+    mockUserFindUnique.mockResolvedValue({ stripeCustomerId: "cus_test" });
+    mockStripeSessionCreate.mockResolvedValue({ id: "sess_new", url: "https://checkout.stripe.com/pay/sess_new" });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", cashStripeSessionId: "sess_new" });
+  });
+
+  it("returns checkout URL for proposer when AWAITING_PAYMENT", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "AWAITING_PAYMENT", cashAmount: 30, conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        platformSettings: { upsert: mockPlatformSettingsUpsert },
+        user: { findUnique: mockUserFindUnique },
+      } as any,
+    });
+    const result = await caller.getPaymentLink({ tradeOfferId: "offer-1" });
+    expect(result.url).toBe("https://checkout.stripe.com/pay/sess_new");
+    expect(mockStripeSessionCreate).toHaveBeenCalled();
+  });
+
+  it("throws FORBIDDEN if caller is not proposer", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "seller-1", recipientId: "user-1",
+      status: "AWAITING_PAYMENT", cashAmount: 30, conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        platformSettings: { upsert: mockPlatformSettingsUpsert },
+        user: { findUnique: mockUserFindUnique },
+      } as any,
+    });
+    await expect(caller.getPaymentLink({ tradeOfferId: "offer-1" })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws BAD_REQUEST if trade is not AWAITING_PAYMENT", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", proposerId: "user-1", recipientId: "seller-1",
+      status: "PENDING", cashAmount: 30, conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        platformSettings: { upsert: mockPlatformSettingsUpsert },
+        user: { findUnique: mockUserFindUnique },
+      } as any,
+    });
+    await expect(caller.getPaymentLink({ tradeOfferId: "offer-1" })).rejects.toThrow(TRPCError);
+  });
+});
