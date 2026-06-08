@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc";
 import { TRPCError } from "@trpc/server";
 import { AES256E2EE } from "@/lib/aes-e2ee";
+import { stripe } from "@/lib/stripe";
 
 export const tradeRouter = createTRPCRouter({
   proposeOffer: protectedProcedure
@@ -146,16 +147,100 @@ export const tradeRouter = createTRPCRouter({
       if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
       if (offer.recipientId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the recipient can respond" });
       if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Offer is no longer pending" });
-      const updated = await ctx.prisma.tradeOffer.update({ where: { id: input.tradeOfferId }, data: { status: input.response } });
+
+      if (input.response === "DECLINED") {
+        const updated = await ctx.prisma.tradeOffer.update({
+          where: { id: input.tradeOfferId },
+          data: { status: "DECLINED" },
+        });
+        if (offer.offeredProductId) {
+          await ctx.prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: true } });
+        }
+        await ctx.prisma.notification.create({
+          data: {
+            userId: offer.proposerId,
+            type: "TRADE_OFFER_DECLINED",
+            title: "Trade offer declined",
+            content: "Your trade offer was declined.",
+            metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+          },
+        });
+        return updated;
+      }
+
+      // ACCEPTED path
+      const cashAmount = offer.cashAmount ? Number(offer.cashAmount) : 0;
+
+      if (cashAmount > 0) {
+        const settings = await ctx.prisma.platformSettings.upsert({
+          where: { id: "singleton" },
+          create: { id: "singleton" },
+          update: {},
+          select: { buyerMarketplaceFee: true },
+        });
+        const fee = settings.buyerMarketplaceFee ?? 0;
+        const chargeAmount = Math.ceil(cashAmount * (1 + fee) * 100);
+
+        const proposer = await ctx.prisma.user.findUnique({
+          where: { id: offer.proposerId },
+          select: { stripeCustomerId: true },
+        });
+
+        const baseUrl = process.env.NEXT_PUBLIC_BETTER_AUTH_URL!;
+        const session = await stripe.checkout.sessions.create({
+          customer: proposer?.stripeCustomerId ?? undefined,
+          mode: "payment",
+          line_items: [{
+            price_data: {
+              currency: "gbp",
+              product_data: { name: "Cash sweetener" },
+              unit_amount: chargeAmount,
+            },
+            quantity: 1,
+          }],
+          metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId, type: "TRADE_CASH_PAYMENT" },
+          success_url: `${baseUrl}/dashboard/trades?payment=success`,
+          cancel_url: `${baseUrl}/dashboard/inbox?conversation=${offer.conversationId}`,
+        });
+
+        const updated = await ctx.prisma.tradeOffer.update({
+          where: { id: input.tradeOfferId },
+          data: { status: "AWAITING_PAYMENT", cashStripeSessionId: session.id },
+        });
+
+        await ctx.prisma.notification.create({
+          data: {
+            userId: offer.proposerId,
+            type: "TRADE_OFFER_ACCEPTED",
+            title: "Trade accepted — complete your payment",
+            content: "Your trade offer was accepted. Complete payment to confirm.",
+            metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+          },
+        });
+
+        return updated;
+      }
+
+      // Pure item swap — no cash
+      const updated = await ctx.prisma.tradeOffer.update({
+        where: { id: input.tradeOfferId },
+        data: { status: "ACCEPTED" },
+      });
+
+      if (offer.offeredProductId) {
+        await ctx.prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: false } });
+      }
+
       await ctx.prisma.notification.create({
         data: {
           userId: offer.proposerId,
-          type: input.response === "ACCEPTED" ? "TRADE_OFFER_ACCEPTED" : "TRADE_OFFER_DECLINED",
-          title: input.response === "ACCEPTED" ? "Trade offer accepted!" : "Trade offer declined",
-          content: input.response === "ACCEPTED" ? "Your trade offer was accepted. Time to ship!" : "Your trade offer was declined.",
+          type: "TRADE_OFFER_ACCEPTED",
+          title: "Trade offer accepted!",
+          content: "Your trade offer was accepted. Time to ship!",
           metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
         },
       });
+
       return updated;
     }),
 

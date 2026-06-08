@@ -11,6 +11,10 @@ const {
   mockTradeOfferUpdate,
   mockTradeOfferFindMany,
   mockConversationParticipantFindUnique,
+  mockPlatformSettingsUpsert,
+  mockUserFindUnique,
+  mockProductUpdate,
+  mockStripeSessionCreate,
 } = vi.hoisted(() => {
   const convCreate = vi.fn().mockResolvedValue({ id: "conv-1" });
   const offerCreate = vi.fn().mockResolvedValue({ id: "offer-1", conversationId: "conv-1" });
@@ -26,6 +30,13 @@ const {
     mockTradeOfferUpdate: vi.fn().mockResolvedValue({ id: "offer-1", status: "ACCEPTED" }),
     mockTradeOfferFindMany: vi.fn().mockResolvedValue([]),
     mockConversationParticipantFindUnique: vi.fn().mockResolvedValue({ userId: "user-1" }),
+    mockPlatformSettingsUpsert: vi.fn().mockResolvedValue({ buyerMarketplaceFee: 0.0 }),
+    mockUserFindUnique: vi.fn().mockResolvedValue({ stripeCustomerId: "cus_test" }),
+    mockProductUpdate: vi.fn().mockResolvedValue({ id: "offered-1", isActive: false }),
+    mockStripeSessionCreate: vi.fn().mockResolvedValue({
+      id: "sess_test",
+      url: "https://checkout.stripe.com/pay/sess_test",
+    }),
   };
 });
 
@@ -53,6 +64,9 @@ vi.mock("@/lib/aes-e2ee", () => ({
   AES256E2EE: {
     encryptForConversation: vi.fn().mockReturnValue({ "user-1": "enc", "seller-1": "enc" }),
   },
+}));
+vi.mock("@/lib/stripe", () => ({
+  stripe: { checkout: { sessions: { create: mockStripeSessionCreate } } },
 }));
 
 import { createCallerFactory } from "@/server/trpc";
@@ -175,30 +189,88 @@ const recipientCtx = {
   prisma: {
     tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate, findFirst: mockTradeOfferFindFirst },
     notification: { create: mockNotificationCreate },
+    platformSettings: { upsert: mockPlatformSettingsUpsert },
+    user: { findUnique: mockUserFindUnique },
+    product: { update: mockProductUpdate },
   } as any,
 };
 
 describe("trade.respondToOffer", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPlatformSettingsUpsert.mockResolvedValue({ buyerMarketplaceFee: 0.0 });
+    mockUserFindUnique.mockResolvedValue({ stripeCustomerId: "cus_test" });
+    mockProductUpdate.mockResolvedValue({ id: "offered-1", isActive: false });
+  });
 
-  it("recipient can accept — status becomes ACCEPTED", async () => {
+  it("recipient accepts item-swap — status ACCEPTED, offered product deactivated", async () => {
     mockTradeOfferFindUnique.mockResolvedValue({
-      id: "offer-1", recipientId: "seller-1", proposerId: "user-1", status: "PENDING",
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", cashAmount: null, offeredProductId: "offered-1",
+      conversationId: "conv-1",
     });
     mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "ACCEPTED" });
     const caller = createCaller(recipientCtx);
     const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" });
     expect(result.status).toBe("ACCEPTED");
+    expect(mockProductUpdate).toHaveBeenCalledWith({
+      where: { id: "offered-1" },
+      data: { isActive: false },
+    });
   });
 
-  it("recipient can decline — status becomes DECLINED", async () => {
+  it("recipient accepts with cash sweetener — status AWAITING_PAYMENT, Stripe session created", async () => {
     mockTradeOfferFindUnique.mockResolvedValue({
-      id: "offer-1", recipientId: "seller-1", proposerId: "user-1", status: "PENDING",
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", cashAmount: 30, offeredProductId: "offered-1",
+      conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "AWAITING_PAYMENT", cashStripeSessionId: "sess_test" });
+    const caller = createCaller(recipientCtx);
+    const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" });
+    expect(result.status).toBe("AWAITING_PAYMENT");
+    expect(mockStripeSessionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ type: "TRADE_CASH_PAYMENT", tradeOfferId: "offer-1" }),
+      }),
+    );
+    expect(mockProductUpdate).not.toHaveBeenCalled();
+  });
+
+  it("cash sweetener applies buyerMarketplaceFee to unit_amount", async () => {
+    mockPlatformSettingsUpsert.mockResolvedValue({ buyerMarketplaceFee: 0.05 });
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", cashAmount: 100, offeredProductId: null,
+      conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "AWAITING_PAYMENT" });
+    const caller = createCaller(recipientCtx);
+    await caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" });
+    expect(mockStripeSessionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        line_items: [expect.objectContaining({
+          price_data: expect.objectContaining({ unit_amount: 10500 }),
+        })],
+      }),
+    );
+  });
+
+  it("recipient declines — status DECLINED, offered product restored", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", cashAmount: null, offeredProductId: "offered-1",
+      conversationId: "conv-1",
     });
     mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "DECLINED" });
+    mockProductUpdate.mockResolvedValue({ id: "offered-1", isActive: true });
     const caller = createCaller(recipientCtx);
     const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "DECLINED" });
     expect(result.status).toBe("DECLINED");
+    expect(mockProductUpdate).toHaveBeenCalledWith({
+      where: { id: "offered-1" },
+      data: { isActive: true },
+    });
   });
 
   it("proposer cannot call respondToOffer", async () => {
