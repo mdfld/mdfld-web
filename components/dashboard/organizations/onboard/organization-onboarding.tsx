@@ -198,7 +198,7 @@ export default function OrganizationOnboarding({
       onChangePage={onChangePage}
       onNext={page === 3 ? handleSubmit : onNext}
     >
-      <div className="relative flex h-fit w-full flex-col pt-6 lg:h-full lg:justify-center lg:pt-0">
+      <div className="relative flex h-fit w-full flex-col pt-6 lg:h-full lg:pt-0">
         {content}
         <MultistepNavigationButtons
           backButtonProps={{ isDisabled: page === 0 }}
