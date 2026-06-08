@@ -1143,6 +1143,7 @@ enum ConversationPriority {
 
 enum TradeOfferStatus {
   PENDING
+  AWAITING_PAYMENT
   ACCEPTED
   DECLINED
   CANCELLED
@@ -1161,6 +1162,7 @@ model TradeOffer {
   offeredProductId        String?
   cashAmount              Decimal?
   cashFromProposer        Boolean          @default(true)
+  cashStripeSessionId     String?
   status                  TradeOfferStatus @default(PENDING)
 
   proposerTrackingNumber  String?
