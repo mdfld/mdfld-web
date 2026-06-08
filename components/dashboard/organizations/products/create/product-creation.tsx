@@ -217,6 +217,12 @@ export default function ProductCreation({
     );
   }, [direction, page, formData]);
 
+  const shippingValid =
+    (formData.weight ?? 0) > 0 &&
+    (formData.dimensions?.length ?? 0) > 0 &&
+    (formData.dimensions?.width ?? 0) > 0 &&
+    (formData.dimensions?.height ?? 0) > 0;
+
   return (
     <MultistepSidebar
       currentPage={page}
@@ -233,6 +239,7 @@ export default function ProductCreation({
           nextButtonProps={{
             children: page === 3 ? "Create Product" : "Continue",
             isLoading: page === 3 && isLoading,
+            isDisabled: page === 2 && !shippingValid,
           }}
           onBack={onBack}
           onNext={page === 3 ? handleSubmit : onNext}

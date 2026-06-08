@@ -108,6 +108,74 @@ export default function ProductPricingForm({
           {...inputProps}
         />
 
+        {/* Shipping dimensions — required for rate calculation */}
+        <div className="col-span-12 space-y-4 border-t border-zinc-700 pt-4">
+          <div>
+            <p className="text-sm font-medium text-default-700">Shipping Details</p>
+            <p className="text-xs text-default-400 mt-0.5">Required for calculating shipping rates at checkout</p>
+          </div>
+
+          <Input
+            label="Weight (kg)"
+            placeholder="e.g., 0.5"
+            type="number"
+            min="0.01"
+            step="0.01"
+            isRequired
+            value={data.weight ? String(data.weight) : ""}
+            onValueChange={(v) => onUpdate({ weight: parseFloat(v) || 0 })}
+            description="Total item weight including packaging"
+            isInvalid={!data.weight || data.weight <= 0}
+            errorMessage={!data.weight || data.weight <= 0 ? "Weight is required" : undefined}
+            {...inputProps}
+          />
+
+          <div>
+            <p className="text-sm font-medium text-default-700 mb-2">Dimensions (cm) <span className="text-danger">*</span></p>
+            <div className="grid grid-cols-3 gap-3">
+              <Input
+                label="Length"
+                placeholder="e.g., 30"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.length ? String(data.dimensions.length) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: parseFloat(v) || 0, width: data.dimensions?.width || 0, height: data.dimensions?.height || 0 } })
+                }
+                isInvalid={!data.dimensions?.length || data.dimensions.length <= 0}
+                {...inputProps}
+              />
+              <Input
+                label="Width"
+                placeholder="e.g., 20"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.width ? String(data.dimensions.width) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: data.dimensions?.length || 0, width: parseFloat(v) || 0, height: data.dimensions?.height || 0 } })
+                }
+                isInvalid={!data.dimensions?.width || data.dimensions.width <= 0}
+                {...inputProps}
+              />
+              <Input
+                label="Height"
+                placeholder="e.g., 10"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.height ? String(data.dimensions.height) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: data.dimensions?.length || 0, width: data.dimensions?.width || 0, height: parseFloat(v) || 0 } })
+                }
+                isInvalid={!data.dimensions?.height || data.dimensions.height <= 0}
+                {...inputProps}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Shipping divider */}
         <div className="col-span-12 border-t border-zinc-700 pt-2">
           <p className="text-sm font-medium text-default-700 mb-1">Shipping</p>
