@@ -251,7 +251,7 @@ export const tradeRouter = createTRPCRouter({
       if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
       if (offer.proposerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can cancel" });
       if (offer.status !== "PENDING" && offer.status !== "AWAITING_PAYMENT") {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending offers can be cancelled" });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending or awaiting-payment offers can be cancelled" });
       }
       const updated = await ctx.prisma.tradeOffer.update({
         where: { id: input.tradeOfferId },
