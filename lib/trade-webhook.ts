@@ -17,17 +17,21 @@ export async function handleTradeCashPayment(
     return;
   }
 
-  await prisma.tradeOffer.update({ where: { id: tradeOfferId }, data: { status: "ACCEPTED" } });
-
-  if (offer.offeredProductId) {
-    await prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: false } });
-  }
+  await prisma.$transaction([
+    prisma.tradeOffer.update({
+      where: { id: tradeOfferId },
+      data: { status: "ACCEPTED", cashStripeSessionId: checkoutSession.id },
+    }),
+    ...(offer.offeredProductId
+      ? [prisma.product.update({ where: { id: offer.offeredProductId }, data: { isActive: false } })]
+      : []),
+  ]);
 
   await prisma.notification.create({
     data: {
       userId: offer.proposerId,
       type: "TRADE_OFFER_ACCEPTED",
-      title: "Payment received — time to ship!",
+      title: "Payment received. Time to ship!",
       content: "Your payment was received. Trade confirmed. Time to ship!",
       metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
     },
@@ -36,7 +40,7 @@ export async function handleTradeCashPayment(
     data: {
       userId: offer.recipientId,
       type: "TRADE_OFFER_ACCEPTED",
-      title: "Payment received — time to ship!",
+      title: "Payment received. Time to ship!",
       content: "The buyer paid. Trade confirmed. Time to ship your item!",
       metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
     },

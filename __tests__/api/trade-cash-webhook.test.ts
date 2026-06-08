@@ -5,11 +5,13 @@ const {
   mockTradeOfferUpdate,
   mockProductUpdate,
   mockNotificationCreate,
+  mockTransaction,
 } = vi.hoisted(() => ({
   mockTradeOfferFindUnique: vi.fn(),
   mockTradeOfferUpdate: vi.fn().mockResolvedValue({ id: "offer-1" }),
   mockProductUpdate: vi.fn().mockResolvedValue({}),
   mockNotificationCreate: vi.fn().mockResolvedValue({}),
+  mockTransaction: vi.fn().mockImplementation((ops: Promise<any>[]) => Promise.all(ops)),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -17,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
     tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
     product: { update: mockProductUpdate },
     notification: { create: mockNotificationCreate },
+    $transaction: mockTransaction,
   },
 }));
 
@@ -42,7 +45,10 @@ describe("handleTradeCashPayment", () => {
       conversationId: "conv-1",
     });
     await handleTradeCashPayment(baseSession);
-    expect(mockTradeOfferUpdate).toHaveBeenCalledWith({ where: { id: "offer-1" }, data: { status: "ACCEPTED" } });
+    expect(mockTradeOfferUpdate).toHaveBeenCalledWith({
+      where: { id: "offer-1" },
+      data: { status: "ACCEPTED", cashStripeSessionId: "sess_test" },
+    });
     expect(mockProductUpdate).toHaveBeenCalledWith({ where: { id: "product-offered" }, data: { isActive: false } });
     expect(mockNotificationCreate).toHaveBeenCalledTimes(2);
   });
