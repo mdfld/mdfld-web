@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { items } = await request.json();
+    const { items, shippingSelections = [] } = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -149,6 +149,38 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         });
       }
+    }
+
+    // Build sellerId → storeName lookup from items in request body
+    const sellerNameById: Record<string, string> = {};
+    for (const item of items) {
+      if (item.sellerId && item.sellerName) sellerNameById[item.sellerId] = item.sellerName;
+    }
+
+    // Add shipping line items from pre-calculated EasyPost rates
+    for (const sel of shippingSelections) {
+      if (sel.totalCents <= 0) continue; // skip DDP / free shipping
+
+      const sellerLabel = sellerNameById[sel.sellerId] ?? "Seller";
+
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Shipping — ${sellerLabel} (${sel.carrier} ${sel.service})`,
+          },
+          unit_amount: sel.totalCents,
+        },
+        quantity: 1,
+      });
+
+      metadata[`shipping_${sel.sellerId}`] = JSON.stringify({
+        rateCents:      sel.rateCents,
+        totalCents:     sel.totalCents,
+        carrier:        sel.carrier,
+        service:        sel.service,
+        easypostRateId: sel.easypostRateId,
+      });
     }
 
     // Create Stripe Checkout session
