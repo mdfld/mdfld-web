@@ -51,4 +51,20 @@ describe("resolveTradeOfferActions", () => {
     expect(p.canCancel).toBe(false);
     expect(r.canDecline).toBe(false);
   });
+
+  it("proposer + AWAITING_PAYMENT: canPay only", () => {
+    const actions = resolveTradeOfferActions("proposer", "AWAITING_PAYMENT", false);
+    expect(actions.canPay).toBe(true);
+    expect(actions.isAwaitingPayment).toBe(false);
+    expect(actions.canAccept).toBe(false);
+    expect(actions.canDecline).toBe(false);
+    expect(actions.canCancel).toBe(false);
+  });
+
+  it("recipient + AWAITING_PAYMENT: isAwaitingPayment only", () => {
+    const actions = resolveTradeOfferActions("recipient", "AWAITING_PAYMENT", false);
+    expect(actions.isAwaitingPayment).toBe(true);
+    expect(actions.canPay).toBe(false);
+    expect(actions.canAccept).toBe(false);
+  });
 });

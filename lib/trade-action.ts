@@ -6,6 +6,8 @@ export interface TradeOfferActions {
   canCancel: boolean;
   canUploadTracking: boolean;
   hasUploaded: boolean;
+  canPay: boolean;
+  isAwaitingPayment: boolean;
 }
 
 export function resolveTradeOfferActions(
@@ -19,11 +21,19 @@ export function resolveTradeOfferActions(
     canCancel: false,
     canUploadTracking: false,
     hasUploaded: false,
+    canPay: false,
+    isAwaitingPayment: false,
   };
 
   if (status === "PENDING") {
     if (viewerRole === "recipient") return { ...none, canAccept: true, canDecline: true };
     if (viewerRole === "proposer") return { ...none, canCancel: true };
+    return none;
+  }
+
+  if (status === "AWAITING_PAYMENT") {
+    if (viewerRole === "proposer") return { ...none, canPay: true };
+    if (viewerRole === "recipient") return { ...none, isAwaitingPayment: true };
     return none;
   }
 
