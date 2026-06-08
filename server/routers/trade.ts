@@ -270,6 +270,8 @@ export const tradeRouter = createTRPCRouter({
       if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
       if (offer.proposerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can get the payment link" });
       if (offer.status !== "AWAITING_PAYMENT") throw new TRPCError({ code: "BAD_REQUEST", message: "Trade is not awaiting payment" });
+      // cashFromProposer is always true in the current product — proposer pays the cash sweetener
+      if (!offer.cashAmount || Number(offer.cashAmount) <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Trade has no cash sweetener" });
 
       const cashAmount = Number(offer.cashAmount);
       const settings = await ctx.prisma.platformSettings.upsert({
@@ -308,7 +310,8 @@ export const tradeRouter = createTRPCRouter({
         data: { cashStripeSessionId: session.id },
       });
 
-      return { url: session.url! };
+      if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe did not return a checkout URL" });
+      return { url: session.url };
     }),
 
   uploadTracking: protectedProcedure
