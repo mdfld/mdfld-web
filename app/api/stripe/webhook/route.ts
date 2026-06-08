@@ -192,6 +192,16 @@ async function handleCheckoutSessionCompleted(
 
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
+    // Parse per-seller shipping metadata written by create-checkout-session
+    const shippingMeta = metadata[`shipping_${sellerId}`]
+      ? JSON.parse(metadata[`shipping_${sellerId}`] as string)
+      : null;
+
+    const shippingTotal   = shippingMeta ? shippingMeta.totalCents / 100 : 0;
+    const shippingRaw     = shippingMeta ? shippingMeta.rateCents  / 100 : 0;
+    const shippingMarkup  = shippingTotal - shippingRaw;
+    const shippingService = shippingMeta?.service ?? null;
+
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -202,7 +212,9 @@ async function handleCheckoutSessionCompleted(
         paymentStatus: "CAPTURED",
         subtotal,
         tax: 0,
-        shipping: 0,
+        shipping:        shippingTotal,
+        shippingMarkup:  shippingMarkup,
+        shippingService: shippingService,
         total: amountTotal / 100, // Stripe sends cents
         stripePaymentIntentId: paymentIntentId,
         shippingAddress,
