@@ -474,8 +474,10 @@ export const adminRouter = createTRPCRouter({
 
   updatePlatformSettings: adminProcedure
     .input(z.object({
-      sellerCommissionPct: z.number().min(0).max(1),
-      buyerMarketplaceFee: z.number().min(0).max(1),
+      sellerCommissionPct:   z.number().min(0).max(1),
+      buyerMarketplaceFee:   z.number().min(0).max(1),
+      shippingMarkupPct:     z.number().min(0).max(2),
+      shippingFlatRateCents: z.number().int().min(0),
     }))
     .mutation(async ({ ctx, input }) => {
       const settings = await ctx.prisma.platformSettings.upsert({

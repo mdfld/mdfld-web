@@ -57,18 +57,26 @@ export default function AdminSettingsPage() {
 
 	const [commissionPct, setCommissionPct] = useState<string>("");
 	const [marketplaceFee, setMarketplaceFee] = useState<string>("");
+	const [shippingMarkup, setShippingMarkup] = useState<string>("");
+	const [shippingFlat,   setShippingFlat]   = useState<string>("");
 	const [feesSaved, setFeesSaved] = useState(false);
 
 	// Sync fetched values into inputs on first load
 	const commissionValue = commissionPct !== "" ? commissionPct : platformSettings ? String(Math.round(platformSettings.sellerCommissionPct * 100)) : "";
 	const marketplaceValue = marketplaceFee !== "" ? marketplaceFee : platformSettings ? String(Math.round(platformSettings.buyerMarketplaceFee * 100)) : "";
+	const shippingMarkupValue = shippingMarkup !== "" ? shippingMarkup
+		: platformSettings ? String(Math.round((platformSettings.shippingMarkupPct ?? 0.15) * 100)) : "";
+	const shippingFlatValue = shippingFlat !== "" ? shippingFlat
+		: platformSettings ? String(platformSettings.shippingFlatRateCents ?? 899) : "";
 
 	const handleSaveFees = () => {
 		const commission = parseFloat(commissionValue) / 100;
-		const fee = parseFloat(marketplaceValue) / 100;
-		if (isNaN(commission) || isNaN(fee)) return;
+		const fee        = parseFloat(marketplaceValue) / 100;
+		const markup     = parseFloat(shippingMarkupValue) / 100;
+		const flatRate   = parseInt(shippingFlatValue, 10);
+		if (isNaN(commission) || isNaN(fee) || isNaN(markup) || isNaN(flatRate)) return;
 		updateSettings.mutate(
-			{ sellerCommissionPct: commission, buyerMarketplaceFee: fee },
+			{ sellerCommissionPct: commission, buyerMarketplaceFee: fee, shippingMarkupPct: markup, shippingFlatRateCents: flatRate },
 			{ onSuccess: () => { setFeesSaved(true); setTimeout(() => setFeesSaved(false), 2000); } }
 		);
 	};
@@ -248,6 +256,42 @@ export default function AdminSettingsPage() {
 								style={{ width: 80, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}
 							/>
 							<span style={{ fontSize: 14, color: "#64748b" }}>%</span>
+						</div>
+					</div>
+					<div style={{ flex: "0 0 100%", marginTop: 16 }}>
+						<div style={{ display: "flex", gap: 24 }}>
+							<div style={{ flex: 1, minWidth: 200 }}>
+								<label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>
+									Shipping Markup (%)
+								</label>
+								<p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>% added on top of EasyPost carrier rate</p>
+								<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+									<input
+										type="number" min="0" max="200" step="1"
+										value={shippingMarkupValue}
+										onChange={(e) => setShippingMarkup(e.target.value)}
+										style={{ width: 80, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}
+										placeholder="15"
+									/>
+									<span style={{ fontSize: 14, color: "#64748b" }}>%</span>
+								</div>
+							</div>
+							<div style={{ flex: 1, minWidth: 200 }}>
+								<label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>
+									Shipping Fallback Rate (cents)
+								</label>
+								<p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Used when seller address or EasyPost is unavailable</p>
+								<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+									<input
+										type="number" min="0" step="1"
+										value={shippingFlatValue}
+										onChange={(e) => setShippingFlat(e.target.value)}
+										style={{ width: 100, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: "center" }}
+										placeholder="899"
+									/>
+									<span style={{ fontSize: 14, color: "#64748b" }}>¢</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
