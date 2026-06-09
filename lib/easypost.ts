@@ -8,7 +8,7 @@ export type BuyLabelResult = {
   rateCents:      number;
 };
 
-const FALLBACK_PARCEL = { weightOz: 16, length: 12, width: 10, height: 6 };
+const FALLBACK_PARCEL: { weightOz: number; length: number; width: number; height: number } = { weightOz: 16, length: 12, width: 10, height: 6 };
 
 export async function buyShippingLabel(params: {
   fromAddress: { street: string; city: string; state: string; zip: string; country: string };
@@ -22,10 +22,11 @@ export async function buyShippingLabel(params: {
   const auth = Buffer.from(`${apiKey}:`).toString("base64");
   const headers = { Authorization: `Basic ${auth}`, "Content-Type": "application/json" };
 
-  const parcel = params.parcel ?? (() => {
+  let parcel = params.parcel;
+  if (parcel == null) {
     console.warn(`[EasyPost] buyShippingLabel: null parcel for reference=${params.reference}, using fallback`);
-    return FALLBACK_PARCEL;
-  })();
+    parcel = FALLBACK_PARCEL;
+  }
 
   const shipRes = await fetch(`${EASYPOST_API_URL}/shipments`, {
     method: "POST",
@@ -77,6 +78,16 @@ export async function buyShippingLabel(params: {
   if (!buyRes.ok) throw new Error(`EasyPost API error buying label: ${buyRes.status}`);
 
   const bought = await buyRes.json();
+
+  if (!bought.postage_label?.label_url) {
+    throw new Error(`EasyPost label URL missing for shipment ${shipData.id} — label may still be generating`);
+  }
+  if (!bought.selected_rate?.carrier || !bought.selected_rate?.rate) {
+    throw new Error(`EasyPost selected_rate missing for shipment ${shipData.id}`);
+  }
+  if (!bought.tracking_code) {
+    throw new Error(`EasyPost tracking_code missing for shipment ${shipData.id}`);
+  }
 
   return {
     shipmentId:     bought.id,
