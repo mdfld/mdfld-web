@@ -610,10 +610,10 @@ export default function OrganizationOrdersLayout() {
                         <CardBody className="space-y-4">
                           <div>
                             <p className="text-sm font-medium">Shipping & Tracking</p>
-                            {selectedOrder.trackingNumber ? (
+                            {selectedOrder.trackingNumber && !selectedOrder.labelTrackingNumber ? (
                               <div className="mt-2 space-y-1">
                                 <p className="text-xs text-default-500">
-                                  {selectedOrder.trackingCarrier} — {selectedOrder.trackingNumber}
+                                  {selectedOrder.trackingCarrier}: {selectedOrder.trackingNumber}
                                 </p>
                                 {selectedOrder.trackingStatus && (
                                   <Chip size="sm" variant="flat" color={
@@ -625,9 +625,9 @@ export default function OrganizationOrdersLayout() {
                                   </Chip>
                                 )}
                               </div>
-                            ) : (
+                            ) : !selectedOrder.labelTrackingNumber ? (
                               <p className="text-xs text-default-400 mt-1">No tracking added yet</p>
-                            )}
+                            ) : null}
                           </div>
 
                           {/* Ship Order / Re-download Label */}
@@ -708,7 +708,7 @@ export default function OrganizationOrdersLayout() {
                               <div className="flex items-center gap-2">
                                 <Icon icon="solar:check-circle-bold" className="text-success w-4 h-4" />
                                 <p className="text-xs text-default-500">
-                                  Withdrawal requested — admin will process your payout shortly.
+                                  Withdrawal requested. Admin will process your payout shortly.
                                 </p>
                               </div>
                             ) : selectedOrder.carrierConfirmedAt ? (
