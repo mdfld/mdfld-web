@@ -112,7 +112,11 @@ describe("order.buyLabel", () => {
     const caller = createCaller(sellerCtx);
     const result = await caller.buyLabel({ orderId: "order-1" });
 
-    expect(result).toEqual({ labelUrl: "https://cdn.easypost.com/label.pdf" });
+    expect(result).toEqual({
+      labelUrl: "https://cdn.easypost.com/label.pdf",
+      labelTrackingNumber: "9400111899223397861234",
+      labelCarrier: "USPS",
+    });
 
     expect(mockBuyShippingLabel).toHaveBeenCalledWith(
       expect.objectContaining({

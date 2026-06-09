@@ -533,7 +533,11 @@ export const orderRouter = createTRPCRouter({
       }
 
       if (order.labelUrl) {
-        return { labelUrl: order.labelUrl };
+        return {
+          labelUrl: order.labelUrl,
+          labelTrackingNumber: order.labelTrackingNumber,
+          labelCarrier: order.labelCarrier,
+        };
       }
 
       const fromAddress = {
@@ -600,7 +604,11 @@ export const orderRouter = createTRPCRouter({
 
       await createOrGetTracking(label.trackingNumber, label.carrier);
 
-      return { labelUrl: label.labelUrl };
+      return {
+        labelUrl: label.labelUrl,
+        labelTrackingNumber: label.trackingNumber,
+        labelCarrier: label.carrier,
+      };
     }),
 
   requestWithdrawal: protectedProcedure

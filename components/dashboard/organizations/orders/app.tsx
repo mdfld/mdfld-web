@@ -129,6 +129,23 @@ export default function OrganizationOrdersLayout() {
     },
   });
 
+  const buyLabelMutation = trpc.order.buyLabel.useMutation({
+    onSuccess: (data) => {
+      window.open(data.labelUrl, "_blank");
+      toast.success("Label purchased. Tracking number auto-filled.");
+      setSelectedOrder((prev: any) => ({
+        ...prev,
+        labelUrl: data.labelUrl,
+        labelTrackingNumber: data.labelTrackingNumber,
+        labelCarrier: data.labelCarrier,
+      }));
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to purchase label");
+    },
+  });
+
   const orders = ordersData?.items || [];
   const filteredOrders = orders.filter((order: any) => {
     const matchesSearch =
@@ -612,44 +629,77 @@ export default function OrganizationOrdersLayout() {
                             )}
                           </div>
 
-                          {/* Tracking input — always show so seller can update */}
-                          <div className="space-y-3">
-                            <Select
-                              label="Carrier"
-                              placeholder="Select carrier"
-                              selectedKeys={trackingCarrier ? [trackingCarrier] : []}
-                              onSelectionChange={(keys) => setTrackingCarrier(Array.from(keys)[0] as string)}
-                              labelPlacement="outside"
-                              size="sm"
-                            >
-                              {["UPS", "USPS", "FedEx", "DHL", "Other"].map((c) => (
-                                <SelectItem key={c}>{c}</SelectItem>
-                              ))}
-                            </Select>
-                            <Input
-                              label="Tracking Number"
-                              placeholder="e.g. 1Z999AA10123456784"
-                              value={trackingNumber}
-                              onValueChange={setTrackingNumber}
-                              labelPlacement="outside"
-                              size="sm"
-                            />
-                            <Button
-                              size="sm"
-                              color="primary"
-                              isDisabled={!trackingNumber.trim() || !trackingCarrier}
-                              isLoading={submitTrackingMutation.isPending}
-                              onPress={() =>
-                                submitTrackingMutation.mutate({
-                                  orderId: selectedOrder.id,
-                                  trackingNumber: trackingNumber.trim(),
-                                  trackingCarrier,
-                                })
-                              }
-                            >
-                              {selectedOrder.trackingNumber ? "Update Tracking" : "Submit Tracking"}
-                            </Button>
-                          </div>
+                          {/* Ship Order / Re-download Label */}
+                          {(selectedOrder.status === "CONFIRMED" || selectedOrder.status === "PROCESSING") && (
+                            <div className="mb-4">
+                              {selectedOrder.labelUrl ? (
+                                <Button
+                                  size="sm"
+                                  color="default"
+                                  variant="bordered"
+                                  onPress={() => window.open(selectedOrder.labelUrl!, "_blank")}
+                                >
+                                  Re-download Label
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  color="primary"
+                                  isLoading={buyLabelMutation.isPending}
+                                  onPress={() => buyLabelMutation.mutate({ orderId: selectedOrder.id })}
+                                >
+                                  Ship Order
+                                </Button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Tracking input — show read-only if label was purchased, otherwise editable */}
+                          {selectedOrder.labelTrackingNumber ? (
+                            <div className="text-sm text-default-500 space-y-1">
+                              <p>Tracking: <span className="font-medium text-foreground">{selectedOrder.labelTrackingNumber}</span></p>
+                              <p>Carrier: <span className="font-medium text-foreground">{selectedOrder.labelCarrier}</span></p>
+                              <p className="text-xs text-default-400">Purchased via Ship Order</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <Select
+                                label="Carrier"
+                                placeholder="Select carrier"
+                                selectedKeys={trackingCarrier ? [trackingCarrier] : []}
+                                onSelectionChange={(keys) => setTrackingCarrier(Array.from(keys)[0] as string)}
+                                labelPlacement="outside"
+                                size="sm"
+                              >
+                                {["UPS", "USPS", "FedEx", "DHL", "Other"].map((c) => (
+                                  <SelectItem key={c}>{c}</SelectItem>
+                                ))}
+                              </Select>
+                              <Input
+                                label="Tracking Number"
+                                placeholder="e.g. 1Z999AA10123456784"
+                                value={trackingNumber}
+                                onValueChange={setTrackingNumber}
+                                labelPlacement="outside"
+                                size="sm"
+                              />
+                              <Button
+                                size="sm"
+                                color="primary"
+                                isDisabled={!trackingNumber.trim() || !trackingCarrier}
+                                isLoading={submitTrackingMutation.isPending}
+                                onPress={() =>
+                                  submitTrackingMutation.mutate({
+                                    orderId: selectedOrder.id,
+                                    trackingNumber: trackingNumber.trim(),
+                                    trackingCarrier,
+                                  })
+                                }
+                              >
+                                {selectedOrder.trackingNumber ? "Update Tracking" : "Submit Tracking"}
+                              </Button>
+                            </div>
+                          )}
 
                           {/* Withdrawal */}
                           <div className="border-t pt-4">
