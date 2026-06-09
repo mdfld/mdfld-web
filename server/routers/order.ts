@@ -532,7 +532,7 @@ export const orderRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Order must be CONFIRMED or PROCESSING to buy a label" });
       }
 
-      if (order.labelBoughtAt && order.labelUrl) {
+      if (order.labelUrl) {
         return { labelUrl: order.labelUrl };
       }
 
@@ -543,6 +543,10 @@ export const orderRouter = createTRPCRouter({
         zip:     order.organization?.addressZip     ?? "",
         country: order.organization?.addressCountry ?? "US",
       };
+
+      if (!fromAddress.street || !fromAddress.city || !fromAddress.state || !fromAddress.zip) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Seller address is incomplete. Update your organization address before buying a label." });
+      }
 
       const ship = order.shippingAddress as any;
       const toAddress = {
