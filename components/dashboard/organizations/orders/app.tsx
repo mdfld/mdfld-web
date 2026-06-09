@@ -70,10 +70,11 @@ export default function OrganizationOrdersLayout() {
     (state) => state.activeOrganization,
   );
 
+  const utils = trpc.useUtils();
+
   const {
     data: ordersData,
     isLoading,
-    refetch,
   } = trpc.organization.getOrders.useQuery(
     {
       organizationId: activeOrganization?.id || "",
@@ -91,7 +92,7 @@ export default function OrganizationOrdersLayout() {
   const updateOrderStatusMutation = trpc.order.updateStatus.useMutation({
     onSuccess: () => {
       toast.success("Order status updated");
-      refetch();
+      utils.organization.getOrders.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update order status");
@@ -111,7 +112,7 @@ export default function OrganizationOrdersLayout() {
       }));
       setTrackingNumber("");
       setTrackingCarrier("");
-      refetch();
+      utils.organization.getOrders.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to submit tracking");
@@ -122,7 +123,7 @@ export default function OrganizationOrdersLayout() {
     onSuccess: () => {
       toast.success("Withdrawal requested. Admin will process your payout shortly.");
       setSelectedOrder((prev: any) => ({ ...prev, withdrawalRequestedAt: new Date().toISOString() }));
-      refetch();
+      utils.organization.getOrders.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to request withdrawal");
@@ -139,7 +140,7 @@ export default function OrganizationOrdersLayout() {
         labelTrackingNumber: data.labelTrackingNumber,
         labelCarrier: data.labelCarrier,
       }));
-      refetch();
+      utils.organization.getOrders.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to purchase label");
