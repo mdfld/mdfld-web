@@ -196,7 +196,11 @@ model SellerProfile {
   businessEmail    String
   businessPhone    String?
   taxNumber        String?
-  bankAccount      String?
+  payoutMethod      PayoutMethod?
+  paypalEmail       String?
+  stripeBankLast4   String?
+  payoutSetupAt     DateTime?
+  payoutRequestedAt DateTime?
   shippingPolicy   String?
   returnPolicy     String?
   averageRating    Float   @default(0.0)
@@ -491,6 +495,8 @@ model Transaction {
 
   // Stripe fields
   stripeTransactionId String?  // Could be charge ID, refund ID, transfer ID, etc.
+  stripeTransferId  String?
+  paypalPayoutId    String?
   stripePaymentMethod String?  // Payment method ID used
   stripeFeeAmount     Decimal? // Stripe's processing fee
   netAmount           Decimal? // Amount after fees
@@ -766,6 +772,11 @@ enum PaymentMethod {
   STRIPE
 }
 
+enum PayoutMethod {
+  STRIPE_BANK
+  PAYPAL
+}
+
 enum PaymentStatus {
   PENDING
   AUTHORIZED
@@ -864,6 +875,7 @@ enum NotificationType {
   TRADE_OFFER_DECLINED
   TRADE_OFFER_SHIPPED
   TRADE_OFFER_COMPLETED
+  PAYOUT_COMPLETED
 }
 
 // Chat Models
