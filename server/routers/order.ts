@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { stripe } from "@/lib/stripe";
 import { createOrGetTracking } from "@/lib/aftership";
+import { buyShippingLabel } from "@/lib/easypost";
 
 export const orderRouter = createTRPCRouter({
   // Get user's orders
@@ -495,6 +496,107 @@ export const orderRouter = createTRPCRouter({
           ? "Tracking confirmed. You can now request a withdrawal."
           : "Tracking saved. Withdrawal will unlock once the carrier confirms pickup.",
       };
+    }),
+
+  buyLabel: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      const order = await ctx.prisma.order.findUnique({
+        where: { id: input.orderId },
+        include: {
+          seller: true,
+          buyer: true,
+          organization: true,
+          items: { include: { product: { select: { weight: true, dimensions: true } } } },
+        },
+      });
+
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+
+      const isSeller =
+        (order.seller.userId && order.seller.userId === userId) ||
+        (order.seller.organizationId &&
+          (await ctx.prisma.organizationMember.findFirst({
+            where: {
+              organizationId: order.seller.organizationId,
+              userId,
+              role: { in: ["owner", "admin"] },
+            },
+          })));
+
+      if (!isSeller) throw new TRPCError({ code: "FORBIDDEN", message: "Only the seller can buy a label" });
+
+      if (!["CONFIRMED", "PROCESSING"].includes(order.status)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Order must be CONFIRMED or PROCESSING to buy a label" });
+      }
+
+      if (order.labelBoughtAt && order.labelUrl) {
+        return { labelUrl: order.labelUrl };
+      }
+
+      const fromAddress = {
+        street:  order.organization?.addressStreet  ?? "",
+        city:    order.organization?.addressCity    ?? "",
+        state:   order.organization?.addressState   ?? "",
+        zip:     order.organization?.addressZip     ?? "",
+        country: order.organization?.addressCountry ?? "US",
+      };
+
+      const ship = order.shippingAddress as any;
+      const toAddress = {
+        name:    ship.name    ?? "",
+        street:  ship.street  ?? ship.street1 ?? "",
+        city:    ship.city    ?? "",
+        state:   ship.state   ?? "",
+        zip:     ship.zip     ?? ship.postalCode ?? "",
+        country: ship.country ?? "US",
+      };
+
+      let totalWeightOz = 0;
+      let maxLength = 0, maxWidth = 0, maxHeight = 0;
+      let hasDimensions = false;
+
+      for (const item of order.items) {
+        const p = item.product;
+        if (p.weight) totalWeightOz += p.weight * item.quantity;
+        const dims = p.dimensions as any;
+        if (dims?.length && dims?.width && dims?.height) {
+          hasDimensions = true;
+          maxLength = Math.max(maxLength, dims.length);
+          maxWidth  = Math.max(maxWidth,  dims.width);
+          maxHeight = Math.max(maxHeight, dims.height);
+        }
+      }
+
+      const parcel = (totalWeightOz > 0 && hasDimensions)
+        ? { weightOz: totalWeightOz, length: maxLength, width: maxWidth, height: maxHeight }
+        : null;
+
+      const label = await buyShippingLabel({
+        fromAddress,
+        toAddress,
+        parcel,
+        reference: order.orderNumber,
+      });
+
+      await ctx.prisma.order.update({
+        where: { id: input.orderId },
+        data: {
+          easypostShipmentId:  label.shipmentId,
+          labelUrl:            label.labelUrl,
+          labelTrackingNumber: label.trackingNumber,
+          labelCarrier:        label.carrier,
+          labelBoughtAt:       new Date(),
+          trackingNumber:      label.trackingNumber,
+          trackingCarrier:     label.carrier,
+        },
+      });
+
+      await createOrGetTracking(label.trackingNumber, label.carrier);
+
+      return { labelUrl: label.labelUrl };
     }),
 
   requestWithdrawal: protectedProcedure
