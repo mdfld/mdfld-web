@@ -435,6 +435,13 @@ model Order {
   carrierConfirmedAt  DateTime?  // Set when carrier confirms pickup — unlocks withdrawal
   withdrawalRequestedAt DateTime? // Set when seller clicks Request Withdrawal
 
+  // EasyPost label fields
+  easypostShipmentId  String?
+  labelUrl            String?
+  labelTrackingNumber String?
+  labelCarrier        String?
+  labelBoughtAt       DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
