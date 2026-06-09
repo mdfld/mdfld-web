@@ -562,6 +562,10 @@ export const orderRouter = createTRPCRouter({
         country: ship.country ?? "US",
       };
 
+      if (!toAddress.zip) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Buyer shipping address is missing a zip code." });
+      }
+
       let totalWeightOz = 0;
       let maxLength = 0, maxWidth = 0, maxHeight = 0;
       let hasDimensions = false;

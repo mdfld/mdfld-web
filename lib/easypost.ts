@@ -80,7 +80,7 @@ export async function buyShippingLabel(params: {
   const bought = await buyRes.json();
 
   if (!bought.postage_label?.label_url) {
-    throw new Error(`EasyPost label URL missing for shipment ${shipData.id} — label may still be generating`);
+    throw new Error(`EasyPost label URL missing for shipment ${shipData.id}, label may still be generating`);
   }
   if (!bought.selected_rate?.carrier || !bought.selected_rate?.rate) {
     throw new Error(`EasyPost selected_rate missing for shipment ${shipData.id}`);

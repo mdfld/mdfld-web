@@ -655,7 +655,7 @@ export default function OrganizationOrdersLayout() {
                             </div>
                           )}
 
-                          {/* Tracking input — show read-only if label was purchased, otherwise editable */}
+                          {/* Tracking input: show read-only if label was purchased, otherwise editable */}
                           {selectedOrder.labelTrackingNumber ? (
                             <div className="text-sm text-default-500 space-y-1">
                               <p>Tracking: <span className="font-medium text-foreground">{selectedOrder.labelTrackingNumber}</span></p>
