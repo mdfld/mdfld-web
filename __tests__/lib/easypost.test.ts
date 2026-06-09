@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getShippingRates } from "@/lib/easypost";
+import { getShippingRates, buyShippingLabel } from "@/lib/easypost";
 
 const mockFrom = { street: "1 Seller St", city: "Atlanta", state: "GA", zip: "30301", country: "US" };
 const mockTo   = { street: "2 Buyer Ave", city: "New York", state: "NY", zip: "10001", country: "US" };
@@ -61,5 +61,119 @@ describe("getShippingRates", () => {
     await expect(
       getShippingRates({ fromAddress: mockFrom, toAddress: mockTo, parcel: mockParcel, markupPct: 0.15 })
     ).rejects.toThrow("EASYPOST_API_KEY");
+  });
+});
+
+// ── buyShippingLabel helpers ──────────────────────────────────────────────────
+
+const makeShipmentWithRates = (rates: any[]) => ({
+  id: "shp_test",
+  rates,
+});
+
+const makeBuyResponse = () => ({
+  id: "shp_test",
+  postage_label: { label_url: "https://cdn.easypost.com/label.pdf" },
+  tracking_code: "9400111899223397861234",
+  selected_rate: { carrier: "USPS", rate: "8.50" },
+});
+
+const mockBuyParams = {
+  fromAddress: mockFrom,
+  toAddress:   { name: "John Buyer", ...mockTo },
+  parcel:      mockParcel,
+  reference:   "order_abc123",
+};
+
+describe("buyShippingLabel", () => {
+  it("buys cheapest rate and returns correct BuyLabelResult", async () => {
+    const cheapRate = makeRate("r_cheap", 8.50, 5, "USPS", "GroundAdvantage");
+    const expRate   = makeRate("r_exp",  18.00, 2, "UPS",  "2ndDayAir");
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeShipmentWithRates([expRate, cheapRate]),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeBuyResponse(),
+      } as any);
+
+    const result = await buyShippingLabel(mockBuyParams);
+
+    // Verify the buy call used the cheaper rate's ID
+    const buyCall = vi.mocked(fetch).mock.calls[1];
+    const buyBody = JSON.parse(buyCall[1]!.body as string);
+    expect(buyBody.rate.id).toBe("r_cheap");
+
+    // Verify returned fields
+    expect(result.shipmentId).toBe("shp_test");
+    expect(result.labelUrl).toBe("https://cdn.easypost.com/label.pdf");
+    expect(result.trackingNumber).toBe("9400111899223397861234");
+    expect(result.carrier).toBe("USPS");
+    expect(result.rateCents).toBe(850);
+  });
+
+  it("uses fallback parcel when parcel is null and calls console.warn", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeShipmentWithRates([makeRate("r1", 8.50, 5)]),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeBuyResponse(),
+      } as any);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await buyShippingLabel({ ...mockBuyParams, parcel: null });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("null parcel")
+    );
+
+    // Verify fallback dimensions were sent
+    const shipCall = vi.mocked(fetch).mock.calls[0];
+    const shipBody = JSON.parse(shipCall[1]!.body as string);
+    expect(shipBody.shipment.parcel.weight).toBe(16);
+    expect(shipBody.shipment.parcel.length).toBe(12);
+    expect(shipBody.shipment.parcel.width).toBe(10);
+    expect(shipBody.shipment.parcel.height).toBe(6);
+
+    expect(result.shipmentId).toBe("shp_test");
+
+    warnSpy.mockRestore();
+  });
+
+  it("throws when shipment creation returns non-ok (422)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 422 } as any);
+
+    await expect(buyShippingLabel(mockBuyParams)).rejects.toThrow(
+      "EasyPost API error creating shipment: 422"
+    );
+  });
+
+  it("throws when buy call returns non-ok (402)", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeShipmentWithRates([makeRate("r1", 8.50, 5)]),
+      } as any)
+      .mockResolvedValueOnce({ ok: false, status: 402 } as any);
+
+    await expect(buyShippingLabel(mockBuyParams)).rejects.toThrow(
+      "EasyPost API error buying label: 402"
+    );
+  });
+
+  it("throws when shipment returns empty rates array", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => makeShipmentWithRates([]),
+    } as any);
+
+    await expect(buyShippingLabel(mockBuyParams)).rejects.toThrow("No rates");
   });
 });

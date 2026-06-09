@@ -1,5 +1,92 @@
 const EASYPOST_API_URL = "https://api.easypost.com/v2";
 
+export type BuyLabelResult = {
+  shipmentId:     string;
+  labelUrl:       string;
+  trackingNumber: string;
+  carrier:        string;
+  rateCents:      number;
+};
+
+const FALLBACK_PARCEL = { weightOz: 16, length: 12, width: 10, height: 6 };
+
+export async function buyShippingLabel(params: {
+  fromAddress: { street: string; city: string; state: string; zip: string; country: string };
+  toAddress:   { name?: string; street: string; city: string; state: string; zip: string; country: string };
+  parcel:      { weightOz: number; length: number; width: number; height: number } | null;
+  reference:   string;
+}): Promise<BuyLabelResult> {
+  const apiKey = process.env.EASYPOST_API_KEY;
+  if (!apiKey) throw new Error("EASYPOST_API_KEY is not set");
+
+  const auth = Buffer.from(`${apiKey}:`).toString("base64");
+  const headers = { Authorization: `Basic ${auth}`, "Content-Type": "application/json" };
+
+  const parcel = params.parcel ?? (() => {
+    console.warn(`[EasyPost] buyShippingLabel: null parcel for reference=${params.reference}, using fallback`);
+    return FALLBACK_PARCEL;
+  })();
+
+  const shipRes = await fetch(`${EASYPOST_API_URL}/shipments`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      shipment: {
+        reference: params.reference,
+        from_address: {
+          street1: params.fromAddress.street,
+          city:    params.fromAddress.city,
+          state:   params.fromAddress.state,
+          zip:     params.fromAddress.zip,
+          country: params.fromAddress.country,
+        },
+        to_address: {
+          name:    params.toAddress.name ?? "",
+          street1: params.toAddress.street,
+          city:    params.toAddress.city,
+          state:   params.toAddress.state,
+          zip:     params.toAddress.zip,
+          country: params.toAddress.country,
+        },
+        parcel: {
+          weight: parcel.weightOz,
+          length: parcel.length,
+          width:  parcel.width,
+          height: parcel.height,
+        },
+        options: { label_format: "PDF" },
+      },
+    }),
+  });
+
+  if (!shipRes.ok) throw new Error(`EasyPost API error creating shipment: ${shipRes.status}`);
+
+  const shipData = await shipRes.json();
+  const rates: any[] = shipData.rates ?? [];
+
+  if (rates.length === 0) throw new Error("No rates available from EasyPost for this shipment");
+
+  const cheapest = [...rates].sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+
+  const buyRes = await fetch(`${EASYPOST_API_URL}/shipments/${shipData.id}/buy`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ rate: { id: cheapest.id } }),
+  });
+
+  if (!buyRes.ok) throw new Error(`EasyPost API error buying label: ${buyRes.status}`);
+
+  const bought = await buyRes.json();
+
+  return {
+    shipmentId:     bought.id,
+    labelUrl:       bought.postage_label.label_url,
+    trackingNumber: bought.tracking_code,
+    carrier:        bought.selected_rate.carrier,
+    rateCents:      Math.round(parseFloat(bought.selected_rate.rate) * 100),
+  };
+}
+
 export type RateOption = {
   easypostRateId: string
   carrier: string
