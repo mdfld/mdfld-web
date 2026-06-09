@@ -1,5 +1,5 @@
-ALTER TABLE "order" ADD COLUMN "easypostShipmentId" TEXT;
-ALTER TABLE "order" ADD COLUMN "labelUrl" TEXT;
-ALTER TABLE "order" ADD COLUMN "labelTrackingNumber" TEXT;
-ALTER TABLE "order" ADD COLUMN "labelCarrier" TEXT;
-ALTER TABLE "order" ADD COLUMN "labelBoughtAt" TIMESTAMP(3);
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "easypostShipmentId" TEXT;
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "labelUrl" TEXT;
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "labelTrackingNumber" TEXT;
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "labelCarrier" TEXT;
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS "labelBoughtAt" TIMESTAMPTZ;
