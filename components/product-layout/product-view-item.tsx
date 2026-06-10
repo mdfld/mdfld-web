@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useGuestCart } from "@/hooks/use-guest-cart";
 
 import { resolveSellerAction } from "@/lib/seller-action";
+import { getVerificationBadge } from "@/lib/verification-badge";
 import ProposeTradeModal from "@/components/product/propose-trade-modal";
 import ColorRadioItem from "./color-radio-item";
 import StarRatingDisplay from "./star-rating-display";
@@ -43,6 +44,7 @@ export type ProductViewItem = {
   isPopular?: boolean;
   sellerId?: string;
   tradeEnabled?: boolean;
+  verificationStatus?: string;
   details?: {
     title: string;
     items: string[];
@@ -89,6 +91,7 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
       seller,
       sellerId,
       tradeEnabled,
+      verificationStatus,
       ...props
     },
     ref,
@@ -328,6 +331,21 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
 
         {/* Product Info */}
         <div className="flex flex-col">
+          {(() => {
+            const verificationBadge = getVerificationBadge(verificationStatus);
+            if (!verificationBadge) return null;
+            return (
+              <Chip
+                size="sm"
+                variant="flat"
+                color={verificationBadge.color}
+                startContent={<Icon icon={verificationBadge.icon} width={14} />}
+                className="w-fit mb-2"
+              >
+                {verificationBadge.label}
+              </Chip>
+            );
+          })()}
           <h1 className="text-2xl font-bold tracking-tight">{name}</h1>
           <h2 className="sr-only">Product information</h2>
 

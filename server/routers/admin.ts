@@ -281,6 +281,38 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
+  setProductVerification: superAdminProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        verificationStatus: z.enum(["UNVERIFIED", "VERIFIED_AUTHENTIC", "VERIFIED_REPLICA"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const previous = await ctx.prisma.product.findUnique({
+        where: { id: input.productId },
+      });
+
+      const updated = await ctx.prisma.product.update({
+        where: { id: input.productId },
+        data: { verificationStatus: input.verificationStatus },
+        select: { id: true, verificationStatus: true },
+      });
+
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PRODUCT_VERIFICATION_UPDATED",
+          entityType: "Product",
+          entityId: input.productId,
+          oldValues: { verificationStatus: previous?.verificationStatus },
+          newValues: { verificationStatus: input.verificationStatus },
+        },
+      });
+
+      return updated;
+    }),
+
   deleteProduct: superAdminProcedure
     .input(z.object({ productId: z.string() }))
     .mutation(async ({ ctx, input }) => {

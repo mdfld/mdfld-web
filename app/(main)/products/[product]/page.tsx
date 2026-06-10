@@ -126,6 +126,7 @@ export default function ProductPage() {
     seller: p.seller,
     sellerId: p.seller?.userId ?? p.seller?.organization?.members?.[0]?.userId,
     tradeEnabled: p.tradeEnabled ?? false,
+    verificationStatus: p.verificationStatus,
     details: [
       {
         title: "Product Details",

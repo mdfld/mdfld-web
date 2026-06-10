@@ -292,6 +292,7 @@ model Product {
   tags            String[]
   isActive        Boolean  @default(true)
   featured        Boolean  @default(false)
+  verificationStatus ProductVerificationStatus @default(UNVERIFIED)
 
   // Variant support
   hasVariants      Boolean  @default(false)
@@ -1085,6 +1086,12 @@ enum ProductTier {
   PRO
   ACADEMY
   CLUB
+}
+
+enum ProductVerificationStatus {
+  UNVERIFIED
+  VERIFIED_AUTHENTIC
+  VERIFIED_REPLICA
 }
 
 enum SoleplateType {

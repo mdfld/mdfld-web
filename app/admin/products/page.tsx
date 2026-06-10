@@ -2,6 +2,7 @@
 import { trpc } from "@/lib/trpc-client";
 import { useSession } from "@/lib/auth-client";
 import { useState } from "react";
+import { VERIFICATION_STATUS_OPTIONS, getVerificationStatusOption } from "@/lib/verification-badge";
 
 const CATEGORIES = [
   "JERSEYS", "BOOTS", "FOOTBALLS", "TRADING_CARDS",
@@ -41,6 +42,10 @@ export default function AdminProductsPage() {
   });
 
   const toggleFeatured = trpc.admin.toggleFeatured.useMutation({
+    onSuccess: () => utils.admin.listProducts.invalidate(),
+  });
+
+  const setVerification = trpc.admin.setProductVerification.useMutation({
     onSuccess: () => utils.admin.listProducts.invalidate(),
   });
 
@@ -131,7 +136,7 @@ export default function AdminProductsPage() {
             <tr style={{ borderBottom: "2px solid #eee" }}>
               {[
                 "Product", "Store", "Category", "Price", "Inventory",
-                "Orders", "Reports", "Featured", "Active",
+                "Orders", "Reports", "Featured", "Verification", "Active",
                 ...(isSuperAdmin ? ["Actions"] : []),
               ].map((h) => (
                 <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 13, color: "#666" }}>
@@ -181,6 +186,42 @@ export default function AdminProductsPage() {
                   >
                     {product.featured ? "Featured" : "Set Featured"}
                   </button>
+                </td>
+                <td style={{ padding: "12px" }}>
+                  {isSuperAdmin ? (
+                    <select
+                      value={product.verificationStatus}
+                      onChange={(e) =>
+                        setVerification.mutate({
+                          productId: product.id,
+                          verificationStatus: e.target.value as
+                            | "UNVERIFIED"
+                            | "VERIFIED_AUTHENTIC"
+                            | "VERIFIED_REPLICA",
+                        })
+                      }
+                      style={{
+                        padding: "4px 8px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                        border: "1px solid #ccc", background: "transparent",
+                        color: getVerificationStatusOption(product.verificationStatus).color,
+                      }}
+                    >
+                      {VERIFICATION_STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: 12, fontWeight: 600,
+                        color: getVerificationStatusOption(product.verificationStatus).color,
+                      }}
+                    >
+                      {getVerificationStatusOption(product.verificationStatus).label}
+                    </span>
+                  )}
                 </td>
                 <td style={{ padding: "12px" }}>
                   <span

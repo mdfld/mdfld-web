@@ -182,3 +182,81 @@ describe("admin.updateProduct", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 });
+
+describe("admin.setProductVerification", () => {
+  beforeEach(() => {
+    mockAuditLogCreate.mockClear();
+    mockProductUpdate.mockClear();
+    mockProductFindUnique.mockClear();
+  });
+
+  it("returns the updated verification status when called by SUPER_ADMIN", async () => {
+    mockProductUpdate.mockResolvedValueOnce({
+      id: "product-1",
+      verificationStatus: "VERIFIED_AUTHENTIC",
+    });
+    const caller = createCaller(superAdminCtx);
+    const result = await caller.setProductVerification({
+      productId: "product-1",
+      verificationStatus: "VERIFIED_AUTHENTIC",
+    });
+    expect(result).toEqual({ id: "product-1", verificationStatus: "VERIFIED_AUTHENTIC" });
+  });
+
+  it("calls prisma.product.update with the new verification status", async () => {
+    const caller = createCaller(superAdminCtx);
+    await caller.setProductVerification({
+      productId: "product-1",
+      verificationStatus: "VERIFIED_REPLICA",
+    });
+    expect(mockProductUpdate).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: { verificationStatus: "VERIFIED_REPLICA" },
+      select: { id: true, verificationStatus: true },
+    });
+  });
+
+  it("writes an audit log entry with old and new verification status", async () => {
+    mockProductFindUnique.mockResolvedValueOnce({
+      id: "product-1",
+      verificationStatus: "UNVERIFIED",
+    });
+    const caller = createCaller(superAdminCtx);
+    await caller.setProductVerification({
+      productId: "product-1",
+      verificationStatus: "VERIFIED_AUTHENTIC",
+    });
+    expect(mockAuditLogCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "PRODUCT_VERIFICATION_UPDATED",
+          entityType: "Product",
+          entityId: "product-1",
+          userId: "sa-1",
+          oldValues: { verificationStatus: "UNVERIFIED" },
+          newValues: { verificationStatus: "VERIFIED_AUTHENTIC" },
+        }),
+      }),
+    );
+  });
+
+  it("throws FORBIDDEN when called by ADMIN role", async () => {
+    const caller = createCaller(adminCtx);
+    await expect(
+      caller.setProductVerification({
+        productId: "product-1",
+        verificationStatus: "VERIFIED_AUTHENTIC",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("throws UNAUTHORIZED when called without a session", async () => {
+    const caller = createCaller(noAuthCtx);
+    await expect(
+      caller.setProductVerification({
+        productId: "product-1",
+        verificationStatus: "VERIFIED_AUTHENTIC",
+      }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+});
