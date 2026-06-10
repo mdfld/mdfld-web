@@ -3,19 +3,16 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc-client";
 import { Button } from "@heroui/react";
-import { DollarSign, Clock, CheckCircle, Building2, AlertCircle } from "lucide-react";
+import { DollarSign, Clock, CheckCircle } from "lucide-react";
 
 const ACCENT = "#00d4b6";
 
 export default function EarningsPage() {
-	const { data, isLoading, refetch } = trpc.organization.getEarnings.useQuery();
-	const updateBank = trpc.organization.updateBankAccount.useMutation({ onSuccess: () => refetch() });
+	const { data, isLoading } = trpc.organization.getEarnings.useQuery();
 	const requestPayout = trpc.organization.requestPayout.useMutation({
 		onSuccess: () => { setPayoutAmount(""); setPayoutSent(true); setTimeout(() => setPayoutSent(false), 4000); },
 	});
 
-	const [bankInput, setBankInput] = useState("");
-	const [editingBank, setEditingBank] = useState(false);
 	const [payoutAmount, setPayoutAmount] = useState("");
 	const [payoutSent, setPayoutSent] = useState(false);
 
@@ -46,6 +43,13 @@ export default function EarningsPage() {
 					Platform commission: {platformCut}% &nbsp;·&nbsp; {data.totalSales} total sales
 				</p>
 			</div>
+
+			{!data.payoutMethod && (
+				<div style={{ background: "#fefce8", border: "1px solid #fde047", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, display: "flex", gap: 12, alignItems: "center" }}>
+					Set up your payout method to receive earnings.
+					<a href="/dashboard/settings/payout" style={{ fontWeight: 700, color: "#854d0e", textDecoration: "underline" }}>Set up now</a>
+				</div>
+			)}
 
 			{/* Balance cards */}
 			<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 32 }}>
@@ -89,46 +93,23 @@ export default function EarningsPage() {
 				</div>
 			</div>
 
-			{/* Bank account + payout request */}
+			{/* Payout method + payout request */}
 			<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 32 }}>
-				{/* Bank account */}
-				<div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-					<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-						<Building2 size={18} color="#64748b" />
-						<h3 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#0f172a" }}>Bank Account</h3>
+				{/* Payout method */}
+				<div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginTop: 8 }}>
+					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+						<span style={{ fontSize: 13, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Payout Method</span>
 					</div>
-					{!editingBank ? (
-						<>
-							{data.bankAccount ? (
-								<p style={{ fontSize: 14, color: "#334155", marginBottom: 12 }}>{data.bankAccount}</p>
-							) : (
-								<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-									<AlertCircle size={14} color="#f59e0b" />
-									<p style={{ fontSize: 13, color: "#f59e0b", margin: 0 }}>No bank account on file</p>
-								</div>
-							)}
-							<Button size="sm" variant="bordered" onPress={() => { setBankInput(data.bankAccount ?? ""); setEditingBank(true); }}
-								style={{ fontSize: 12, fontWeight: 600 }}>
-								{data.bankAccount ? "Update" : "Add Bank Account"}
-							</Button>
-						</>
+					{data.payoutMethod ? (
+						<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+							<span style={{ fontWeight: 700, fontSize: 16 }}>{data.payoutMethod === "STRIPE_BANK" ? "Bank Account" : "PayPal"}</span>
+							<span style={{ color: "#64748b", fontSize: 14 }}>{data.displayDetail}</span>
+							<a href="/dashboard/settings/payout" style={{ fontSize: 12, color: ACCENT, textDecoration: "underline" }}>Change</a>
+						</div>
 					) : (
-						<>
-							<input
-								value={bankInput}
-								onChange={e => setBankInput(e.target.value)}
-								placeholder="e.g. Chase Checking — ****1234"
-								style={{ width: "100%", padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, marginBottom: 10 }}
-							/>
-							<div style={{ display: "flex", gap: 8 }}>
-								<Button size="sm" color="primary" isLoading={updateBank.isPending}
-									onPress={() => updateBank.mutate({ bankAccount: bankInput }, { onSuccess: () => setEditingBank(false) })}
-									style={{ fontSize: 12, fontWeight: 600, background: ACCENT, color: "#020a0a" }}>
-									Save
-								</Button>
-								<Button size="sm" variant="bordered" onPress={() => setEditingBank(false)} style={{ fontSize: 12 }}>Cancel</Button>
-							</div>
-						</>
+						<a href="/dashboard/settings/payout" style={{ display: "inline-block", marginTop: 4, padding: "8px 16px", background: "#000", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+							Set Up Payout Method
+						</a>
 					)}
 				</div>
 
@@ -161,14 +142,14 @@ export default function EarningsPage() {
 							<Button
 								color="primary"
 								isLoading={requestPayout.isPending}
-								isDisabled={!data.bankAccount || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > pending}
+								isDisabled={!data.payoutMethod || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > pending}
 								onPress={() => requestPayout.mutate({ amount: parseFloat(payoutAmount) })}
 								style={{ width: "100%", fontWeight: 700, background: ACCENT, color: "#020a0a", fontSize: 13 }}
 							>
 								Request Payout
 							</Button>
-							{!data.bankAccount && (
-								<p style={{ fontSize: 11, color: "#f59e0b", marginTop: 8 }}>Add a bank account first to request a payout.</p>
+							{!data.payoutMethod && (
+								<p style={{ fontSize: 11, color: "#f59e0b", marginTop: 8 }}>Set up a payout method first to request a payout.</p>
 							)}
 						</>
 					)}
