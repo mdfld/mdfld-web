@@ -535,9 +535,12 @@ export const adminRouter = createTRPCRouter({
       // Stable across retries of the same trigger (payoutRequestedAt only
       // changes when the seller submits a new payout request), so a
       // double-click or retry within Stripe's idempotency window reuses
-      // the same transfer instead of double-paying.
+      // the same transfer instead of double-paying. When there's no
+      // payoutRequestedAt (a manual payout), fall back to a random value
+      // so two distinct manual payouts don't collide on the same Stripe
+      // idempotency key.
       const idempotencyKey = `payout-${input.sellerProfileId}-${amountCents}-${
-        seller.payoutRequestedAt ? seller.payoutRequestedAt.getTime() : "manual"
+        seller.payoutRequestedAt ? seller.payoutRequestedAt.getTime() : `manual-${crypto.randomUUID()}`
       }`;
 
       // Execute the real payout - must succeed before touching the DB

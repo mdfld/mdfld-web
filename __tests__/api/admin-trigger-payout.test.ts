@@ -169,4 +169,19 @@ describe("admin.triggerPayout", () => {
       })
     );
   });
+
+  it("uses distinct idempotency keys for two manual payouts (no payoutRequestedAt)", async () => {
+    mockSellerFindUnique.mockResolvedValue(baseStripeSeller);
+    const caller = createCaller(adminCtx);
+
+    await caller.triggerPayout({ sellerProfileId: "sp-1", amount: 100 });
+    const firstKey = mockTransferToSeller.mock.calls[0][0].idempotencyKey;
+
+    await caller.triggerPayout({ sellerProfileId: "sp-1", amount: 100 });
+    const secondKey = mockTransferToSeller.mock.calls[1][0].idempotencyKey;
+
+    expect(firstKey).toMatch(/^payout-sp-1-10000-manual-[0-9a-f-]+$/);
+    expect(secondKey).toMatch(/^payout-sp-1-10000-manual-[0-9a-f-]+$/);
+    expect(firstKey).not.toBe(secondKey);
+  });
 });
