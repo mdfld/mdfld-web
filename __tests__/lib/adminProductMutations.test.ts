@@ -42,6 +42,8 @@ vi.mock("@/lib/auth", () => ({
   auth: { api: { getSession: vi.fn() } },
 }));
 
+vi.mock("@/lib/stripe", () => ({ stripe: {} }));
+
 import { createCallerFactory } from "@/server/trpc";
 import { adminRouter } from "@/server/routers/admin";
 

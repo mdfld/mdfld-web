@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure, superAdminProcedure, protectedProcedure, publicProcedure } from "../trpc";
+import { transferToSeller } from "@/lib/stripe-payouts";
+import { sendPaypalPayout } from "@/lib/paypal-payouts";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
@@ -445,7 +447,11 @@ export const adminRouter = createTRPCRouter({
           businessEmail: true,
           pendingBalance: true,
           settledBalance: true,
-          bankAccount: true,
+          payoutMethod:     true,
+          stripeBankLast4:  true,
+          paypalEmail:      true,
+          payoutSetupAt:    true,
+          payoutRequestedAt: true,
           user: { select: { name: true, email: true } },
         },
       });
@@ -498,65 +504,126 @@ export const adminRouter = createTRPCRouter({
     }),
 
   triggerPayout: adminProcedure
-    .input(
-      z.object({
-        sellerProfileId: z.string(),
-        amount: z.number().positive(),
-        notes: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      sellerProfileId: z.string(),
+      amount:          z.number().positive(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const seller = await ctx.prisma.sellerProfile.findUnique({
-        where: { id: input.sellerProfileId },
+        where:   { id: input.sellerProfileId },
         include: { user: true },
       });
 
       if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller not found" });
-      if (!seller.bankAccount) {
+
+      if (!seller.payoutMethod) {
         throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Seller has not provided bank account details",
+          code:    "PRECONDITION_FAILED",
+          message: "Seller has not set up a payout method",
         });
       }
 
-      const amountCents = Math.round(input.amount * 100);
       const pendingCents = Math.round(Number(seller.pendingBalance) * 100);
+      const amountCents  = Math.round(input.amount * 100);
       if (amountCents > pendingCents) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
+          code:    "BAD_REQUEST",
           message: `Payout amount exceeds pending balance ($${seller.pendingBalance})`,
         });
       }
 
-      const transaction = await ctx.prisma.transaction.create({
-        data: {
-          userId: seller.userId!,
-          type: "PAYOUT",
-          amount: input.amount,
-          status: "COMPLETED",
-          paymentMethod: "STRIPE",
-          netAmount: input.amount,
-        },
+      // Stable across retries of the same trigger (payoutRequestedAt only
+      // changes when the seller submits a new payout request), so a
+      // double-click or retry within Stripe's idempotency window reuses
+      // the same transfer instead of double-paying.
+      const idempotencyKey = `payout-${input.sellerProfileId}-${amountCents}-${
+        seller.payoutRequestedAt ? seller.payoutRequestedAt.getTime() : "manual"
+      }`;
+
+      // Execute the real payout - must succeed before touching the DB
+      let transferId: string;
+      let destination: string;
+
+      if (seller.payoutMethod === "STRIPE_BANK") {
+        if (!seller.stripeAccountId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Seller Stripe account not found" });
+        }
+        const { transferId: tid } = await transferToSeller({
+          stripeAccountId: seller.stripeAccountId,
+          amountCents,
+          reference:       input.sellerProfileId,
+          idempotencyKey,
+        });
+        transferId  = tid;
+        destination = `••••${seller.stripeBankLast4}`;
+      } else {
+        if (!seller.paypalEmail) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Seller PayPal email not found" });
+        }
+        // PayPal payouts are processed asynchronously: a successful response
+        // here means the batch was accepted (status PENDING), not that funds
+        // have settled. Individual items can still fail after submission.
+        const { payoutBatchId } = await sendPaypalPayout({
+          paypalEmail:  seller.paypalEmail,
+          amountUsd:    input.amount.toFixed(2),
+          senderItemId: `${input.sellerProfileId}-${Date.now()}`,
+        });
+        transferId  = payoutBatchId;
+        destination = seller.paypalEmail;
+      }
+
+      // Payout succeeded - record atomically
+      await ctx.prisma.$transaction(async (tx) => {
+        await tx.transaction.create({
+          data: {
+            userId:          seller.userId!,
+            type:            "PAYOUT",
+            amount:          input.amount,
+            status:          "COMPLETED",
+            paymentMethod:   seller.payoutMethod === "STRIPE_BANK" ? "STRIPE" : "PAYPAL",
+            netAmount:       input.amount,
+            stripeTransferId: seller.payoutMethod === "STRIPE_BANK" ? transferId : null,
+            paypalPayoutId:   seller.payoutMethod === "PAYPAL"       ? transferId : null,
+          },
+        });
+
+        await tx.sellerProfile.update({
+          where: { id: input.sellerProfileId },
+          data: {
+            pendingBalance:    { decrement: input.amount },
+            settledBalance:    { increment: input.amount },
+            payoutRequestedAt: null,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId:     ctx.user.id,
+            action:     "PAYOUT_TRIGGERED",
+            entityType: "SellerProfile",
+            entityId:   input.sellerProfileId,
+            newValues:  { amount: input.amount, transferId, method: seller.payoutMethod },
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId:  seller.userId!,
+            type:    "PAYOUT_COMPLETED",
+            title:   "Payment sent",
+            content: `$${input.amount.toFixed(2)} has been sent to your ${seller.payoutMethod === "STRIPE_BANK" ? "bank account" : "PayPal"} and should arrive within 1 to 2 business days.`,
+            metadata: { transferId, amount: input.amount, method: seller.payoutMethod },
+          },
+        });
       });
 
-      await ctx.prisma.sellerProfile.update({
-        where: { id: input.sellerProfileId },
-        data: {
-          pendingBalance: { decrement: input.amount },
-          settledBalance: { increment: input.amount },
-        },
-      });
-
-      await ctx.prisma.auditLog.create({
-        data: {
-          userId: ctx.user.id,
-          action: "PAYOUT_TRIGGERED",
-          entityType: "SellerProfile",
-          entityId: input.sellerProfileId,
-          newValues: { amount: input.amount, transactionId: transaction.id, notes: input.notes },
-        },
-      });
-
-      return { success: true, transactionId: transaction.id };
+      return {
+        sellerName:  seller.storeName,
+        amount:      input.amount,
+        method:      seller.payoutMethod,
+        destination,
+        transferId,
+        timestamp:   new Date(),
+      };
     }),
 });

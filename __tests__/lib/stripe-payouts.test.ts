@@ -44,4 +44,20 @@ describe("transferToSeller", () => {
 
     await expect(transferToSeller(params)).rejects.toThrow("Stripe transfer failed");
   });
+
+  it("passes idempotencyKey as request options when provided", async () => {
+    mockTransferCreate.mockResolvedValue({ id: "tr_test789" });
+
+    await transferToSeller({ ...params, idempotencyKey: "payout-seller-profile-abc-5000-manual" });
+
+    expect(mockTransferCreate).toHaveBeenCalledWith(
+      {
+        amount:         5000,
+        currency:       "usd",
+        destination:    "acct_test123",
+        transfer_group: "seller-profile-abc",
+      },
+      { idempotencyKey: "payout-seller-profile-abc-5000-manual" }
+    );
+  });
 });
