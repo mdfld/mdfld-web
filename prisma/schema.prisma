@@ -222,6 +222,7 @@ model SellerProfile {
   commissionRate          Float     @default(0.10) // 10% default commission
   pendingBalance          Decimal   @default(0.00)
   settledBalance          Decimal   @default(0.00)
+  lockedBalance           Decimal   @default(0.00)
 
   // Fraud detection metrics
   fraudScore              Float     @default(0.0)
@@ -437,8 +438,7 @@ model Order {
   trackingNumber      String?
   trackingCarrier     String?
   trackingStatus      String?    // AfterShip tag: InfoReceived, InTransit, Delivered, etc.
-  carrierConfirmedAt  DateTime?  // Set when carrier confirms pickup — unlocks withdrawal
-  withdrawalRequestedAt DateTime? // Set when seller clicks Request Withdrawal
+  carrierConfirmedAt  DateTime?  // Set when carrier confirms pickup — unlocks the order's share of pendingBalance
 
   // EasyPost label fields
   easypostShipmentId  String?
