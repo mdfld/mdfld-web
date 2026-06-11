@@ -6,7 +6,8 @@ export type ProductVerificationStatus =
 export type VerificationBadgeInfo = {
   label: string;
   icon: string;
-  color: "success" | "primary";
+  textClassName: string;
+  chipClassNames: { base: string; content: string };
 };
 
 // Storefront badge metadata. UNVERIFIED has no entry - no badge is shown.
@@ -16,12 +17,14 @@ export const VERIFICATION_BADGES: Partial<
   VERIFIED_AUTHENTIC: {
     label: "Verified Authentic",
     icon: "solar:verified-check-bold",
-    color: "success",
+    textClassName: "text-[#44cfcf]",
+    chipClassNames: { base: "bg-[#44cfcf]/20", content: "text-[#44cfcf]" },
   },
   VERIFIED_REPLICA: {
     label: "Verified Replica",
     icon: "solar:copy-bold",
-    color: "primary",
+    textClassName: "text-primary",
+    chipClassNames: { base: "bg-primary/20", content: "text-primary" },
   },
 };
 

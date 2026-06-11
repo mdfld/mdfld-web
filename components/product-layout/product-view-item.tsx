@@ -338,8 +338,14 @@ const ProductViewInfo = React.forwardRef<HTMLDivElement, ProductViewInfoProps>(
               <Chip
                 size="sm"
                 variant="flat"
-                color={verificationBadge.color}
-                startContent={<Icon icon={verificationBadge.icon} width={14} />}
+                classNames={verificationBadge.chipClassNames}
+                startContent={
+                  <Icon
+                    icon={verificationBadge.icon}
+                    width={14}
+                    className={verificationBadge.textClassName}
+                  />
+                }
                 className="w-fit mb-2"
               >
                 {verificationBadge.label}

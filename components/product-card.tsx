@@ -160,9 +160,9 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 <Icon
                   icon={verificationBadge.icon}
                   width={12}
-                  className={`text-${verificationBadge.color}`}
+                  className={verificationBadge.textClassName}
                 />
-                <span className={`text-[10px] font-medium leading-none text-${verificationBadge.color}`}>
+                <span className={`text-[10px] font-medium leading-none ${verificationBadge.textClassName}`}>
                   {verificationBadge.label}
                 </span>
               </div>
