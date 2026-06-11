@@ -267,6 +267,7 @@ async function handleCheckoutSessionCompleted(
         where: { id: sellerId },
         data: {
           pendingBalance: { increment: sellerReceives },
+          lockedBalance: { increment: sellerReceives },
           totalSales: { increment: 1 },
         },
       }),
