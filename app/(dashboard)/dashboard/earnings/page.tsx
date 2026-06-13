@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc-client";
 import { Button } from "@heroui/react";
-import { DollarSign, Clock, CheckCircle } from "lucide-react";
+import { DollarSign, Clock, CheckCircle, Wallet } from "lucide-react";
 
 const ACCENT = "#00d4b6";
 
@@ -26,6 +26,8 @@ export default function EarningsPage() {
 	);
 
 	const pending = data.pendingBalance ?? 0;
+	const locked = data.lockedBalance ?? 0;
+	const available = data.availableBalance ?? 0;
 	const settled = data.settledBalance ?? 0;
 	const total = pending + settled;
 	const platformCut = Math.round(data.commissionRate * 100);
@@ -56,14 +58,27 @@ export default function EarningsPage() {
 				<div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
 					<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
 						<div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(0,212,182,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-							<Clock size={18} color={ACCENT} />
+							<Wallet size={18} color={ACCENT} />
 						</div>
-						<span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Pending</span>
+						<span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Available</span>
 					</div>
 					<div style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", fontFamily: "'Barlow Condensed', sans-serif" }}>
-						${pending.toFixed(2)}
+						${available.toFixed(2)}
 					</div>
 					<p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>Available to request</p>
+				</div>
+
+				<div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+					<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+						<div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(245,158,11,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+							<Clock size={18} color="#f59e0b" />
+						</div>
+						<span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Locked</span>
+					</div>
+					<div style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", fontFamily: "'Barlow Condensed', sans-serif" }}>
+						${locked.toFixed(2)}
+					</div>
+					<p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>Awaiting shipment</p>
 				</div>
 
 				<div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
@@ -127,22 +142,22 @@ export default function EarningsPage() {
 					) : (
 						<>
 							<p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
-								Available: <strong style={{ color: "#0f172a" }}>${pending.toFixed(2)}</strong>
+								Available: <strong style={{ color: "#0f172a" }}>${available.toFixed(2)}</strong>
 							</p>
 							<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
 								<span style={{ fontSize: 14, color: "#64748b" }}>$</span>
 								<input
-									type="number" min="1" max={pending} step="0.01"
+									type="number" min="1" max={available} step="0.01"
 									value={payoutAmount}
 									onChange={e => setPayoutAmount(e.target.value)}
-									placeholder={pending.toFixed(2)}
+									placeholder={available.toFixed(2)}
 									style={{ flex: 1, padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontWeight: 600 }}
 								/>
 							</div>
 							<Button
 								color="primary"
 								isLoading={requestPayout.isPending}
-								isDisabled={!data.payoutMethod || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > pending}
+								isDisabled={!data.payoutMethod || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > available}
 								onPress={() => requestPayout.mutate({ amount: parseFloat(payoutAmount) })}
 								style={{ width: "100%", fontWeight: 700, background: ACCENT, color: "#020a0a", fontSize: 13 }}
 							>
