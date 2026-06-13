@@ -69,7 +69,7 @@ export default function AdminSettlementsPage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #eee" }}>
-              {["Store", "Email", "Payout Method", "Pending", "Settled", "Amount", "Action"].map((h) => (
+              {["Store", "Email", "Payout Method", "Pending", "Locked", "Available", "Settled", "Amount", "Action"].map((h) => (
                 <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#666", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
               ))}
             </tr>
@@ -98,13 +98,19 @@ export default function AdminSettlementsPage() {
                   <td style={{ padding: 12, fontWeight: 700, color: "#f59e0b" }}>
                     ${Number(seller.pendingBalance).toFixed(2)}
                   </td>
+                  <td style={{ padding: 12, fontSize: 13, color: "#999" }}>
+                    ${Number(seller.lockedBalance).toFixed(2)}
+                  </td>
+                  <td style={{ padding: 12, fontWeight: 700, color: "#16a34a" }}>
+                    ${Number(seller.availableBalance).toFixed(2)}
+                  </td>
                   <td style={{ padding: 12, fontSize: 13, color: "#666" }}>
                     ${Number(seller.settledBalance).toFixed(2)}
                   </td>
                   <td style={{ padding: 12 }}>
                     <input
                       type="number"
-                      placeholder={Number(seller.pendingBalance).toFixed(2)}
+                      placeholder={Number(seller.availableBalance).toFixed(2)}
                       value={payoutAmounts[seller.id] ?? ""}
                       onChange={(e) => setPayoutAmounts((prev) => ({ ...prev, [seller.id]: e.target.value }))}
                       style={{ width: 90, padding: "4px 8px", borderRadius: 4, border: "1px solid #ddd", fontSize: 13 }}
