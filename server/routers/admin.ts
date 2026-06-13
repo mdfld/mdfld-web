@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, adminProcedure, superAdminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 import { transferToSeller } from "@/lib/stripe-payouts";
 import { sendPaypalPayout } from "@/lib/paypal-payouts";
+import { getAvailableBalance } from "@/lib/seller-balance";
 
 export const adminRouter = createTRPCRouter({
   analytics: protectedProcedure.query(async ({ ctx }) => {
@@ -478,6 +479,7 @@ export const adminRouter = createTRPCRouter({
           storeName: true,
           businessEmail: true,
           pendingBalance: true,
+          lockedBalance: true,
           settledBalance: true,
           payoutMethod:     true,
           stripeBankLast4:  true,
@@ -489,7 +491,11 @@ export const adminRouter = createTRPCRouter({
       });
       let nextCursor: string | undefined;
       if (sellers.length > input.limit) nextCursor = sellers.pop()!.id;
-      return { sellers, nextCursor };
+      const sellersWithAvailable = sellers.map((seller) => ({
+        ...seller,
+        availableBalance: getAvailableBalance(seller),
+      }));
+      return { sellers: sellersWithAvailable, nextCursor };
     }),
 
   getPublicFees: publicProcedure.query(async ({ ctx }) => {
@@ -555,12 +561,13 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      const pendingCents = Math.round(Number(seller.pendingBalance) * 100);
-      const amountCents  = Math.round(input.amount * 100);
-      if (amountCents > pendingCents) {
+      const availableBalance = getAvailableBalance(seller);
+      const availableCents   = Math.round(availableBalance * 100);
+      const amountCents      = Math.round(input.amount * 100);
+      if (amountCents > availableCents) {
         throw new TRPCError({
           code:    "BAD_REQUEST",
-          message: `Payout amount exceeds pending balance ($${seller.pendingBalance})`,
+          message: `Payout amount exceeds available balance ($${availableBalance.toFixed(2)})`,
         });
       }
 

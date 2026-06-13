@@ -70,6 +70,7 @@ const baseStripeSeller = {
   userId:          "user-seller-1",
   storeName:       "Test Store",
   pendingBalance:  200,
+  lockedBalance:   0,
   settledBalance:  0,
   payoutMethod:    "STRIPE_BANK",
   stripeAccountId: "acct_test123",
@@ -140,6 +141,21 @@ describe("admin.triggerPayout", () => {
     mockSellerFindUnique.mockResolvedValue({ ...baseStripeSeller, pendingBalance: 50 });
     const caller = createCaller(adminCtx);
     await expect(caller.triggerPayout({ sellerProfileId: "sp-1", amount: 100 })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws BAD_REQUEST when amount exceeds availableBalance even if pendingBalance is sufficient", async () => {
+    mockSellerFindUnique.mockResolvedValue({ ...baseStripeSeller, pendingBalance: 200, lockedBalance: 150 });
+    const caller = createCaller(adminCtx);
+    await expect(caller.triggerPayout({ sellerProfileId: "sp-1", amount: 100 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("succeeds when amount equals exactly availableBalance", async () => {
+    mockSellerFindUnique.mockResolvedValue({ ...baseStripeSeller, pendingBalance: 200, lockedBalance: 150 });
+    const caller = createCaller(adminCtx);
+    const result = await caller.triggerPayout({ sellerProfileId: "sp-1", amount: 50 });
+    expect(result).toMatchObject({ sellerName: "Test Store" });
   });
 
   it("throws PRECONDITION_FAILED when payoutMethod is null", async () => {
