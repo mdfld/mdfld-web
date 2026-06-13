@@ -70,6 +70,7 @@ const baseSeller = {
   id:               "sp-1",
   userId:           "user-1",
   pendingBalance:   100,
+  lockedBalance:    0,
   settledBalance:   0,
   totalSales:       5,
   payoutMethod:     null,
@@ -212,5 +213,21 @@ describe("requestPayout (updated)", () => {
     mockSellerFindUnique.mockResolvedValue({ ...baseSeller, payoutMethod: "PAYPAL", pendingBalance: 30 });
     const caller = createCaller(sellerCtx);
     await expect(caller.requestPayout({ amount: 50 })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws BAD_REQUEST when amount exceeds availableBalance even if pendingBalance is sufficient", async () => {
+    mockSellerFindUnique.mockResolvedValue({ ...baseSeller, payoutMethod: "PAYPAL", pendingBalance: 100, lockedBalance: 60 });
+    const caller = createCaller(sellerCtx);
+    await expect(caller.requestPayout({ amount: 50 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Amount exceeds your available balance",
+    });
+  });
+
+  it("succeeds when amount equals exactly availableBalance", async () => {
+    mockSellerFindUnique.mockResolvedValue({ ...baseSeller, payoutMethod: "PAYPAL", pendingBalance: 100, lockedBalance: 60 });
+    const caller = createCaller(sellerCtx);
+    const result = await caller.requestPayout({ amount: 40 });
+    expect(result).toEqual({ success: true });
   });
 });

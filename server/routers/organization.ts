@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { stripe } from "@/lib/stripe";
 import { AES256E2EE } from "@/lib/aes-e2ee";
 import { publishMessage, cacheMessage } from "@/lib/redis";
+import { getAvailableBalance } from "@/lib/seller-balance";
 
 export const organizationRouter = createTRPCRouter({
   create: protectedProcedure
@@ -1388,6 +1389,7 @@ export const organizationRouter = createTRPCRouter({
       select: {
         id: true,
         pendingBalance: true,
+        lockedBalance: true,
         settledBalance: true,
         totalSales: true,
         payoutMethod: true,
@@ -1414,6 +1416,8 @@ export const organizationRouter = createTRPCRouter({
 
     return {
       pendingBalance: Number(seller.pendingBalance),
+      lockedBalance: Number(seller.lockedBalance),
+      availableBalance: getAvailableBalance(seller),
       settledBalance: Number(seller.settledBalance),
       totalSales: seller.totalSales,
       payoutMethod: seller.payoutMethod,
@@ -1429,14 +1433,14 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const seller = await ctx.prisma.sellerProfile.findUnique({
         where: { userId: ctx.user.id },
-        select: { id: true, pendingBalance: true, payoutMethod: true, storeName: true },
+        select: { id: true, pendingBalance: true, lockedBalance: true, payoutMethod: true, storeName: true },
       });
       if (!seller) throw new TRPCError({ code: "NOT_FOUND" });
       if (!seller.payoutMethod) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Set up a payout method before requesting a payout" });
       }
-      if (input.amount > Number(seller.pendingBalance)) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Amount exceeds your pending balance" });
+      if (input.amount > getAvailableBalance(seller)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Amount exceeds your available balance" });
       }
 
       await ctx.prisma.sellerProfile.update({
