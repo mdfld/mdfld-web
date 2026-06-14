@@ -30,6 +30,12 @@ const CONDITIONS = [
   { value: "USED_GOOD", label: "Used - Good" },
 ];
 
+const VERIFICATION_OPTIONS = [
+  { value: "VERIFIED_AUTHENTIC", label: "Verified Authentic" },
+  { value: "VERIFIED_REPLICA", label: "Verified Replica" },
+  { value: "UNVERIFIED", label: "Fan-Made" },
+];
+
 // Using exact categories from database enum
 const FOOTBALL_CATEGORIES = [
   { value: "JERSEYS", label: "Jerseys" },
@@ -114,6 +120,7 @@ export default function ProductFilters({
     categories: initialCategories ?? ([] as string[]),
     priceRange: [0, 5000] as number[],
     conditions: [] as string[],
+    verificationStatuses: [] as string[],
     brands: [] as string[],
     teams: [] as string[],
     bootTypes: [] as string[],
@@ -137,6 +144,7 @@ export default function ProductFilters({
       categories: [],
       priceRange: [0, 5000],
       conditions: [],
+      verificationStatuses: [],
       brands: [],
       teams: [],
       bootTypes: [],
@@ -261,6 +269,36 @@ export default function ProductFilters({
             classNames={{ label: "text-sm text-default-600" }}
           >
             {condition.label}
+          </Checkbox>
+        ))}
+      </CheckboxGroup>
+    </AccordionItem>,
+  );
+
+  // Always include verification filter
+  accordionItems.push(
+    <AccordionItem
+      key="verification"
+      aria-label="Verification"
+      title="Verification"
+      classNames={{
+        title: "text-sm font-normal",
+        content: "pt-0 pb-4",
+      }}
+    >
+      <CheckboxGroup
+        value={filters.verificationStatuses}
+        onValueChange={(value) => updateFilter("verificationStatuses", value)}
+        classNames={{ wrapper: "gap-1" }}
+      >
+        {VERIFICATION_OPTIONS.map((option) => (
+          <Checkbox
+            key={option.value}
+            value={option.value}
+            size="sm"
+            classNames={{ label: "text-sm text-default-600" }}
+          >
+            {option.label}
           </Checkbox>
         ))}
       </CheckboxGroup>
