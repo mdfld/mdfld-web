@@ -32,6 +32,9 @@ export default function ProductsPageClient() {
     [],
   );
   const [tradeEnabled, setTradeEnabled] = React.useState<boolean>(false);
+  const [selectedVerificationStatuses, setSelectedVerificationStatuses] = React.useState<
+    string[]
+  >([]);
 
   React.useEffect(() => {
     setSelectedCategories(urlCategory ? [urlCategory] : []);
@@ -48,6 +51,9 @@ export default function ProductsPageClient() {
         minPrice: priceRange[0],
         maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
         tradeEnabled: tradeEnabled || undefined,
+        verificationStatuses: (selectedVerificationStatuses.length > 0
+          ? selectedVerificationStatuses
+          : undefined) as any,
       },
       {
         getNextPageParam: (lastPage: any) => lastPage.nextCursor,
@@ -98,12 +104,15 @@ export default function ProductsPageClient() {
                 if (filters.priceRange) setPriceRange(filters.priceRange);
                 if (filters.conditions)
                   setSelectedConditions(filters.conditions);
+                if (filters.verificationStatuses)
+                  setSelectedVerificationStatuses(filters.verificationStatuses);
                 setTradeEnabled(filters.tradeEnabled ?? false);
               }}
               onReset={() => {
                 setSelectedCategories([]);
                 setPriceRange([0, 5000]);
                 setSelectedConditions([]);
+                setSelectedVerificationStatuses([]);
                 setTradeEnabled(false);
               }}
             />
@@ -134,11 +143,14 @@ export default function ProductsPageClient() {
                   if (filters.priceRange) setPriceRange(filters.priceRange);
                   if (filters.conditions)
                     setSelectedConditions(filters.conditions);
+                  if (filters.verificationStatuses)
+                    setSelectedVerificationStatuses(filters.verificationStatuses);
                 }}
                 onReset={() => {
                   setSelectedCategories([]);
                   setPriceRange([0, 5000]);
                   setSelectedConditions([]);
+                  setSelectedVerificationStatuses([]);
                 }}
               />
             </div>
