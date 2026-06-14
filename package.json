@@ -49,6 +49,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.18.2",
+    "heic-convert": "^2.1.0",
+    "heic2any": "^0.0.4",
     "intl-messageformat": "^10.7.18",
     "ioredis": "^5.8.2",
     "kyber-crystals": "^1.0.7",
