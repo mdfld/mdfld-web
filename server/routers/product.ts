@@ -10,6 +10,7 @@ import {
   ProductTier,
   SoleplateType,
   PlayerVersion,
+  ProductVerificationStatus,
 } from "@prisma/client";
 import { getScoringWeights } from "@/lib/scoring/getScoringWeights";
 import { applyScoring } from "@/lib/scoring/searchScoring";
@@ -406,6 +407,7 @@ export const productRouter = createTRPCRouter({
         tags: z.array(z.string()).optional(),
         featured: z.boolean().optional(),
         tradeEnabled: z.boolean().optional(),
+        verificationStatuses: z.array(z.nativeEnum(ProductVerificationStatus)).optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -422,6 +424,10 @@ export const productRouter = createTRPCRouter({
 
       if (input.tradeEnabled) {
         where.tradeEnabled = true;
+      }
+
+      if (input.verificationStatuses && input.verificationStatuses.length > 0) {
+        where.verificationStatus = { in: input.verificationStatuses };
       }
 
       if (input.query) {
