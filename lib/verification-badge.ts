@@ -10,10 +10,17 @@ export type VerificationBadgeInfo = {
   chipClassNames: { base: string; content: string };
 };
 
-// Storefront badge metadata. UNVERIFIED has no entry - no badge is shown.
-export const VERIFICATION_BADGES: Partial<
-  Record<ProductVerificationStatus, VerificationBadgeInfo>
+// Storefront badge metadata for every verification status, including UNVERIFIED ("Fan-Made").
+export const VERIFICATION_BADGES: Record<
+  ProductVerificationStatus,
+  VerificationBadgeInfo
 > = {
+  UNVERIFIED: {
+    label: "Fan-Made",
+    icon: "solar:question-circle-linear",
+    textClassName: "text-default-400",
+    chipClassNames: { base: "bg-default-400/20", content: "text-default-400" },
+  },
   VERIFIED_AUTHENTIC: {
     label: "Verified Authentic",
     icon: "solar:verified-check-bold",
