@@ -33,7 +33,8 @@ const CONDITIONS = [
 const VERIFICATION_OPTIONS = [
   { value: "VERIFIED_AUTHENTIC", label: "Verified Authentic" },
   { value: "VERIFIED_REPLICA", label: "Verified Replica" },
-  { value: "UNVERIFIED", label: "Fan-Made" },
+  { value: "FAN_MADE", label: "Fan-Made" },
+  { value: "UNVERIFIED", label: "Unverified" },
 ];
 
 // Using exact categories from database enum
