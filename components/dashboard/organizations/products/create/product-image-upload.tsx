@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 import { Button, Image, Spinner } from "@heroui/react";
 import { useUploadThing } from "@/lib/uploadclient";
 import { toast } from "sonner";
+import { convertHeicFile } from "@/lib/heic-conversion";
 
 interface ProductImageUploadProps {
   images: string[];
@@ -34,7 +35,20 @@ export default function ProductImageUpload({
 
     setIsUploading(true);
     try {
-      const uploadedFiles = await startUpload(newFiles);
+      const convertedFiles = await Promise.all(
+        newFiles.map(async (file) => {
+          try {
+            return await convertHeicFile(file);
+          } catch {
+            toast.error(`Couldn't process ${file.name} — try a different photo`);
+            return null;
+          }
+        }),
+      );
+      const validFiles = convertedFiles.filter((f): f is File => f !== null);
+      if (validFiles.length === 0) return;
+
+      const uploadedFiles = await startUpload(validFiles);
       if (uploadedFiles) {
         const newImageUrls = uploadedFiles.map((file) => file.url);
         onImagesChange([...images, ...newImageUrls]);
@@ -72,7 +86,7 @@ export default function ProductImageUpload({
         <input
           type="file"
           id="product-images"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -101,7 +115,7 @@ export default function ProductImageUpload({
                 Click to upload or drag and drop
               </p>
               <p className="text-xs text-default-400">
-                PNG, JPG, GIF up to 8MB each ({images.length}/{maxImages}{" "}
+                PNG, JPG, GIF, HEIC up to 8MB each ({images.length}/{maxImages}{" "}
                 images)
               </p>
             </>
