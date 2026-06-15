@@ -4,8 +4,10 @@ import convert from "heic-convert";
 
 const utapi = new UTApi();
 
-function isHeicUrl(url: string): boolean {
-  return /\.(heic|heif)$/i.test(url);
+async function isHeicImage(url: string): Promise<boolean> {
+  const response = await fetch(url, { method: "HEAD" });
+  const contentType = response.headers.get("content-type") ?? "";
+  return /^image\/hei[cf]$/i.test(contentType);
 }
 
 function fileKeyFromUrl(url: string): string {
@@ -22,9 +24,14 @@ async function main() {
     select: { id: true, title: true, images: true },
   });
 
-  const affected = products.filter((product) =>
-    product.images.some(isHeicUrl),
-  );
+  const affected: { id: string; title: string; images: string[]; heicFlags: boolean[] }[] = [];
+
+  for (const product of products) {
+    const heicFlags = await Promise.all(product.images.map(isHeicImage));
+    if (heicFlags.some(Boolean)) {
+      affected.push({ ...product, heicFlags });
+    }
+  }
 
   console.log(`Found ${affected.length} product(s) with HEIC images`);
 
@@ -32,8 +39,9 @@ async function main() {
     const newImages: string[] = [];
     const oldKeys: string[] = [];
 
-    for (const url of product.images) {
-      if (!isHeicUrl(url)) {
+    for (let i = 0; i < product.images.length; i++) {
+      const url = product.images[i];
+      if (!product.heicFlags[i]) {
         newImages.push(url);
         continue;
       }
