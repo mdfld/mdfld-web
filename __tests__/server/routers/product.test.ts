@@ -75,6 +75,18 @@ describe("product.search verification status filter", () => {
     );
   });
 
+  it("accepts FAN_MADE as a verification status filter", async () => {
+    const caller = createCaller(ctx);
+    await caller.search({ verificationStatuses: ["FAN_MADE"] });
+    expect(mockProductFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          verificationStatus: { in: ["FAN_MADE"] },
+        }),
+      }),
+    );
+  });
+
   it("does not filter by verification status when omitted", async () => {
     const caller = createCaller(ctx);
     await caller.search({});
