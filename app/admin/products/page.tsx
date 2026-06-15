@@ -196,6 +196,7 @@ export default function AdminProductsPage() {
                           productId: product.id,
                           verificationStatus: e.target.value as
                             | "UNVERIFIED"
+                            | "FAN_MADE"
                             | "VERIFIED_AUTHENTIC"
                             | "VERIFIED_REPLICA",
                         })
