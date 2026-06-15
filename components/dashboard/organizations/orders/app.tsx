@@ -119,17 +119,6 @@ export default function OrganizationOrdersLayout() {
     },
   });
 
-  const requestWithdrawalMutation = trpc.order.requestWithdrawal.useMutation({
-    onSuccess: () => {
-      toast.success("Withdrawal requested. Admin will process your payout shortly.");
-      setSelectedOrder((prev: any) => ({ ...prev, withdrawalRequestedAt: new Date().toISOString() }));
-      utils.organization.getOrders.invalidate();
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to request withdrawal");
-    },
-  });
-
   const buyLabelMutation = trpc.order.buyLabel.useMutation({
     onSuccess: (data) => {
       window.open(data.labelUrl, "_blank");
@@ -702,35 +691,18 @@ export default function OrganizationOrdersLayout() {
                             </div>
                           )}
 
-                          {/* Withdrawal */}
+                          {/* Earnings status */}
                           <div className="border-t pt-4">
-                            {selectedOrder.withdrawalRequestedAt ? (
+                            {selectedOrder.carrierConfirmedAt ? (
                               <div className="flex items-center gap-2">
                                 <Icon icon="solar:check-circle-bold" className="text-success w-4 h-4" />
-                                <p className="text-xs text-default-500">
-                                  Withdrawal requested. Admin will process your payout shortly.
-                                </p>
-                              </div>
-                            ) : selectedOrder.carrierConfirmedAt ? (
-                              <div className="space-y-2">
                                 <p className="text-xs text-success">
-                                  Carrier confirmed pickup. You can now request your payout.
+                                  Carrier confirmed pickup. This order&apos;s earnings are now available on your Earnings page.
                                 </p>
-                                <Button
-                                  size="sm"
-                                  color="success"
-                                  variant="flat"
-                                  isLoading={requestWithdrawalMutation.isPending}
-                                  onPress={() =>
-                                    requestWithdrawalMutation.mutate({ orderId: selectedOrder.id })
-                                  }
-                                >
-                                  Request Withdrawal
-                                </Button>
                               </div>
                             ) : (
                               <p className="text-xs text-default-400">
-                                Withdrawal unlocks once your carrier confirms pickup.
+                                Earnings from this order will become available once the carrier confirms pickup.
                               </p>
                             )}
                           </div>
