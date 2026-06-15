@@ -1,5 +1,6 @@
 export type ProductVerificationStatus =
   | "UNVERIFIED"
+  | "FAN_MADE"
   | "VERIFIED_AUTHENTIC"
   | "VERIFIED_REPLICA";
 
@@ -10,12 +11,11 @@ export type VerificationBadgeInfo = {
   chipClassNames: { base: string; content: string };
 };
 
-// Storefront badge metadata for every verification status, including UNVERIFIED ("Fan-Made").
-export const VERIFICATION_BADGES: Record<
-  ProductVerificationStatus,
-  VerificationBadgeInfo
+// Storefront badge metadata. UNVERIFIED has no entry (no badge).
+export const VERIFICATION_BADGES: Partial<
+  Record<ProductVerificationStatus, VerificationBadgeInfo>
 > = {
-  UNVERIFIED: {
+  FAN_MADE: {
     label: "Fan-Made",
     icon: "solar:question-circle-linear",
     textClassName: "text-default-400",
@@ -51,6 +51,7 @@ export type VerificationStatusOption = {
 
 export const VERIFICATION_STATUS_OPTIONS: VerificationStatusOption[] = [
   { value: "UNVERIFIED", label: "Unverified", color: "#999999" },
+  { value: "FAN_MADE", label: "Fan-Made", color: "#999999" },
   { value: "VERIFIED_AUTHENTIC", label: "Verified Authentic", color: "#10b981" },
   { value: "VERIFIED_REPLICA", label: "Verified Replica", color: "#0066ff" },
 ];

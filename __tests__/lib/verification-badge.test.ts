@@ -18,12 +18,16 @@ describe("getVerificationBadge", () => {
     expect(getVerificationBadge("VERIFIED_REPLICA")?.label).toBe("Verified Replica");
   });
 
-  it("returns Fan-Made badge info for UNVERIFIED", () => {
-    const badge = getVerificationBadge("UNVERIFIED");
+  it("returns undefined for UNVERIFIED", () => {
+    expect(getVerificationBadge("UNVERIFIED")).toBeUndefined();
+  });
+
+  it("returns Fan-Made badge info for FAN_MADE", () => {
+    const badge = getVerificationBadge("FAN_MADE");
     expect(badge?.label).toBe("Fan-Made");
     expect(badge?.icon).toBe("solar:question-circle-linear");
     expect(badge?.textClassName).toBe("text-default-400");
-    expect(badge).toEqual(VERIFICATION_BADGES.UNVERIFIED);
+    expect(badge).toEqual(VERIFICATION_BADGES.FAN_MADE);
   });
 
   it("returns undefined for null or undefined input", () => {
@@ -46,5 +50,9 @@ describe("getVerificationStatusOption", () => {
 
   it("keeps the admin label 'Unverified' for UNVERIFIED, independent of the storefront Fan-Made badge", () => {
     expect(getVerificationStatusOption("UNVERIFIED").label).toBe("Unverified");
+  });
+
+  it("returns the Fan-Made label for FAN_MADE", () => {
+    expect(getVerificationStatusOption("FAN_MADE").label).toBe("Fan-Made");
   });
 });
