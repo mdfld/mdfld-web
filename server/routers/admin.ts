@@ -286,7 +286,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         productId: z.string(),
-        verificationStatus: z.enum(["UNVERIFIED", "VERIFIED_AUTHENTIC", "VERIFIED_REPLICA"]),
+        verificationStatus: z.enum(["UNVERIFIED", "FAN_MADE", "VERIFIED_AUTHENTIC", "VERIFIED_REPLICA"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {

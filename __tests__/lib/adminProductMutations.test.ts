@@ -216,6 +216,24 @@ describe("admin.setProductVerification", () => {
     });
   });
 
+  it("accepts FAN_MADE as a valid verification status", async () => {
+    mockProductUpdate.mockResolvedValueOnce({
+      id: "product-1",
+      verificationStatus: "FAN_MADE",
+    });
+    const caller = createCaller(superAdminCtx);
+    const result = await caller.setProductVerification({
+      productId: "product-1",
+      verificationStatus: "FAN_MADE",
+    });
+    expect(result).toEqual({ id: "product-1", verificationStatus: "FAN_MADE" });
+    expect(mockProductUpdate).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: { verificationStatus: "FAN_MADE" },
+      select: { id: true, verificationStatus: true },
+    });
+  });
+
   it("writes an audit log entry with old and new verification status", async () => {
     mockProductFindUnique.mockResolvedValueOnce({
       id: "product-1",
