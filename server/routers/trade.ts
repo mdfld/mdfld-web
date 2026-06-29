@@ -140,13 +140,60 @@ export const tradeRouter = createTRPCRouter({
       return { tradeOfferId: tradeOffer.id, conversationId: conversation.id };
     }),
 
+  counterOffer: protectedProcedure
+    .input(
+      z.object({
+        tradeOfferId: z.string(),
+        counterCashAmount: z.number().positive().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.counterCashAmount || input.counterCashAmount <= 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Counter offer must include a cash amount greater than 0" });
+      }
+
+      const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
+      if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
+      if (offer.recipientId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the recipient can counter an offer" });
+      if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Only pending offers can be countered" });
+
+      const updated = await ctx.prisma.tradeOffer.update({
+        where: { id: input.tradeOfferId },
+        data: {
+          status: "COUNTERED",
+          counterCashAmount: input.counterCashAmount,
+          counterById: ctx.user.id,
+        },
+      });
+
+      await ctx.prisma.notification.create({
+        data: {
+          userId: offer.proposerId,
+          type: "TRADE_OFFER_COUNTERED",
+          title: `Counter offer from ${ctx.user.name}`,
+          content: "The recipient has proposed different terms for your trade offer.",
+          metadata: { tradeOfferId: offer.id, conversationId: offer.conversationId },
+        },
+      });
+
+      return updated;
+    }),
+
   respondToOffer: protectedProcedure
     .input(z.object({ tradeOfferId: z.string(), response: z.enum(["ACCEPTED", "DECLINED"]) }))
     .mutation(async ({ ctx, input }) => {
       const offer = await ctx.prisma.tradeOffer.findUnique({ where: { id: input.tradeOfferId } });
       if (!offer) throw new TRPCError({ code: "NOT_FOUND", message: "Trade offer not found" });
-      if (offer.recipientId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the recipient can respond" });
-      if (offer.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Offer is no longer pending" });
+
+      if (offer.status === "PENDING" && offer.recipientId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the recipient can respond" });
+      }
+      if (offer.status === "COUNTERED" && offer.proposerId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the proposer can respond to a counter offer" });
+      }
+      if (offer.status !== "PENDING" && offer.status !== "COUNTERED") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Offer is no longer pending" });
+      }
 
       if (input.response === "DECLINED") {
         const updated = await ctx.prisma.tradeOffer.update({
@@ -168,8 +215,10 @@ export const tradeRouter = createTRPCRouter({
         return updated;
       }
 
-      // ACCEPTED path
-      const cashAmount = offer.cashAmount ? Number(offer.cashAmount) : 0;
+      // ACCEPTED path — use counter terms if this was a countered offer
+      const cashAmount = offer.status === "COUNTERED"
+        ? (offer.counterCashAmount ? Number(offer.counterCashAmount) : 0)
+        : (offer.cashAmount ? Number(offer.cashAmount) : 0);
 
       if (cashAmount > 0) {
         const settings = await ctx.prisma.platformSettings.upsert({

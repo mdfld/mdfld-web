@@ -3,6 +3,7 @@
 import React from "react";
 import { Chip, Image } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
+import { trpc } from "@/lib/trpc-client";
 
 interface ProductReviewFormProps {
   data: Partial<ProductFormData>;
@@ -49,7 +50,8 @@ const getConditionLabel = (key: string) => {
 };
 
 export default function ProductReviewForm({ data }: ProductReviewFormProps) {
-  const platformFee = 0.1;
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
+  const platformFee = fees?.sellerCommissionPct ?? 0;
   const sellerReceives = data.price ? data.price * (1 - platformFee) : 0;
 
   return (
@@ -186,12 +188,14 @@ export default function ProductReviewForm({ data }: ProductReviewFormProps) {
                 ${data.price?.toFixed(2) || "0.00"}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-default-500">Platform Fee (10%)</span>
-              <span className="text-default-500">
-                -${((data.price || 0) * platformFee).toFixed(2)}
-              </span>
-            </div>
+            {platformFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-default-500">Platform Fee ({(platformFee * 100).toFixed(0)}%)</span>
+                <span className="text-default-500">
+                  -${((data.price || 0) * platformFee).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center pt-3 border-t">
               <span className="text-sm font-medium">Your Earnings</span>
               <span className="text-lg font-semibold text-success">

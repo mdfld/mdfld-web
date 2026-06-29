@@ -874,6 +874,7 @@ enum NotificationType {
   TRADE_OFFER_RECEIVED
   TRADE_OFFER_ACCEPTED
   TRADE_OFFER_DECLINED
+  TRADE_OFFER_COUNTERED
   TRADE_OFFER_SHIPPED
   TRADE_OFFER_COMPLETED
   PAYOUT_COMPLETED
@@ -1170,6 +1171,7 @@ enum ConversationPriority {
 
 enum TradeOfferStatus {
   PENDING
+  COUNTERED
   AWAITING_PAYMENT
   ACCEPTED
   DECLINED
@@ -1191,6 +1193,8 @@ model TradeOffer {
   cashFromProposer        Boolean          @default(true)
   cashStripeSessionId     String?
   status                  TradeOfferStatus @default(PENDING)
+  counterCashAmount       Decimal?
+  counterById             String?
 
   proposerTrackingNumber  String?
   recipientTrackingNumber String?

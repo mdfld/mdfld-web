@@ -45,6 +45,32 @@ describe("resolveTradeOfferActions", () => {
     expect(actions.canUploadTracking).toBe(false);
   });
 
+  it("recipient + PENDING: canCounter is true", () => {
+    const actions = resolveTradeOfferActions("recipient", "PENDING", false);
+    expect(actions.canCounter).toBe(true);
+  });
+
+  it("proposer + PENDING: canCounter is false", () => {
+    const actions = resolveTradeOfferActions("proposer", "PENDING", false);
+    expect(actions.canCounter).toBe(false);
+  });
+
+  it("proposer + COUNTERED: can accept and decline", () => {
+    const actions = resolveTradeOfferActions("proposer", "COUNTERED", false);
+    expect(actions.canAccept).toBe(true);
+    expect(actions.canDecline).toBe(true);
+    expect(actions.canCounter).toBe(false);
+    expect(actions.canCancel).toBe(false);
+  });
+
+  it("recipient + COUNTERED: no actions (waiting on proposer)", () => {
+    const actions = resolveTradeOfferActions("recipient", "COUNTERED", false);
+    expect(actions.canAccept).toBe(false);
+    expect(actions.canDecline).toBe(false);
+    expect(actions.canCounter).toBe(false);
+    expect(actions.canCancel).toBe(false);
+  });
+
   it("DECLINED: no actions for either party", () => {
     const p = resolveTradeOfferActions("proposer", "DECLINED", false);
     const r = resolveTradeOfferActions("recipient", "DECLINED", false);

@@ -386,6 +386,139 @@ describe("trade.uploadTracking", () => {
   });
 });
 
+describe("trade.counterOffer", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("recipient counters a PENDING offer with cash — status becomes COUNTERED", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "COUNTERED" });
+    const caller = createCaller({
+      ...recipientCtx,
+      prisma: {
+        ...recipientCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        notification: { create: mockNotificationCreate },
+      } as any,
+    });
+    const result = await caller.counterOffer({ tradeOfferId: "offer-1", counterCashAmount: 50 });
+    expect(result.status).toBe("COUNTERED");
+    expect(mockTradeOfferUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "COUNTERED", counterCashAmount: 50, counterById: "seller-1" }),
+      }),
+    );
+  });
+
+  it("throws BAD_REQUEST when no cash amount provided", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...recipientCtx,
+      prisma: { ...recipientCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate } } as any,
+    });
+    await expect(caller.counterOffer({ tradeOfferId: "offer-1" })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws FORBIDDEN when proposer tries to counter", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "PENDING", conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: { ...buyerCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate } } as any,
+    });
+    await expect(caller.counterOffer({ tradeOfferId: "offer-1", counterCashAmount: 20 })).rejects.toThrow(TRPCError);
+  });
+
+  it("throws BAD_REQUEST when offer is not PENDING", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "ACCEPTED", conversationId: "conv-1",
+    });
+    const caller = createCaller({
+      ...recipientCtx,
+      prisma: { ...recipientCtx.prisma, tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate } } as any,
+    });
+    await expect(caller.counterOffer({ tradeOfferId: "offer-1", counterCashAmount: 20 })).rejects.toThrow(TRPCError);
+  });
+});
+
+describe("trade.respondToOffer (COUNTERED)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPlatformSettingsUpsert.mockResolvedValue({ buyerMarketplaceFee: 0.0 });
+    mockUserFindUnique.mockResolvedValue({ stripeCustomerId: "cus_test" });
+    mockStripeSessionCreate.mockResolvedValue({ id: "sess_test", url: "https://checkout.stripe.com/pay/sess_test" });
+  });
+
+  it("proposer accepts counter with cash — creates Stripe session using counterCashAmount", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "COUNTERED", cashAmount: null, offeredProductId: "offered-1",
+      counterCashAmount: 50, conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "AWAITING_PAYMENT" });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        notification: { create: mockNotificationCreate },
+        platformSettings: { upsert: mockPlatformSettingsUpsert },
+        user: { findUnique: mockUserFindUnique },
+        product: { update: mockProductUpdate },
+      } as any,
+    });
+    const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" });
+    expect(result.status).toBe("AWAITING_PAYMENT");
+    expect(mockStripeSessionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        line_items: [expect.objectContaining({
+          price_data: expect.objectContaining({ unit_amount: 5000 }),
+        })],
+      }),
+    );
+  });
+
+  it("proposer declines counter — status DECLINED", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "COUNTERED", cashAmount: null, offeredProductId: "offered-1",
+      counterCashAmount: 50, conversationId: "conv-1",
+    });
+    mockTradeOfferUpdate.mockResolvedValue({ id: "offer-1", status: "DECLINED" });
+    mockProductUpdate.mockResolvedValue({ id: "offered-1", isActive: true });
+    const caller = createCaller({
+      ...buyerCtx,
+      prisma: {
+        ...buyerCtx.prisma,
+        tradeOffer: { findUnique: mockTradeOfferFindUnique, update: mockTradeOfferUpdate },
+        notification: { create: mockNotificationCreate },
+        product: { update: mockProductUpdate },
+      } as any,
+    });
+    const result = await caller.respondToOffer({ tradeOfferId: "offer-1", response: "DECLINED" });
+    expect(result.status).toBe("DECLINED");
+  });
+
+  it("recipient cannot respond to a COUNTERED offer", async () => {
+    mockTradeOfferFindUnique.mockResolvedValue({
+      id: "offer-1", recipientId: "seller-1", proposerId: "user-1",
+      status: "COUNTERED", conversationId: "conv-1",
+    });
+    const caller = createCaller(recipientCtx);
+    await expect(
+      caller.respondToOffer({ tradeOfferId: "offer-1", response: "ACCEPTED" }),
+    ).rejects.toThrow(TRPCError);
+  });
+});
+
 describe("trade.getMyOffers", () => {
   it("returns offers for current user as both proposer and recipient", async () => {
     mockTradeOfferFindMany.mockResolvedValue([

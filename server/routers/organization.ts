@@ -40,6 +40,16 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
+      const existingOrg = await prisma.organizationMember.findFirst({
+        where: { userId, role: "owner" },
+      });
+      if (existingOrg) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You already have a store. Only one store is allowed per account.",
+        });
+      }
+
       // Find all existing slugs that start with the requested slug in one query
       const conflicting = await prisma.organization.findMany({
         where: { slug: { startsWith: input.slug } },

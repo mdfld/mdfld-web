@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc-client";
 import { resolveTradeOfferActions } from "@/lib/trade-action";
 import type { TradeViewerRole } from "@/lib/trade-action";
+import CounterOfferModal from "@/components/product/counter-offer-modal";
 
 interface TradeProduct {
   id: string;
@@ -24,6 +25,7 @@ interface TradeOfferData {
   offeredProductId: string | null;
   requestedProductId: string;
   conversationId: string;
+  counterCashAmount: number | string | null;
   proposerTrackingNumber: string | null;
   recipientTrackingNumber: string | null;
   requestedProduct: TradeProduct;
@@ -46,6 +48,7 @@ const STATUS_CHIP: Record<
   }
 > = {
   PENDING: { color: "warning", label: "Pending" },
+  COUNTERED: { color: "secondary", label: "Countered" },
   ACCEPTED: { color: "primary", label: "Accepted" },
   SHIPPING: { color: "secondary", label: "Shipping" },
   COMPLETED: { color: "success", label: "Complete" },
@@ -59,6 +62,7 @@ const STATUS_CHIP: Record<
 export default function TradeOfferCard({ offer, currentUserId, onUpdate }: TradeOfferCardProps) {
   const [trackingInput, setTrackingInput] = useState("");
   const [showTrackingInput, setShowTrackingInput] = useState(false);
+  const [counterModalOpen, setCounterModalOpen] = useState(false);
 
   const viewerRole: TradeViewerRole =
     offer.proposerId === currentUserId ? "proposer" : "recipient";
@@ -168,6 +172,13 @@ export default function TradeOfferCard({ offer, currentUserId, onUpdate }: Trade
         </p>
       )}
 
+      {offer.status === "COUNTERED" && offer.counterCashAmount != null && (
+        <div className="flex items-center justify-center gap-1 text-xs text-secondary mb-2">
+          <Icon icon="solar:refresh-linear" width={12} />
+          Counter: £{Number(offer.counterCashAmount).toFixed(2)} cash requested
+        </div>
+      )}
+
       {offer.status === "COMPLETED" ? (
         <div className="flex items-center justify-center gap-2 py-2">
           <Icon icon="solar:check-circle-bold" width={16} className="text-success" />
@@ -175,6 +186,16 @@ export default function TradeOfferCard({ offer, currentUserId, onUpdate }: Trade
         </div>
       ) : (
         <div className="flex gap-2 mt-2">
+          {actions.canCounter && (
+            <Button
+              size="sm"
+              color="secondary"
+              variant="flat"
+              onPress={() => setCounterModalOpen(true)}
+            >
+              Counter
+            </Button>
+          )}
           {actions.canAccept && (
             <Button
               size="sm"
@@ -269,6 +290,13 @@ export default function TradeOfferCard({ offer, currentUserId, onUpdate }: Trade
           </Button>
         </div>
       )}
+
+      <CounterOfferModal
+        isOpen={counterModalOpen}
+        onClose={() => setCounterModalOpen(false)}
+        tradeOfferId={offer.id}
+        onSuccess={onUpdate}
+      />
     </div>
   );
 }

@@ -93,7 +93,7 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
                 isBordered
                 src={session?.user.image}
                 name={session?.user.name || "MD"}
-                radius="lg"
+                radius="full"
                 className="mx-1 transition-transform"
                 size="md"
               />

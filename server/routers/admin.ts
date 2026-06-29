@@ -503,9 +503,12 @@ export const adminRouter = createTRPCRouter({
       where: { id: "singleton" },
       create: { id: "singleton" },
       update: {},
-      select: { buyerMarketplaceFee: true },
+      select: { buyerMarketplaceFee: true, sellerCommissionPct: true },
     });
-    return { buyerMarketplaceFee: settings.buyerMarketplaceFee };
+    return {
+      buyerMarketplaceFee: settings.buyerMarketplaceFee,
+      sellerCommissionPct: settings.sellerCommissionPct,
+    };
   }),
 
   getPlatformSettings: adminProcedure.query(async ({ ctx }) => {

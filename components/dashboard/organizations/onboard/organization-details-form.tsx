@@ -1,12 +1,10 @@
 "use client";
 
-import type { InputProps, SelectProps } from "@heroui/react";
+import type { InputProps } from "@heroui/react";
 import React, { useEffect } from "react";
-import { Input, Select, SelectItem } from "@heroui/react";
+import { Input } from "@heroui/react";
 import { cn } from "@heroui/react";
 import type { OrganizationFormData } from "./organization-onboarding";
-import companyTypes from "./company-types";
-import companyIndustries from "./company-industries";
 
 export type OrganizationDetailsFormProps = {
   data: Partial<OrganizationFormData>;
@@ -17,10 +15,6 @@ const OrganizationDetailsForm = React.forwardRef<
   HTMLFormElement,
   OrganizationDetailsFormProps
 >(({ className, data, onUpdate, ...props }, ref) => {
-  const [industry, setIndustry] = React.useState(data.industry || "");
-  const [businessType, setBusinessType] = React.useState(
-    data.businessType || "",
-  );
   const [website, setWebsite] = React.useState(data.website || "");
 
   const inputProps: Pick<InputProps, "labelPlacement" | "classNames"> = {
@@ -31,17 +25,9 @@ const OrganizationDetailsForm = React.forwardRef<
     },
   };
 
-  const selectProps: Pick<SelectProps, "labelPlacement" | "classNames"> = {
-    labelPlacement: "outside",
-    classNames: {
-      label:
-        "text-small font-medium text-default-700 group-data-[filled=true]:text-default-700",
-    },
-  };
-
   useEffect(() => {
-    onUpdate({ industry, businessType, website });
-  }, [industry, businessType, website]);
+    onUpdate({ website });
+  }, [website]);
 
   return (
     <>
@@ -56,42 +42,6 @@ const OrganizationDetailsForm = React.forwardRef<
         className={cn("flex grid grid-cols-12 flex-col gap-4 py-8", className)}
         {...props}
       >
-        <Select
-          className="col-span-12 md:col-span-6"
-          items={companyTypes}
-          label="Seller Type"
-          name="business-type"
-          placeholder="Select seller type"
-          selectedKeys={businessType ? [businessType] : []}
-          onSelectionChange={(keys) =>
-            setBusinessType(Array.from(keys)[0] as string)
-          }
-          {...selectProps}
-        >
-          {(companyType) => (
-            <SelectItem key={companyType.value}>{companyType.title}</SelectItem>
-          )}
-        </Select>
-
-        <Select
-          className="col-span-12 md:col-span-6"
-          items={companyIndustries}
-          label="Category Focus"
-          name="industry"
-          placeholder="Select a category"
-          selectedKeys={industry ? [industry] : []}
-          onSelectionChange={(keys) =>
-            setIndustry(Array.from(keys)[0] as string)
-          }
-          {...selectProps}
-        >
-          {(companyIndustry) => (
-            <SelectItem key={companyIndustry.value}>
-              {companyIndustry.title}
-            </SelectItem>
-          )}
-        </Select>
-
         <Input
           className="col-span-12"
           label="Website"

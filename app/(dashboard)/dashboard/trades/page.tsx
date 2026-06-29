@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 const STATUS_COLOR: Record<string, "warning" | "primary" | "secondary" | "success" | "danger" | "default"> = {
   PENDING: "warning",
+  COUNTERED: "secondary",
   ACCEPTED: "primary",
   SHIPPING: "secondary",
   COMPLETED: "success",

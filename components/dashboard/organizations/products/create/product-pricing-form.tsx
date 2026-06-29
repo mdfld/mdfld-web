@@ -5,6 +5,7 @@ import React from "react";
 import { Input, Card, CardBody, RadioGroup, Radio, Select, SelectItem, Switch } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
 import countries from "../../onboard/countries";
+import { trpc } from "@/lib/trpc-client";
 
 const CARRIERS = [
   { value: "UPS", label: "UPS" },
@@ -25,7 +26,8 @@ export default function ProductPricingForm({
   onUpdate,
   storeShipsFromCountry,
 }: ProductPricingFormProps) {
-  const platformFee = 0.1;
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
+  const platformFee = fees?.sellerCommissionPct ?? 0;
   const sellerReceives = data.price ? data.price * (1 - platformFee) : 0;
 
   const shippingTerms = data.shippingTerms || "CALCULATED";
@@ -71,12 +73,14 @@ export default function ProductPricingForm({
         {data.price && data.price > 0 && (
           <Card className="col-span-12 bg-default-50 dark:bg-default-100/50">
             <CardBody className="gap-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-default-600">Platform Fee (10%)</span>
-                <span className="text-default-600">
-                  ${(data.price * platformFee).toFixed(2)}
-                </span>
-              </div>
+              {platformFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-default-600">Platform Fee ({(platformFee * 100).toFixed(0)}%)</span>
+                  <span className="text-default-600">
+                    ${(data.price * platformFee).toFixed(2)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between font-medium">
                 <span className="text-default-800">You&apos;ll receive</span>
                 <span className="text-success">${sellerReceives.toFixed(2)}</span>
