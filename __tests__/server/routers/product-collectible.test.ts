@@ -51,7 +51,7 @@ const baseInput = {
   tradeEnabled: false,
 };
 
-describe('product.create — collectible fields', () => {
+describe('product.create - collectible fields', () => {
   beforeEach(() => {
     mockSellerFindUnique.mockResolvedValue({ id: 'sp1', userId: 'u1' });
     mockOrgFindUnique.mockResolvedValue(null);
@@ -109,7 +109,7 @@ describe('product.create — collectible fields', () => {
   });
 });
 
-describe('product.search — collectible filters', () => {
+describe('product.search - collectible filters', () => {
   beforeEach(() => {
     authedCtx.prisma.product.findMany = vi.fn().mockResolvedValue([]);
   });

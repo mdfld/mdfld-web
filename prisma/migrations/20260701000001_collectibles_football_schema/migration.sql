@@ -26,11 +26,3 @@ ALTER TABLE "product" ADD COLUMN "isPeeled" BOOLEAN;
 ALTER TABLE "product" ADD COLUMN "ballSize" INTEGER;
 ALTER TABLE "product" ADD COLUMN "ballGrade" "BallGrade";
 
--- DataMigration: move STICKERS and TRADING_CARDS products into COLLECTIBLES
-UPDATE "product"
-SET "category" = 'COLLECTIBLES', "subcategory" = 'STICKERS'
-WHERE "category" = 'STICKERS';
-
-UPDATE "product"
-SET "category" = 'COLLECTIBLES', "subcategory" = 'TRADING_CARDS'
-WHERE "category" = 'TRADING_CARDS';

@@ -110,16 +110,6 @@ const JERSEY_TYPES = ["Home", "Away", "Third", "Training", "Vintage"];
 const JERSEY_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 const SEASONS = ["2024/25", "2023/24", "2022/23", "2021/22", "Retro"];
 
-// Card-specific filters
-const CARD_TYPES = [
-  "Base",
-  "Rare",
-  "Ultra Rare",
-  "Limited Edition",
-  "Autographed",
-];
-const CARD_YEARS = ["2024", "2023", "2022", "2021", "2020"];
-
 export default function ProductFilters({
   initialCategories,
   onFiltersChange,
@@ -138,8 +128,6 @@ export default function ProductFilters({
     jerseyTypes: [] as string[],
     jerseySizes: [] as string[],
     seasons: [] as string[],
-    cardTypes: [] as string[],
-    cardYears: [] as string[],
     tradeEnabled: initialTradeEnabled ?? false,
     subcategory: '',
     collectibleCode: '',
@@ -154,6 +142,18 @@ export default function ProductFilters({
 
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...filters, [key]: value };
+    if (key === 'categories') {
+      newFilters.conditions = [];
+      newFilters.subcategory = '';
+      newFilters.collectibleCode = '';
+      newFilters.setName = '';
+      newFilters.collectiblePublisher = '';
+      newFilters.collectiblePlayerName = '';
+      newFilters.collectibleTeam = '';
+      newFilters.isPeeled = undefined;
+      newFilters.ballSize = undefined;
+      newFilters.ballGrade = '';
+    }
     setFilters(newFilters);
     onFiltersChange?.(newFilters);
   };
@@ -171,8 +171,6 @@ export default function ProductFilters({
       jerseyTypes: [],
       jerseySizes: [],
       seasons: [],
-      cardTypes: [],
-      cardYears: [],
       tradeEnabled: false,
       subcategory: '',
       collectibleCode: '',
