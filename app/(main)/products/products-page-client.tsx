@@ -35,6 +35,17 @@ export default function ProductsPageClient() {
   const [selectedVerificationStatuses, setSelectedVerificationStatuses] = React.useState<
     string[]
   >([]);
+  const [collectibleFilters, setCollectibleFilters] = React.useState<{
+    subcategory?: string;
+    collectibleCode?: string;
+    setName?: string;
+    collectiblePublisher?: string;
+    collectiblePlayerName?: string;
+    collectibleTeam?: string;
+    isPeeled?: boolean;
+    ballSize?: number;
+    ballGrade?: string;
+  }>({});
 
   React.useEffect(() => {
     setSelectedCategories(urlCategory ? [urlCategory] : []);
@@ -50,10 +61,14 @@ export default function ProductsPageClient() {
           selectedCategories.length > 0 ? selectedCategories[0] : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
+        conditions: (selectedConditions.length > 0
+          ? selectedConditions
+          : undefined) as any,
         tradeEnabled: tradeEnabled || undefined,
         verificationStatuses: (selectedVerificationStatuses.length > 0
           ? selectedVerificationStatuses
           : undefined) as any,
+        ...(collectibleFilters as any),
       },
       {
         getNextPageParam: (lastPage: any) => lastPage.nextCursor,
@@ -107,6 +122,17 @@ export default function ProductsPageClient() {
                 if (filters.verificationStatuses)
                   setSelectedVerificationStatuses(filters.verificationStatuses);
                 setTradeEnabled(filters.tradeEnabled ?? false);
+                setCollectibleFilters({
+                  subcategory: filters.subcategory || undefined,
+                  collectibleCode: filters.collectibleCode || undefined,
+                  setName: filters.setName || undefined,
+                  collectiblePublisher: filters.collectiblePublisher || undefined,
+                  collectiblePlayerName: filters.collectiblePlayerName || undefined,
+                  collectibleTeam: filters.collectibleTeam || undefined,
+                  isPeeled: filters.isPeeled,
+                  ballSize: filters.ballSize,
+                  ballGrade: filters.ballGrade || undefined,
+                });
               }}
               onReset={() => {
                 setSelectedCategories([]);
@@ -114,6 +140,7 @@ export default function ProductsPageClient() {
                 setSelectedConditions([]);
                 setSelectedVerificationStatuses([]);
                 setTradeEnabled(false);
+                setCollectibleFilters({});
               }}
             />
           </DrawerBody>
@@ -145,12 +172,26 @@ export default function ProductsPageClient() {
                     setSelectedConditions(filters.conditions);
                   if (filters.verificationStatuses)
                     setSelectedVerificationStatuses(filters.verificationStatuses);
+                  setTradeEnabled(filters.tradeEnabled ?? false);
+                  setCollectibleFilters({
+                    subcategory: filters.subcategory || undefined,
+                    collectibleCode: filters.collectibleCode || undefined,
+                    setName: filters.setName || undefined,
+                    collectiblePublisher: filters.collectiblePublisher || undefined,
+                    collectiblePlayerName: filters.collectiblePlayerName || undefined,
+                    collectibleTeam: filters.collectibleTeam || undefined,
+                    isPeeled: filters.isPeeled,
+                    ballSize: filters.ballSize,
+                    ballGrade: filters.ballGrade || undefined,
+                  });
                 }}
                 onReset={() => {
                   setSelectedCategories([]);
                   setPriceRange([0, 5000]);
                   setSelectedConditions([]);
                   setSelectedVerificationStatuses([]);
+                  setTradeEnabled(false);
+                  setCollectibleFilters({});
                 }}
               />
             </div>

@@ -8,6 +8,7 @@ import {
   Button,
   Checkbox,
   CheckboxGroup,
+  Input,
   Slider,
   Switch,
 } from "@heroui/react";
@@ -15,6 +16,14 @@ import {
   FOOTBALL_BRANDS,
   FOOTBALL_TEAMS,
 } from "@/lib/constants/football-attributes";
+import {
+  getCategoryGroup,
+  WEARABLE_CONDITIONS,
+  COLLECTIBLE_CONDITIONS,
+  FOOTBALL_CONDITIONS,
+  BALL_GRADES,
+  COLLECTIBLE_SUBCATEGORIES,
+} from "@/lib/constants/product-categories";
 
 export type ProductFiltersProps = {
   initialCategories?: string[];
@@ -41,6 +50,7 @@ const VERIFICATION_OPTIONS = [
 const FOOTBALL_CATEGORIES = [
   { value: "JERSEYS", label: "Jerseys" },
   { value: "BOOTS", label: "Boots" },
+  { value: "COLLECTIBLES", label: "Collectibles" },
   { value: "FOOTBALLS", label: "Footballs" },
   { value: "GOALKEEPER_GLOVES", label: "Goalkeeper Gloves" },
   { value: "SHIN_GUARDS", label: "Shin Guards" },
@@ -131,6 +141,15 @@ export default function ProductFilters({
     cardTypes: [] as string[],
     cardYears: [] as string[],
     tradeEnabled: initialTradeEnabled ?? false,
+    subcategory: '',
+    collectibleCode: '',
+    setName: '',
+    collectiblePublisher: '',
+    collectiblePlayerName: '',
+    collectibleTeam: '',
+    isPeeled: undefined as boolean | undefined,
+    ballSize: undefined as number | undefined,
+    ballGrade: '',
   });
 
   const updateFilter = (key: string, value: any) => {
@@ -155,6 +174,15 @@ export default function ProductFilters({
       cardTypes: [],
       cardYears: [],
       tradeEnabled: false,
+      subcategory: '',
+      collectibleCode: '',
+      setName: '',
+      collectiblePublisher: '',
+      collectiblePlayerName: '',
+      collectibleTeam: '',
+      isPeeled: undefined,
+      ballSize: undefined,
+      ballGrade: '',
     };
     setFilters(resetFilters);
     onReset?.();
@@ -171,7 +199,16 @@ export default function ProductFilters({
   // Conditionally show filters based on selected categories
   const showJerseyFilters = filters.categories.includes("JERSEYS");
   const showBootFilters = filters.categories.includes("BOOTS");
-  const showCardFilters = filters.categories.includes("COLLECTIBLES");
+
+  const activeCategory = filters.categories[0] ?? '';
+  const categoryGroup = getCategoryGroup(activeCategory);
+
+  const activeConditions =
+    categoryGroup === 'COLLECTIBLE'
+      ? COLLECTIBLE_CONDITIONS
+      : categoryGroup === 'FOOTBALL'
+      ? FOOTBALL_CONDITIONS
+      : WEARABLE_CONDITIONS;
 
   // Build accordion items array to avoid conditional rendering issues
   const accordionItems = [];
@@ -261,10 +298,10 @@ export default function ProductFilters({
         onValueChange={(value) => updateFilter("conditions", value)}
         classNames={{ wrapper: "gap-1" }}
       >
-        {CONDITIONS.map((condition) => (
+        {activeConditions.map((condition) => (
           <Checkbox
-            key={condition.value}
-            value={condition.value}
+            key={condition.key}
+            value={condition.key}
             size="sm"
             classNames={{ label: "text-sm text-default-600" }}
           >
@@ -487,31 +524,31 @@ export default function ProductFilters({
     );
   }
 
-  // Conditionally add card filters
-  if (showCardFilters) {
+  // Conditionally add collectible filters
+  if (categoryGroup === 'COLLECTIBLE') {
     accordionItems.push(
       <AccordionItem
-        key="cardType"
-        aria-label="Card Type"
-        title="Card Type"
+        key="collectible-type"
+        aria-label="Type"
+        title="Type"
         classNames={{
           title: "text-sm font-normal",
           content: "pt-0 pb-4",
         }}
       >
         <CheckboxGroup
-          value={filters.cardTypes}
-          onValueChange={(value) => updateFilter("cardTypes", value)}
+          value={filters.subcategory ? [filters.subcategory] : []}
+          onValueChange={(v) => updateFilter('subcategory', v[0] ?? '')}
           classNames={{ wrapper: "gap-1" }}
         >
-          {CARD_TYPES.map((type) => (
+          {COLLECTIBLE_SUBCATEGORIES.map((s) => (
             <Checkbox
-              key={type}
-              value={type}
+              key={s.key}
+              value={s.key}
               size="sm"
               classNames={{ label: "text-sm text-default-600" }}
             >
-              {type}
+              {s.label}
             </Checkbox>
           ))}
         </CheckboxGroup>
@@ -520,27 +557,119 @@ export default function ProductFilters({
 
     accordionItems.push(
       <AccordionItem
-        key="cardYear"
-        aria-label="Card Year"
-        title="Year"
+        key="collectible-details"
+        aria-label="Details"
+        title="Details"
+        classNames={{
+          title: "text-sm font-normal",
+          content: "pt-0 pb-4",
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <Input
+            size="sm"
+            label="Code"
+            placeholder="e.g. KOR14"
+            value={filters.collectibleCode}
+            onValueChange={(v) => updateFilter('collectibleCode', v)}
+          />
+          <Input
+            size="sm"
+            label="Set / Series"
+            placeholder="e.g. FIFA World Cup 2026"
+            value={filters.setName}
+            onValueChange={(v) => updateFilter('setName', v)}
+          />
+          <Input
+            size="sm"
+            label="Publisher"
+            placeholder="e.g. Panini"
+            value={filters.collectiblePublisher}
+            onValueChange={(v) => updateFilter('collectiblePublisher', v)}
+          />
+          <Input
+            size="sm"
+            label="Player"
+            placeholder="e.g. Son Heung-min"
+            value={filters.collectiblePlayerName}
+            onValueChange={(v) => updateFilter('collectiblePlayerName', v)}
+          />
+          <Input
+            size="sm"
+            label="Team / Country"
+            placeholder="e.g. South Korea"
+            value={filters.collectibleTeam}
+            onValueChange={(v) => updateFilter('collectibleTeam', v)}
+          />
+          {filters.subcategory === 'STICKERS' && (
+            <div className="flex items-center gap-2">
+              <Switch
+                size="sm"
+                isSelected={filters.isPeeled ?? false}
+                onValueChange={(v) => updateFilter('isPeeled', v)}
+              />
+              <span className="text-small text-default-500">Peeled only</span>
+            </div>
+          )}
+        </div>
+      </AccordionItem>,
+    );
+  }
+
+  // Conditionally add football filters
+  if (categoryGroup === 'FOOTBALL') {
+    accordionItems.push(
+      <AccordionItem
+        key="football-size"
+        aria-label="Ball Size"
+        title="Ball Size"
         classNames={{
           title: "text-sm font-normal",
           content: "pt-0 pb-4",
         }}
       >
         <CheckboxGroup
-          value={filters.cardYears}
-          onValueChange={(value) => updateFilter("cardYears", value)}
+          value={filters.ballSize !== undefined ? [String(filters.ballSize)] : []}
+          onValueChange={(v) => updateFilter('ballSize', v.length > 0 ? Number(v[v.length - 1]) : undefined)}
           classNames={{ wrapper: "gap-1" }}
         >
-          {CARD_YEARS.map((year) => (
+          {[1, 2, 3, 4, 5].map((n) => (
             <Checkbox
-              key={year}
-              value={year}
+              key={String(n)}
+              value={String(n)}
               size="sm"
               classNames={{ label: "text-sm text-default-600" }}
             >
-              {year}
+              Size {n}
+            </Checkbox>
+          ))}
+        </CheckboxGroup>
+      </AccordionItem>,
+    );
+
+    accordionItems.push(
+      <AccordionItem
+        key="football-grade"
+        aria-label="Ball Grade"
+        title="Ball Grade"
+        classNames={{
+          title: "text-sm font-normal",
+          content: "pt-0 pb-4",
+        }}
+      >
+        <CheckboxGroup
+          value={filters.ballGrade ? [filters.ballGrade] : []}
+          onValueChange={(v) => updateFilter('ballGrade', v[0] ?? '')}
+          classNames={{ wrapper: "gap-1" }}
+        >
+          {BALL_GRADES.map((g) => (
+            <Checkbox
+              key={g.key}
+              value={g.key}
+              size="sm"
+              classNames={{ label: "text-sm text-default-600" }}
+            >
+              {g.label}
             </Checkbox>
           ))}
         </CheckboxGroup>

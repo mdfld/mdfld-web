@@ -438,6 +438,7 @@ export const productRouter = createTRPCRouter({
         isPeeled: z.boolean().optional(),
         ballSize: z.number().int().min(1).max(5).optional(),
         ballGrade: z.nativeEnum(BallGrade).optional(),
+        conditions: z.array(z.string()).optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -524,6 +525,10 @@ export const productRouter = createTRPCRouter({
       }
       if (input.ballGrade) {
         where.ballGrade = input.ballGrade;
+      }
+
+      if (input.conditions && input.conditions.length > 0) {
+        where.condition = { in: input.conditions as any };
       }
 
       if (input.minPrice !== undefined || input.maxPrice !== undefined) {
