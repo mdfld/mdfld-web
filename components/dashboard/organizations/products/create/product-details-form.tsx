@@ -2,8 +2,13 @@
 
 import type { InputProps } from "@heroui/react";
 import React from "react";
-import { Input, Chip } from "@heroui/react";
+import { Input, Chip, Select, SelectItem, Switch } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
+import {
+  getCategoryGroup,
+  BALL_GRADES,
+  BALL_SIZE_LABELS,
+} from "@/lib/constants/product-categories";
 
 interface ProductDetailsFormProps {
   data: Partial<ProductFormData>;
@@ -15,6 +20,8 @@ export default function ProductDetailsForm({
   onUpdate,
 }: ProductDetailsFormProps) {
   const [tagInput, setTagInput] = React.useState("");
+
+  const categoryGroup = getCategoryGroup(data.category || "");
 
   const inputProps: Pick<InputProps, "labelPlacement" | "classNames"> = {
     labelPlacement: "outside",
@@ -115,6 +122,99 @@ export default function ProductDetailsForm({
               </Chip>
             ))}
           </div>
+        )}
+
+        {/* Collectible fields */}
+        {categoryGroup === "COLLECTIBLE" && (
+          <>
+            <Input
+              className="col-span-12 md:col-span-6"
+              label="Code"
+              placeholder="e.g. KOR14"
+              value={data.collectibleCode || ""}
+              onValueChange={(v) => onUpdate({ collectibleCode: v })}
+              {...inputProps}
+            />
+            <Input
+              className="col-span-12 md:col-span-6"
+              label="Set / Series"
+              placeholder="e.g. FIFA World Cup 2026"
+              value={data.setName || ""}
+              onValueChange={(v) => onUpdate({ setName: v })}
+              {...inputProps}
+            />
+            <Input
+              className="col-span-12 md:col-span-6"
+              label="Publisher"
+              placeholder="e.g. Panini"
+              value={data.collectiblePublisher || ""}
+              onValueChange={(v) => onUpdate({ collectiblePublisher: v })}
+              {...inputProps}
+            />
+            <Input
+              className="col-span-12 md:col-span-6"
+              label="Player"
+              placeholder="e.g. Son Heung-min"
+              value={data.collectiblePlayerName || ""}
+              onValueChange={(v) => onUpdate({ collectiblePlayerName: v })}
+              {...inputProps}
+            />
+            <Input
+              className="col-span-12 md:col-span-6"
+              label="Team / Country"
+              placeholder="e.g. South Korea"
+              value={data.collectibleTeam || ""}
+              onValueChange={(v) => onUpdate({ collectibleTeam: v })}
+              {...inputProps}
+            />
+            {data.subcategory === "STICKERS" && (
+              <div className="col-span-12 flex items-center gap-3 py-2">
+                <Switch
+                  isSelected={data.isPeeled ?? false}
+                  onValueChange={(v) => onUpdate({ isPeeled: v })}
+                />
+                <span className="text-small text-default-700">Peeled (previously stuck in album)</span>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Football fields */}
+        {categoryGroup === "FOOTBALL" && (
+          <>
+            <Select
+              className="col-span-12 md:col-span-6"
+              label="Ball Size"
+              placeholder="Select size"
+              selectedKeys={data.ballSize ? [String(data.ballSize)] : []}
+              onSelectionChange={(keys) => {
+                const v = Array.from(keys)[0] as string;
+                onUpdate({ ballSize: Number(v) });
+              }}
+              {...inputProps}
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <SelectItem key={String(n)}>
+                  {`Size ${n} - ${BALL_SIZE_LABELS[n]}`}
+                </SelectItem>
+              ))}
+            </Select>
+            <Select
+              className="col-span-12 md:col-span-6"
+              label="Ball Grade"
+              placeholder="Select grade"
+              selectedKeys={data.ballGrade ? [data.ballGrade] : []}
+              onSelectionChange={(keys) => {
+                const v = Array.from(keys)[0] as string;
+                onUpdate({ ballGrade: v });
+              }}
+              {...inputProps}
+            >
+              {BALL_GRADES.map((g) => (
+                <SelectItem key={g.key}>{g.label}</SelectItem>
+              ))}
+            </Select>
+          </>
         )}
       </form>
     </>

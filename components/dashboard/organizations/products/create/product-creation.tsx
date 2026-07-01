@@ -37,6 +37,7 @@ export interface ProductFormData {
   slug: string;
   description: string;
   category: string;
+  subcategory?: string;
   condition: string;
   images: string[];
   price: number;
@@ -59,6 +60,16 @@ export interface ProductFormData {
   estimatedDeliveryDays: number;
   shipsFromCountry: string;
   tradeEnabled: boolean;
+  // Collectible fields
+  collectibleCode?: string;
+  setName?: string;
+  collectiblePublisher?: string;
+  collectiblePlayerName?: string;
+  collectibleTeam?: string;
+  isPeeled?: boolean;
+  // Football fields
+  ballSize?: number;
+  ballGrade?: string;
 }
 
 export default function ProductCreation({
@@ -156,6 +167,15 @@ export default function ProductCreation({
         estimatedDeliveryDays: formData.estimatedDeliveryDays || undefined,
         shipsFromCountry: formData.shipsFromCountry || undefined,
         tradeEnabled: formData.tradeEnabled ?? false,
+        subcategory: formData.subcategory || undefined,
+        collectibleCode: formData.collectibleCode || undefined,
+        setName: formData.setName || undefined,
+        collectiblePublisher: formData.collectiblePublisher || undefined,
+        collectiblePlayerName: formData.collectiblePlayerName || undefined,
+        collectibleTeam: formData.collectibleTeam || undefined,
+        isPeeled: formData.isPeeled,
+        ballSize: formData.ballSize,
+        ballGrade: formData.ballGrade as any || undefined,
       });
 
       toast.success("Product created successfully!");
