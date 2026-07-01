@@ -11,6 +11,7 @@ import {
   SoleplateType,
   PlayerVersion,
   ProductVerificationStatus,
+  BallGrade,
 } from "@prisma/client";
 import { getScoringWeights } from "@/lib/scoring/getScoringWeights";
 import { applyScoring } from "@/lib/scoring/searchScoring";
@@ -78,6 +79,18 @@ const createProductSchema = z.object({
   estimatedDeliveryDays: z.number().int().positive().optional(),
   shipsFromCountry: z.string().optional(),
   tradeEnabled: z.boolean().default(false),
+
+  // Collectible fields
+  collectibleCode: z.string().optional(),
+  setName: z.string().optional(),
+  collectiblePublisher: z.string().optional(),
+  collectiblePlayerName: z.string().optional(),
+  collectibleTeam: z.string().optional(),
+  isPeeled: z.boolean().optional(),
+
+  // Football fields
+  ballSize: z.number().int().min(1).max(5).optional(),
+  ballGrade: z.nativeEnum(BallGrade).optional(),
 });
 
 export { PRODUCT_CATEGORIES };
@@ -147,6 +160,14 @@ export const productRouter = createTRPCRouter({
           estimatedDeliveryDays: input.estimatedDeliveryDays,
           shipsFromCountry: input.shipsFromCountry,
           tradeEnabled: input.tradeEnabled,
+          collectibleCode: input.collectibleCode,
+          setName: input.setName,
+          collectiblePublisher: input.collectiblePublisher,
+          collectiblePlayerName: input.collectiblePlayerName,
+          collectibleTeam: input.collectibleTeam,
+          isPeeled: input.isPeeled,
+          ballSize: input.ballSize,
+          ballGrade: input.ballGrade,
           variants:
             input.variants && input.hasVariants
               ? {
@@ -408,6 +429,15 @@ export const productRouter = createTRPCRouter({
         featured: z.boolean().optional(),
         tradeEnabled: z.boolean().optional(),
         verificationStatuses: z.array(z.nativeEnum(ProductVerificationStatus)).optional(),
+        subcategory: z.string().optional(),
+        collectibleCode: z.string().optional(),
+        setName: z.string().optional(),
+        collectiblePublisher: z.string().optional(),
+        collectiblePlayerName: z.string().optional(),
+        collectibleTeam: z.string().optional(),
+        isPeeled: z.boolean().optional(),
+        ballSize: z.number().int().min(1).max(5).optional(),
+        ballGrade: z.nativeEnum(BallGrade).optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -466,6 +496,34 @@ export const productRouter = createTRPCRouter({
 
       if (input.category) {
         where.category = input.category as any;
+      }
+
+      if (input.subcategory) {
+        where.subcategory = input.subcategory as any;
+      }
+      if (input.collectibleCode) {
+        where.collectibleCode = { contains: input.collectibleCode, mode: 'insensitive' };
+      }
+      if (input.setName) {
+        where.setName = { contains: input.setName, mode: 'insensitive' };
+      }
+      if (input.collectiblePublisher) {
+        where.collectiblePublisher = { contains: input.collectiblePublisher, mode: 'insensitive' };
+      }
+      if (input.collectiblePlayerName) {
+        where.collectiblePlayerName = { contains: input.collectiblePlayerName, mode: 'insensitive' };
+      }
+      if (input.collectibleTeam) {
+        where.collectibleTeam = { contains: input.collectibleTeam, mode: 'insensitive' };
+      }
+      if (input.isPeeled !== undefined) {
+        where.isPeeled = input.isPeeled;
+      }
+      if (input.ballSize !== undefined) {
+        where.ballSize = input.ballSize;
+      }
+      if (input.ballGrade) {
+        where.ballGrade = input.ballGrade;
       }
 
       if (input.minPrice !== undefined || input.maxPrice !== undefined) {
