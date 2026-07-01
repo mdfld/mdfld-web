@@ -147,3 +147,74 @@ export const AUTHENTICATION_METHODS = [
   "Receipt/proof of purchase",
   "Serial number verification",
 ];
+
+export const CATEGORY_GROUPS = {
+  WEARABLE: ['JERSEYS', 'BOOTS', 'GOALKEEPER_GLOVES', 'SHIN_GUARDS', 'TRAINING_EQUIPMENT', 'ACCESSORIES'],
+  COLLECTIBLE: ['COLLECTIBLES'],
+  FOOTBALL: ['FOOTBALLS'],
+} as const;
+
+export type CategoryGroup = keyof typeof CATEGORY_GROUPS;
+
+export function getCategoryGroup(category: string): CategoryGroup {
+  for (const [group, cats] of Object.entries(CATEGORY_GROUPS)) {
+    if ((cats as readonly string[]).includes(category)) return group as CategoryGroup;
+  }
+  return 'WEARABLE';
+}
+
+export const WEARABLE_CONDITIONS = [
+  { key: 'BRAND_NEW', label: 'Brand New' },
+  { key: 'NEW_WITH_TAGS', label: 'New with Tags' },
+  { key: 'NEW_WITHOUT_TAGS', label: 'New without Tags' },
+  { key: 'USED_LIKE_NEW', label: 'Used - Like New' },
+  { key: 'USED_GOOD', label: 'Used - Good' },
+  { key: 'USED_FAIR', label: 'Used - Fair' },
+];
+
+export const COLLECTIBLE_CONDITIONS = [
+  { key: 'MINT', label: 'Mint' },
+  { key: 'NEAR_MINT', label: 'Near Mint' },
+  { key: 'EXCELLENT', label: 'Excellent' },
+  { key: 'GOOD', label: 'Good' },
+  { key: 'FAIR', label: 'Fair' },
+  { key: 'POOR', label: 'Poor' },
+];
+
+export const FOOTBALL_CONDITION_LABELS: Record<string, string> = {
+  BRAND_NEW: 'New in Box',
+  NEW_WITHOUT_TAGS: 'New Without Box',
+  USED_LIKE_NEW: 'Used - Like New',
+  USED_GOOD: 'Used - Good',
+  USED_FAIR: 'Used - Fair',
+};
+
+export const FOOTBALL_CONDITIONS = [
+  { key: 'BRAND_NEW', label: 'New in Box' },
+  { key: 'NEW_WITHOUT_TAGS', label: 'New Without Box' },
+  { key: 'USED_LIKE_NEW', label: 'Used - Like New' },
+  { key: 'USED_GOOD', label: 'Used - Good' },
+  { key: 'USED_FAIR', label: 'Used - Fair' },
+];
+
+export const BALL_GRADES = [
+  { key: 'PRO_MATCH', label: 'Pro / Match' },
+  { key: 'COMPETITION', label: 'Competition' },
+  { key: 'LEAGUE', label: 'League' },
+  { key: 'TRAINING', label: 'Training' },
+  { key: 'CLUB', label: 'Club' },
+  { key: 'MINI_SKILLS', label: 'Mini / Skills' },
+];
+
+export const BALL_SIZE_LABELS: Record<number, string> = {
+  1: 'Mini / Skills / Promo',
+  2: 'Skills / Ages 3-5',
+  3: 'Youth / Ages 5-8',
+  4: 'Youth / Ages 8-12',
+  5: 'Full size / Ages 13+ / Professional',
+};
+
+export const COLLECTIBLE_SUBCATEGORIES = [
+  { key: 'STICKERS', label: 'Stickers' },
+  { key: 'TRADING_CARDS', label: 'Trading Cards' },
+];
