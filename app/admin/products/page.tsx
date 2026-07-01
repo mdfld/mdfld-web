@@ -5,7 +5,7 @@ import { useState } from "react";
 import { VERIFICATION_STATUS_OPTIONS, getVerificationStatusOption } from "@/lib/verification-badge";
 
 const CATEGORIES = [
-  "JERSEYS", "BOOTS", "FOOTBALLS", "TRADING_CARDS",
+  "JERSEYS", "BOOTS", "FOOTBALLS", "COLLECTIBLES",
   "GOALKEEPER_GLOVES", "SHIN_GUARDS", "TRAINING_EQUIPMENT", "ACCESSORIES",
 ] as const;
 

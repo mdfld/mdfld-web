@@ -42,7 +42,6 @@ const FOOTBALL_CATEGORIES = [
   { value: "JERSEYS", label: "Jerseys" },
   { value: "BOOTS", label: "Boots" },
   { value: "FOOTBALLS", label: "Footballs" },
-  { value: "TRADING_CARDS", label: "Trading Cards" },
   { value: "GOALKEEPER_GLOVES", label: "Goalkeeper Gloves" },
   { value: "SHIN_GUARDS", label: "Shin Guards" },
   { value: "TRAINING_EQUIPMENT", label: "Training Equipment" },
@@ -172,7 +171,7 @@ export default function ProductFilters({
   // Conditionally show filters based on selected categories
   const showJerseyFilters = filters.categories.includes("JERSEYS");
   const showBootFilters = filters.categories.includes("BOOTS");
-  const showCardFilters = filters.categories.includes("TRADING_CARDS");
+  const showCardFilters = filters.categories.includes("COLLECTIBLES");
 
   // Build accordion items array to avoid conditional rendering issues
   const accordionItems = [];

@@ -309,7 +309,19 @@ model Product {
   material         String?
   soleplateType    SoleplateType?
   playerVersion    PlayerVersion?
-  
+
+  // Collectible fields (COLLECTIBLES category only)
+  collectibleCode       String?
+  setName               String?
+  collectiblePublisher  String?
+  collectiblePlayerName String?
+  collectibleTeam       String?
+  isPeeled              Boolean?
+
+  // Football fields (FOOTBALLS category only)
+  ballSize              Int?
+  ballGrade             BallGrade?
+
   // Stripe fields
   stripePriceId   String?  // Stripe Price object ID for this product
   stripeProductId String?  // Stripe Product object ID
@@ -987,12 +999,11 @@ enum ProductCategory {
   JERSEYS
   BOOTS
   FOOTBALLS
-  TRADING_CARDS
-  STICKERS
   GOALKEEPER_GLOVES
   SHIN_GUARDS
   TRAINING_EQUIPMENT
   ACCESSORIES
+  COLLECTIBLES
 }
 
 enum ProductSubcategory {
@@ -1043,6 +1054,10 @@ enum ProductSubcategory {
   EQUIPMENT_BAGS
   FIRST_AID
   COACHING_EQUIPMENT
+
+  // Collectibles
+  STICKERS
+  TRADING_CARDS
 }
 
 enum ShippingTerms {
@@ -1080,6 +1095,12 @@ enum ProductCondition {
   USED_LIKE_NEW
   USED_GOOD
   USED_FAIR
+  MINT
+  NEAR_MINT
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
 }
 
 enum ProductTier {
@@ -1111,6 +1132,15 @@ enum PlayerVersion {
   REPLICA
   STADIUM
   MATCH
+}
+
+enum BallGrade {
+  PRO_MATCH
+  COMPETITION
+  LEAGUE
+  TRAINING
+  CLUB
+  MINI_SKILLS
 }
 
 enum ReturnStatus {
