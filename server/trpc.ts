@@ -56,11 +56,6 @@ export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.session || !ctx.user) {
-    console.error("Authentication failed in TRPC:", {
-      hasSession: !!ctx.session,
-      hasUser: !!ctx.user,
-      userId: ctx.user?.id,
-    });
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in to access this resource",
