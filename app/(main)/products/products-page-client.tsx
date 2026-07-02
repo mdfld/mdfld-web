@@ -11,31 +11,64 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc-client";
 import ProductsGrid from "@/components/products-grid";
 import { Drawer, DrawerContent, DrawerHeader, DrawerBody } from "@heroui/react";
 import ProductFilters from "@/components/product-filters";
 
 export default function ProductsPageClient() {
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+  const urlQuery = searchParams.get("q") ?? undefined;
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [sortBy, setSortBy] = React.useState<string>("newest");
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
-    [],
+    urlCategory ? [urlCategory] : [],
   );
   const [priceRange, setPriceRange] = React.useState<number[]>([0, 5000]);
   const [selectedConditions, setSelectedConditions] = React.useState<string[]>(
     [],
   );
+  const [tradeEnabled, setTradeEnabled] = React.useState<boolean>(false);
+  const [selectedVerificationStatuses, setSelectedVerificationStatuses] = React.useState<
+    string[]
+  >([]);
+  const [collectibleFilters, setCollectibleFilters] = React.useState<{
+    subcategory?: string;
+    collectibleCode?: string;
+    setName?: string;
+    collectiblePublisher?: string;
+    collectiblePlayerName?: string;
+    collectibleTeam?: string;
+    isPeeled?: boolean;
+    ballSize?: number;
+    ballGrade?: string;
+  }>({});
+
+  React.useEffect(() => {
+    setSelectedCategories(urlCategory ? [urlCategory] : []);
+  }, [urlCategory]);
 
   // Fetch products using tRPC
   const { data, isLoading, fetchNextPage, hasNextPage } =
     trpc.product.search.useInfiniteQuery(
       {
         limit: 20,
+        query: urlQuery,
         category:
           selectedCategories.length > 0 ? selectedCategories[0] : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
+        conditions: (selectedConditions.length > 0
+          ? selectedConditions
+          : undefined) as any,
+        tradeEnabled: tradeEnabled || undefined,
+        verificationStatuses: (selectedVerificationStatuses.length > 0
+          ? selectedVerificationStatuses
+          : undefined) as any,
+        ...(collectibleFilters as any),
       },
       {
         getNextPageParam: (lastPage: any) => lastPage.nextCursor,
@@ -79,17 +112,35 @@ export default function ProductsPageClient() {
           </DrawerHeader>
           <DrawerBody>
             <ProductFilters
+              initialCategories={selectedCategories}
               onFiltersChange={(filters) => {
                 if (filters.categories)
                   setSelectedCategories(filters.categories);
                 if (filters.priceRange) setPriceRange(filters.priceRange);
                 if (filters.conditions)
                   setSelectedConditions(filters.conditions);
+                if (filters.verificationStatuses)
+                  setSelectedVerificationStatuses(filters.verificationStatuses);
+                setTradeEnabled(filters.tradeEnabled ?? false);
+                setCollectibleFilters({
+                  subcategory: filters.subcategory || undefined,
+                  collectibleCode: filters.collectibleCode || undefined,
+                  setName: filters.setName || undefined,
+                  collectiblePublisher: filters.collectiblePublisher || undefined,
+                  collectiblePlayerName: filters.collectiblePlayerName || undefined,
+                  collectibleTeam: filters.collectibleTeam || undefined,
+                  isPeeled: filters.isPeeled,
+                  ballSize: filters.ballSize,
+                  ballGrade: filters.ballGrade || undefined,
+                });
               }}
               onReset={() => {
                 setSelectedCategories([]);
                 setPriceRange([0, 5000]);
                 setSelectedConditions([]);
+                setSelectedVerificationStatuses([]);
+                setTradeEnabled(false);
+                setCollectibleFilters({});
               }}
             />
           </DrawerBody>
@@ -97,7 +148,7 @@ export default function ProductsPageClient() {
       </Drawer>
 
       {/* Page Content */}
-      <div className="mx-auto max-w-7xl px-4 lg:px-8 pt-24 pb-8 lg:pt-28">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8 pb-8 pt-4">
         {/* Breadcrumbs */}
         <nav className="mb-8">
           <Breadcrumbs size="sm">
@@ -112,17 +163,35 @@ export default function ProductsPageClient() {
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <ProductFilters
+                initialCategories={selectedCategories}
                 onFiltersChange={(filters) => {
                   if (filters.categories)
                     setSelectedCategories(filters.categories);
                   if (filters.priceRange) setPriceRange(filters.priceRange);
                   if (filters.conditions)
                     setSelectedConditions(filters.conditions);
+                  if (filters.verificationStatuses)
+                    setSelectedVerificationStatuses(filters.verificationStatuses);
+                  setTradeEnabled(filters.tradeEnabled ?? false);
+                  setCollectibleFilters({
+                    subcategory: filters.subcategory || undefined,
+                    collectibleCode: filters.collectibleCode || undefined,
+                    setName: filters.setName || undefined,
+                    collectiblePublisher: filters.collectiblePublisher || undefined,
+                    collectiblePlayerName: filters.collectiblePlayerName || undefined,
+                    collectibleTeam: filters.collectibleTeam || undefined,
+                    isPeeled: filters.isPeeled,
+                    ballSize: filters.ballSize,
+                    ballGrade: filters.ballGrade || undefined,
+                  });
                 }}
                 onReset={() => {
                   setSelectedCategories([]);
                   setPriceRange([0, 5000]);
                   setSelectedConditions([]);
+                  setSelectedVerificationStatuses([]);
+                  setTradeEnabled(false);
+                  setCollectibleFilters({});
                 }}
               />
             </div>
@@ -151,7 +220,9 @@ export default function ProductsPageClient() {
                 </Button>
 
                 <p className="text-sm text-default-500">
-                  {products.length} products
+                  {urlQuery
+                    ? `${sortedProducts.length} result${sortedProducts.length !== 1 ? "s" : ""} for "${urlQuery}"`
+                    : `${products.length} products`}
                 </p>
               </div>
 

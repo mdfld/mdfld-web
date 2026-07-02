@@ -9,7 +9,7 @@ export default function MainLayout({
   return (
     <div style={{ background: "#020606", minHeight: "100vh" }}>
       <Navbar />
-      <main>{children}</main>
+      <main className="pt-20">{children}</main>
       <Footer />
     </div>
   );

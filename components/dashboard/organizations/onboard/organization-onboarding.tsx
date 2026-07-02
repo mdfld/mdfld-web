@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { domAnimation, LazyMotion, m } from "framer-motion";
 
 import { trpc } from "@/lib/trpc-client";
+import { randomTemplate } from "@/lib/profile-templates";
 
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ export interface OrganizationFormData {
   website: string;
   taxId: string;
   businessLicense: string;
+  shipsFromCountry: string;
   address: {
     street: string;
     city: string;
@@ -103,6 +105,7 @@ export default function OrganizationOnboarding({
       await createOrganization.mutateAsync({
         name: formData.name,
         slug: formData.slug,
+        logo: randomTemplate(),
         description: formData.description || undefined,
         industry: formData.industry || undefined,
         size: formData.size
@@ -123,6 +126,7 @@ export default function OrganizationOnboarding({
         website: formData.website || undefined,
         taxId: formData.taxId || undefined,
         businessLicense: formData.businessLicense || undefined,
+        shipsFromCountry: formData.shipsFromCountry || undefined,
         address: formData.address || undefined,
       });
 
@@ -194,7 +198,7 @@ export default function OrganizationOnboarding({
       onChangePage={onChangePage}
       onNext={page === 3 ? handleSubmit : onNext}
     >
-      <div className="relative flex h-fit w-full flex-col pt-6 lg:h-full lg:justify-center lg:pt-0">
+      <div className="relative flex h-fit w-full flex-col pt-6 lg:pt-0">
         {content}
         <MultistepNavigationButtons
           backButtonProps={{ isDisabled: page === 0 }}

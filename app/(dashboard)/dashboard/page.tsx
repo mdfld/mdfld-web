@@ -12,6 +12,8 @@ import { ActiveOrders } from "@/components/dashboard/active-orders";
 import { WishlistSpotlight } from "@/components/dashboard/wishlist-spotlight";
 import { ReturnsSection } from "@/components/dashboard/returns-section";
 import { ChecklistPanel } from "@/components/onboarding/checklist-panel";
+import { SellerNudgeCard } from "@/components/onboarding/seller-nudge-card";
+import { TaxTierBanner } from "@/components/onboarding/tax-tier-banner";
 import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
 import { TourTrigger } from "@/components/onboarding/tour-trigger";
 import { useOnboarding } from "@/contexts/onboarding-context";
@@ -22,9 +24,11 @@ export const dynamic = "force-dynamic";
 export default function Dashboard() {
 	const { data: session, isPending } = useSession();
 	const router = useRouter();
-	const { shouldShowTour, markTourSeen } = useOnboarding();
+	const { shouldShowTour, markTourSeen, state, setSellerOptIn } = useOnboarding();
 	const [tourActive, setTourActive] = useState(false);
 	const tour = getTour("dashboard");
+
+	const taxTierReached = (session?.user as any)?.taxTierReached === true;
 
 	useEffect(() => {
 		if (!isPending && !session) {
@@ -67,9 +71,22 @@ export default function Dashboard() {
 				<div data-onboarding="dashboard-settings" className="hidden" />
 				<SidebarWrapper>
 					<div className="flex-1 overflow-y-auto">
+						{taxTierReached && <div className="p-4 pb-0"><TaxTierBanner /></div>}
 						<EmailCheckBanner />
 						<WelcomeHero />
-						<ChecklistPanel type="buyer" />
+						<div className="px-4">
+							<ChecklistPanel type="buyer" />
+							{state.sellerOptIn && <ChecklistPanel type="seller" />}
+							{!state.sellerOptIn && !state.tours.includes("seller-nudge" as any) && (
+								<SellerNudgeCard
+									onGetStarted={async () => {
+										await setSellerOptIn();
+										router.push("/dashboard/organization/settings");
+									}}
+									onDismiss={() => markTourSeen("seller-nudge")}
+								/>
+							)}
+						</div>
 						<div className="p-4 pb-8 space-y-6">
 							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 								<ActiveOrders />

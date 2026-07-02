@@ -62,16 +62,19 @@ export default function OrganizationOrdersLayout() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingCarrier, setTrackingCarrier] = useState("");
   const rowsPerPage = 10;
 
   const activeOrganization = useOrganizationStore(
     (state) => state.activeOrganization,
   );
 
+  const utils = trpc.useUtils();
+
   const {
     data: ordersData,
     isLoading,
-    refetch,
   } = trpc.organization.getOrders.useQuery(
     {
       organizationId: activeOrganization?.id || "",
@@ -89,10 +92,47 @@ export default function OrganizationOrdersLayout() {
   const updateOrderStatusMutation = trpc.order.updateStatus.useMutation({
     onSuccess: () => {
       toast.success("Order status updated");
-      refetch();
+      utils.organization.getOrders.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update order status");
+    },
+  });
+
+  const submitTrackingMutation = trpc.order.submitTracking.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message);
+      setSelectedOrder((prev: any) => ({
+        ...prev,
+        status: "SHIPPED",
+        trackingNumber: result.trackingNumber,
+        trackingCarrier: result.trackingCarrier,
+        trackingStatus: result.trackingStatus,
+        carrierConfirmedAt: result.carrierConfirmedAt,
+      }));
+      setTrackingNumber("");
+      setTrackingCarrier("");
+      utils.organization.getOrders.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to submit tracking");
+    },
+  });
+
+  const buyLabelMutation = trpc.order.buyLabel.useMutation({
+    onSuccess: (data) => {
+      window.open(data.labelUrl, "_blank");
+      toast.success("Label purchased. Tracking number auto-filled.");
+      setSelectedOrder((prev: any) => ({
+        ...prev,
+        labelUrl: data.labelUrl,
+        labelTrackingNumber: data.labelTrackingNumber,
+        labelCarrier: data.labelCarrier,
+      }));
+      utils.organization.getOrders.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to purchase label");
     },
   });
 
@@ -552,6 +592,123 @@ export default function OrganizationOrdersLayout() {
                         </div>
                       </CardBody>
                     </Card>
+
+                    {/* Tracking submission */}
+                    {["CONFIRMED", "PROCESSING", "SHIPPED"].includes(selectedOrder.status) && (
+                      <Card>
+                        <CardBody className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium">Shipping & Tracking</p>
+                            {selectedOrder.trackingNumber && !selectedOrder.labelTrackingNumber ? (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-xs text-default-500">
+                                  {selectedOrder.trackingCarrier}: {selectedOrder.trackingNumber}
+                                </p>
+                                {selectedOrder.trackingStatus && (
+                                  <Chip size="sm" variant="flat" color={
+                                    selectedOrder.trackingStatus === "Delivered" ? "success"
+                                      : selectedOrder.trackingStatus === "InTransit" || selectedOrder.trackingStatus === "OutForDelivery" ? "primary"
+                                      : "default"
+                                  }>
+                                    {selectedOrder.trackingStatus}
+                                  </Chip>
+                                )}
+                              </div>
+                            ) : !selectedOrder.labelTrackingNumber ? (
+                              <p className="text-xs text-default-400 mt-1">No tracking added yet</p>
+                            ) : null}
+                          </div>
+
+                          {/* Ship Order / Re-download Label */}
+                          {(selectedOrder.status === "CONFIRMED" || selectedOrder.status === "PROCESSING") && (
+                            <div className="mb-4">
+                              {selectedOrder.labelUrl ? (
+                                <Button
+                                  size="sm"
+                                  color="default"
+                                  variant="bordered"
+                                  onPress={() => window.open(selectedOrder.labelUrl!, "_blank")}
+                                >
+                                  Re-download Label
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  color="primary"
+                                  isLoading={buyLabelMutation.isPending}
+                                  onPress={() => buyLabelMutation.mutate({ orderId: selectedOrder.id })}
+                                >
+                                  Ship Order
+                                </Button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Tracking input: show read-only if label was purchased, otherwise editable */}
+                          {selectedOrder.labelTrackingNumber ? (
+                            <div className="text-sm text-default-500 space-y-1">
+                              <p>Tracking: <span className="font-medium text-foreground">{selectedOrder.labelTrackingNumber}</span></p>
+                              <p>Carrier: <span className="font-medium text-foreground">{selectedOrder.labelCarrier}</span></p>
+                              <p className="text-xs text-default-400">Purchased via Ship Order</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <Select
+                                label="Carrier"
+                                placeholder="Select carrier"
+                                selectedKeys={trackingCarrier ? [trackingCarrier] : []}
+                                onSelectionChange={(keys) => setTrackingCarrier(Array.from(keys)[0] as string)}
+                                labelPlacement="outside"
+                                size="sm"
+                              >
+                                {["UPS", "USPS", "FedEx", "DHL", "Other"].map((c) => (
+                                  <SelectItem key={c}>{c}</SelectItem>
+                                ))}
+                              </Select>
+                              <Input
+                                label="Tracking Number"
+                                placeholder="e.g. 1Z999AA10123456784"
+                                value={trackingNumber}
+                                onValueChange={setTrackingNumber}
+                                labelPlacement="outside"
+                                size="sm"
+                              />
+                              <Button
+                                size="sm"
+                                color="primary"
+                                isDisabled={!trackingNumber.trim() || !trackingCarrier}
+                                isLoading={submitTrackingMutation.isPending}
+                                onPress={() =>
+                                  submitTrackingMutation.mutate({
+                                    orderId: selectedOrder.id,
+                                    trackingNumber: trackingNumber.trim(),
+                                    trackingCarrier,
+                                  })
+                                }
+                              >
+                                {selectedOrder.trackingNumber ? "Update Tracking" : "Submit Tracking"}
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Earnings status */}
+                          <div className="border-t pt-4">
+                            {selectedOrder.carrierConfirmedAt ? (
+                              <div className="flex items-center gap-2">
+                                <Icon icon="solar:check-circle-bold" className="text-success w-4 h-4" />
+                                <p className="text-xs text-success">
+                                  Carrier confirmed pickup. This order&apos;s earnings are now available on your Earnings page.
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-default-400">
+                                Earnings from this order will become available once the carrier confirms pickup.
+                              </p>
+                            )}
+                          </div>
+                        </CardBody>
+                      </Card>
+                    )}
 
                     <Card>
                       <CardBody>

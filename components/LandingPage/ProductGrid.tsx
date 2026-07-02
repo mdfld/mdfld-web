@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { trpc } from '@/lib/trpc-client';
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
+import { getVerificationBadge } from '@/lib/verification-badge';
 
 const ACCENT = '#00d4b6';
 
@@ -28,10 +30,19 @@ function ProductCard({ product, index }: { product: any; index: number }) {
     onSuccess: () => setLiked((l: boolean) => !l),
   });
 
+  const CONDITION_LABELS: Record<string, string> = {
+    BRAND_NEW: 'Brand New',
+    NEW_WITH_TAGS: 'New with Tags',
+    NEW_WITHOUT_TAGS: 'New w/o Tags',
+    USED_EXCELLENT: 'Used - Excellent',
+    USED_GOOD: 'Used - Good',
+    USED_FAIR: 'Used - Fair',
+  };
+
   const price = Number(product.price);
   const comparePrice = product.compareAtPrice ? Number(product.compareAtPrice) : null;
   const img = product.images?.[0] || FALLBACK_IMG;
-  const tag = product.tags?.[0] || product.condition || 'NEW';
+  const tag = product.condition ? (CONDITION_LABELS[product.condition] ?? product.condition) : null;
   const stock = product.inventory ?? 99;
   const lowStock = stock > 0 && stock <= 8;
 
@@ -61,7 +72,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
           <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8, zIndex: 10 }}>
             {tag && (
               <span style={{ background: '#fff', color: '#000', fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', borderRadius: 2 }}>
-                {String(tag).toUpperCase()}
+                {tag}
               </span>
             )}
             {lowStock && (
@@ -78,6 +89,37 @@ function ProductCard({ product, index }: { product: any; index: number }) {
           >
             <Heart size={18} fill={liked ? '#ff4d4d' : 'transparent'} color={liked ? '#ff4d4d' : '#fff'} strokeWidth={liked ? 0 : 2} style={{ transition: 'all 0.3s' }} />
           </button>
+
+          {/* Verification / Fan-Made badge */}
+          {(() => {
+            const badge = getVerificationBadge(product.verificationStatus);
+            if (!badge) return null;
+            return (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 16,
+                  right: 16,
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(10, 10, 10, 0.7)',
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                }}
+              >
+                <Icon icon={badge.icon} width={12} className={badge.textClassName} />
+                <span
+                  className={badge.textClassName}
+                  style={{ fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 700, lineHeight: 1 }}
+                >
+                  {badge.label}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Quick Add */}
           <div className="ec-quick-add">

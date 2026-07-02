@@ -61,65 +61,83 @@ export function useChat(conversationId: string) {
   useEffect(() => {
     if (!conversationId) return;
 
-    // For now, we'll use a simple WebSocket connection
-    // In production, you'd want to use the Redis subscription properly
-    const ws = new WebSocket(`ws://localhost:3001/chat/${conversationId}`);
+    let ws: WebSocket | null = null;
+    let cancelled = false;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-    };
+    const connect = async () => {
+      // The websocket server only accepts connections carrying a short-lived
+      // token issued after a session + conversation membership check.
+      const res = await fetch(
+        `/api/ws-token?type=chat&conversationId=${encodeURIComponent(conversationId)}`,
+      );
+      if (!res.ok || cancelled) return;
+      const { token } = await res.json();
+      if (cancelled) return;
 
-    ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
+      const wsBase = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
+      ws = new WebSocket(
+        `${wsBase}/chat/${conversationId}?token=${encodeURIComponent(token)}`,
+      );
 
-      switch (data.type) {
-        case "new_message":
-          // Add the new message
-          setMessages((prev) => [
-            ...prev,
-            {
-              ...data.message,
-              decryptedContent: data.message.content,
-            },
-          ]);
-          break;
+      ws.onopen = () => {
+        setIsConnected(true);
+      };
 
-        case "typing":
-          if (data.isTyping) {
-            setTypingUsers((prev) =>
-              new Map(prev).set(data.userId, {
-                userId: data.userId,
-                timestamp: Date.now(),
-              }),
+      ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+
+        switch (data.type) {
+          case "new_message":
+            // Add the new message
+            setMessages((prev) => [
+              ...prev,
+              {
+                ...data.message,
+                decryptedContent: data.message.content,
+              },
+            ]);
+            break;
+
+          case "typing":
+            if (data.isTyping) {
+              setTypingUsers((prev) =>
+                new Map(prev).set(data.userId, {
+                  userId: data.userId,
+                  timestamp: Date.now(),
+                }),
+              );
+            } else {
+              setTypingUsers((prev) => {
+                const next = new Map(prev);
+                next.delete(data.userId);
+                return next;
+              });
+            }
+            break;
+
+          case "read_receipt":
+            // Update message status
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === data.messageId
+                  ? { ...msg, status: "READ" as MessageStatus }
+                  : msg,
+              ),
             );
-          } else {
-            setTypingUsers((prev) => {
-              const next = new Map(prev);
-              next.delete(data.userId);
-              return next;
-            });
-          }
-          break;
+            break;
+        }
+      };
 
-        case "read_receipt":
-          // Update message status
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === data.messageId
-                ? { ...msg, status: "READ" as MessageStatus }
-                : msg,
-            ),
-          );
-          break;
-      }
+      ws.onclose = () => {
+        setIsConnected(false);
+      };
     };
 
-    ws.onclose = () => {
-      setIsConnected(false);
-    };
+    connect();
 
     return () => {
-      ws.close();
+      cancelled = true;
+      ws?.close();
     };
   }, [conversationId]);
 

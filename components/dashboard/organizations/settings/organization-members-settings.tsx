@@ -37,15 +37,38 @@ export default function OrganizationMembersSettings({
     { enabled: !!organizationSlug },
   );
   const organization = data as any;
+  const utils = trpc.useUtils();
 
-  const handleRoleChange = (userId: string, newRole: string) => {
-    // TODO: Implement role change mutation
-    toast.info("Role change feature coming soon");
+  const updateMemberRoleMutation =
+    trpc.organization.updateMemberRole.useMutation({
+      onSuccess: () => {
+        toast.success("Member role updated");
+        utils.organization.get.invalidate({ slug: organizationSlug });
+      },
+      onError: (error) => toast.error(error.message),
+    });
+
+  const removeMemberMutation = trpc.organization.removeMember.useMutation({
+    onSuccess: () => {
+      toast.success("Member removed");
+      utils.organization.get.invalidate({ slug: organizationSlug });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const handleRoleChange = (memberId: string, newRole: "admin" | "member") => {
+    updateMemberRoleMutation.mutate({
+      organizationId: organization.id,
+      memberId,
+      role: newRole,
+    });
   };
 
-  const handleRemoveMember = (userId: string) => {
-    // TODO: Implement remove member mutation
-    toast.info("Remove member feature coming soon");
+  const handleRemoveMember = (memberId: string) => {
+    removeMemberMutation.mutate({
+      organizationId: organization.id,
+      memberId,
+    });
   };
 
   const members = organization?.members || [];
@@ -123,9 +146,16 @@ export default function OrganizationMembersSettings({
                       startContent={
                         <Icon icon="solar:user-id-bold" width={16} />
                       }
-                      onPress={() => handleRoleChange(member.user.id, "admin")}
+                      onPress={() =>
+                        handleRoleChange(
+                          member.id,
+                          member.role === "admin" ? "member" : "admin",
+                        )
+                      }
                     >
-                      Change Role
+                      {member.role === "admin"
+                        ? "Demote to Member"
+                        : "Promote to Admin"}
                     </DropdownItem>
                     <DropdownItem
                       key="remove"
@@ -134,7 +164,7 @@ export default function OrganizationMembersSettings({
                       startContent={
                         <Icon icon="solar:trash-bin-trash-bold" width={16} />
                       }
-                      onPress={() => handleRemoveMember(member.user.id)}
+                      onPress={() => handleRemoveMember(member.id)}
                     >
                       Remove Member
                     </DropdownItem>

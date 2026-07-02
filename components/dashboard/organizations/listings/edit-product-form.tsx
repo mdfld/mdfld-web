@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc-client";
 import { Icon } from "@iconify/react";
 import { useUploadThing } from "@/lib/uploadclient";
+import { convertHeicFile } from "@/lib/heic-conversion";
 
 interface EditProductFormProps {
   product: any;
@@ -79,7 +80,20 @@ export default function EditProductForm({
 
     setIsUploading(true);
     try {
-      const response = await startUpload(newFiles);
+      const convertedFiles = await Promise.all(
+        newFiles.map(async (file) => {
+          try {
+            return await convertHeicFile(file);
+          } catch {
+            toast.error(`Couldn't process ${file.name} — try a different photo`);
+            return null;
+          }
+        }),
+      );
+      const validFiles = convertedFiles.filter((f): f is File => f !== null);
+      if (validFiles.length === 0) return;
+
+      const response = await startUpload(validFiles);
       if (response) {
         const newImageUrls = response.map((file: any) => file.url);
         setImages([...images, ...newImageUrls]);
@@ -165,7 +179,7 @@ export default function EditProductForm({
             <label className="border-2 border-dashed border-default-300 rounded-lg h-24 flex items-center justify-center cursor-pointer hover:border-default-400 transition-colors">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 multiple
                 className="hidden"
                 onChange={handleFileSelect}

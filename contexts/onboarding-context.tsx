@@ -11,6 +11,7 @@ interface OnboardingContextValue {
   completeStep: (id: string, stepType: "buyer" | "seller") => Promise<void>;
   markTourSeen: (pageId: string) => Promise<void>;
   shouldShowTour: (pageId: string) => boolean;
+  setSellerOptIn: () => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -21,6 +22,7 @@ const noopValue: OnboardingContextValue = {
   completeStep: async () => {},
   markTourSeen: async () => {},
   shouldShowTour: () => false,
+  setSellerOptIn: async () => {},
 };
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
@@ -34,6 +36,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setIsLoading(false);
       return;
     }
+    setIsLoading(true);
     fetch("/api/onboarding")
       .then((r) => r.json())
       .then((data: OnboardingState) => setState(data))
@@ -76,6 +79,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     [isLoading, isAuthenticated, state.tours],
   );
 
+  const setSellerOptIn = useCallback(async () => {
+    setState((prev) => ({ ...prev, sellerOptIn: true }));
+    await fetch("/api/onboarding", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sellerOptIn: true }),
+    });
+  }, []);
+
   if (!enabled) {
     return (
       <OnboardingContext.Provider value={noopValue}>
@@ -85,7 +97,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <OnboardingContext.Provider value={{ state, isLoading, completeStep, markTourSeen, shouldShowTour }}>
+    <OnboardingContext.Provider value={{ state, isLoading, completeStep, markTourSeen, shouldShowTour, setSellerOptIn }}>
       {children}
     </OnboardingContext.Provider>
   );

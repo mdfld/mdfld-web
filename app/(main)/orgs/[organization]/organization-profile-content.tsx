@@ -185,7 +185,7 @@ export function OrganizationProfileContent({
                     src={organization.logo || undefined}
                     name={organization.name}
                     className="w-32 h-32 border-2 border-primary shadow-2xl text-2xl"
-                    radius="md"
+                    radius="full"
                   />
                   {/* Verified Badge */}
                   {organization.isVerified && (

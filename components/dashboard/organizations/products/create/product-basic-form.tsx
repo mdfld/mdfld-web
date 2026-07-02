@@ -5,6 +5,13 @@ import React from "react";
 import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
 import ProductImageUpload from "./product-image-upload";
+import {
+  getCategoryGroup,
+  WEARABLE_CONDITIONS,
+  COLLECTIBLE_CONDITIONS,
+  FOOTBALL_CONDITIONS,
+  COLLECTIBLE_SUBCATEGORIES,
+} from "@/lib/constants/product-categories";
 
 interface ProductBasicFormProps {
   data: Partial<ProductFormData>;
@@ -14,27 +21,27 @@ interface ProductBasicFormProps {
 const categories = [
   { key: "JERSEYS", label: "Jerseys" },
   { key: "BOOTS", label: "Boots" },
+  { key: "COLLECTIBLES", label: "Collectibles" },
   { key: "FOOTBALLS", label: "Footballs" },
-  { key: "TRADING_CARDS", label: "Trading Cards" },
   { key: "GOALKEEPER_GLOVES", label: "Goalkeeper Gloves" },
   { key: "SHIN_GUARDS", label: "Shin Guards" },
   { key: "TRAINING_EQUIPMENT", label: "Training Equipment" },
   { key: "ACCESSORIES", label: "Accessories" },
 ];
 
-const conditions = [
-  { key: "BRAND_NEW", label: "Brand New" },
-  { key: "NEW_WITH_TAGS", label: "New with Tags" },
-  { key: "NEW_WITHOUT_TAGS", label: "New without Tags" },
-  { key: "USED_LIKE_NEW", label: "Used - Like New" },
-  { key: "USED_GOOD", label: "Used - Good" },
-  { key: "USED_FAIR", label: "Used - Fair" },
-];
-
 export default function ProductBasicForm({
   data,
   onUpdate,
 }: ProductBasicFormProps) {
+  const categoryGroup = getCategoryGroup(data.category || "");
+
+  const conditions =
+    categoryGroup === "COLLECTIBLE"
+      ? COLLECTIBLE_CONDITIONS
+      : categoryGroup === "FOOTBALL"
+      ? FOOTBALL_CONDITIONS
+      : WEARABLE_CONDITIONS;
+
   const inputProps: Pick<InputProps, "labelPlacement" | "classNames"> = {
     labelPlacement: "outside",
     classNames: {
@@ -97,6 +104,29 @@ export default function ProductBasicForm({
             <SelectItem key={category.key}>{category.label}</SelectItem>
           ))}
         </Select>
+
+        {categoryGroup === "COLLECTIBLE" && (
+          <Select
+            className="col-span-12"
+            label="Type"
+            placeholder="Stickers or Trading Cards"
+            selectedKeys={data.subcategory ? [data.subcategory] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              onUpdate({ subcategory: selected });
+            }}
+            isRequired
+            labelPlacement="outside"
+            classNames={{
+              label:
+                "text-small font-medium text-default-700 group-data-[filled-within=true]:text-default-700",
+            }}
+          >
+            {COLLECTIBLE_SUBCATEGORIES.map((s) => (
+              <SelectItem key={s.key}>{s.label}</SelectItem>
+            ))}
+          </Select>
+        )}
 
         <Select
           className="col-span-12"

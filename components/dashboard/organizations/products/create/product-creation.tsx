@@ -37,6 +37,7 @@ export interface ProductFormData {
   slug: string;
   description: string;
   category: string;
+  subcategory?: string;
   condition: string;
   images: string[];
   price: number;
@@ -54,23 +55,42 @@ export interface ProductFormData {
     height: number;
   };
   tags: string[];
+  shippingTerms: "CALCULATED" | "INCLUDED_DDP";
+  shippingCarrier: string;
+  estimatedDeliveryDays: number;
+  shipsFromCountry: string;
+  tradeEnabled: boolean;
+  // Collectible fields
+  collectibleCode?: string;
+  setName?: string;
+  collectiblePublisher?: string;
+  collectiblePlayerName?: string;
+  collectibleTeam?: string;
+  isPeeled?: boolean;
+  // Football fields
+  ballSize?: number;
+  ballGrade?: string;
 }
 
 export default function ProductCreation({
   organizationId,
   sellerProfileId,
+  storeShipsFromCountry,
   onComplete,
   onClose,
 }: {
   organizationId: string;
   sellerProfileId: string;
+  storeShipsFromCountry?: string | null;
   onComplete?: () => void;
   onClose?: () => void;
 }) {
   const [[page, direction], setPage] = React.useState([0, 0]);
 
   const createProduct = trpc.product.create.useMutation();
-  const [formData, setFormData] = useState<Partial<ProductFormData>>({});
+  const [formData, setFormData] = useState<Partial<ProductFormData>>({
+    tradeEnabled: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { completeStep } = useOnboarding();
 
@@ -142,6 +162,20 @@ export default function ProductCreation({
         dimensions: formData.dimensions,
         tags: formData.tags || [],
         isActive: true,
+        shippingTerms: formData.shippingTerms || "CALCULATED",
+        shippingCarrier: formData.shippingCarrier || undefined,
+        estimatedDeliveryDays: formData.estimatedDeliveryDays || undefined,
+        shipsFromCountry: formData.shipsFromCountry || undefined,
+        tradeEnabled: formData.tradeEnabled ?? false,
+        subcategory: formData.subcategory || undefined,
+        collectibleCode: formData.collectibleCode || undefined,
+        setName: formData.setName || undefined,
+        collectiblePublisher: formData.collectiblePublisher || undefined,
+        collectiblePlayerName: formData.collectiblePlayerName || undefined,
+        collectibleTeam: formData.collectibleTeam || undefined,
+        isPeeled: formData.isPeeled,
+        ballSize: formData.ballSize,
+        ballGrade: formData.ballGrade as any || undefined,
       });
 
       toast.success("Product created successfully!");
@@ -167,7 +201,11 @@ export default function ProductCreation({
         break;
       case 2:
         component = (
-          <ProductPricingForm data={formData} onUpdate={updateFormData} />
+          <ProductPricingForm
+            data={formData}
+            onUpdate={updateFormData}
+            storeShipsFromCountry={storeShipsFromCountry}
+          />
         );
         break;
       case 3:
@@ -199,6 +237,12 @@ export default function ProductCreation({
     );
   }, [direction, page, formData]);
 
+  const shippingValid =
+    (formData.weight ?? 0) > 0 &&
+    (formData.dimensions?.length ?? 0) > 0 &&
+    (formData.dimensions?.width ?? 0) > 0 &&
+    (formData.dimensions?.height ?? 0) > 0;
+
   return (
     <MultistepSidebar
       currentPage={page}
@@ -207,15 +251,15 @@ export default function ProductCreation({
       onNext={page === 3 ? handleSubmit : onNext}
       onClose={onClose}
     >
-      <div className="relative flex h-fit w-full flex-col pt-6 lg:h-full lg:justify-center lg:pt-0">
+      <div className="relative flex h-fit w-full flex-col pt-6 lg:pt-0">
         {content}
         <MultistepNavigationButtons
           backButtonProps={{ isDisabled: page === 0 }}
           className="hidden justify-start lg:flex"
           nextButtonProps={{
             children: page === 3 ? "Create Product" : "Continue",
-            onClick: page === 3 ? handleSubmit : onNext,
             isLoading: page === 3 && isLoading,
+            isDisabled: page === 2 && !shippingValid,
           }}
           onBack={onBack}
           onNext={page === 3 ? handleSubmit : onNext}

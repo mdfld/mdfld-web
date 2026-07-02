@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Input,
   Textarea,
-  Select,
-  SelectItem,
   Button,
   Spacer,
   Card,
@@ -25,33 +23,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useOnboarding } from "@/contexts/onboarding-context";
 
-const industries = [
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Retail",
-  "Manufacturing",
-  "Education",
-  "Real Estate",
-  "Hospitality",
-  "Transportation",
-  "Other",
-];
-
-const organizationSizes = [
-  { value: "STARTUP", label: "Startup (1-10 employees)" },
-  { value: "SMALL", label: "Small (11-50 employees)" },
-  { value: "MEDIUM", label: "Medium (51-200 employees)" },
-  { value: "LARGE", label: "Large (201-1000 employees)" },
-  { value: "ENTERPRISE", label: "Enterprise (1000+ employees)" },
-];
-
-const businessTypes = [
-  { value: "INDIVIDUAL", label: "Individual" },
-  { value: "SMALL_BUSINESS", label: "Small Business" },
-  { value: "CORPORATION", label: "Corporation" },
-  { value: "NON_PROFIT", label: "Non-Profit" },
-];
 
 export default function OrganizationBasicSettings({
   organizationSlug,
@@ -80,9 +51,6 @@ export default function OrganizationBasicSettings({
     name: "",
     description: "",
     website: "",
-    industry: "",
-    size: "",
-    businessType: "",
     taxId: "",
     businessLicense: "",
   });
@@ -124,9 +92,6 @@ export default function OrganizationBasicSettings({
         name: organization.name || "",
         description: organization.description || "",
         website: organization.website || "",
-        industry: organization.industry || "",
-        size: organization.size || "",
-        businessType: organization.businessType || "",
         taxId: organization.taxId || "",
         businessLicense: organization.businessLicense || "",
       });
@@ -168,9 +133,6 @@ export default function OrganizationBasicSettings({
         name: formData.name,
         description: formData.description,
         website: formData.website,
-        industry: formData.industry,
-        size: formData.size as any,
-        businessType: formData.businessType as any,
         taxId: formData.taxId,
         businessLicense: formData.businessLicense,
       });
@@ -188,13 +150,7 @@ export default function OrganizationBasicSettings({
       }));
     };
 
-  const handleSelectChange = (field: string) => (keys: any) => {
-    const selected = Array.from(keys)[0] as string;
-    setFormData((prev) => ({
-      ...prev,
-      [field]: selected,
-    }));
-  };
+
 
   const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError(null);
@@ -462,67 +418,6 @@ export default function OrganizationBasicSettings({
         />
       </div>
 
-      <Spacer y={4} />
-
-      {/* Industry */}
-      <div>
-        <p className="text-default-700 text-base font-medium">Industry</p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
-          Select your organization's industry.
-        </p>
-        <Select
-          className="mt-2"
-          placeholder="Select your industry"
-          selectedKeys={formData.industry ? [formData.industry] : []}
-          onSelectionChange={handleSelectChange("industry")}
-        >
-          {industries.map((industry) => (
-            <SelectItem key={industry}>{industry}</SelectItem>
-          ))}
-        </Select>
-      </div>
-
-      <Spacer y={4} />
-
-      {/* Organization Size */}
-      <div>
-        <p className="text-default-700 text-base font-medium">
-          Organization Size
-        </p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
-          How many employees does your organization have?
-        </p>
-        <Select
-          className="mt-2"
-          placeholder="Select organization size"
-          selectedKeys={formData.size ? [formData.size] : []}
-          onSelectionChange={handleSelectChange("size")}
-        >
-          {organizationSizes.map((size) => (
-            <SelectItem key={size.value}>{size.label}</SelectItem>
-          ))}
-        </Select>
-      </div>
-
-      <Spacer y={4} />
-
-      {/* Business Type */}
-      <div>
-        <p className="text-default-700 text-base font-medium">Business Type</p>
-        <p className="text-default-400 mt-1 text-sm font-normal">
-          What type of business entity is your organization?
-        </p>
-        <Select
-          className="mt-2"
-          placeholder="Select business type"
-          selectedKeys={formData.businessType ? [formData.businessType] : []}
-          onSelectionChange={handleSelectChange("businessType")}
-        >
-          {businessTypes.map((type) => (
-            <SelectItem key={type.value}>{type.label}</SelectItem>
-          ))}
-        </Select>
-      </div>
 
       <Spacer y={4} />
 

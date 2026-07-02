@@ -14,6 +14,8 @@ const roleStyle = (role: string) => ({
 export default function AdminUsersPage() {
 	const [search, setSearch] = useState("");
 	const [updatingId, setUpdatingId] = useState<string | null>(null);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 	const utils = trpc.useUtils();
 
 	const { data, isLoading } = trpc.admin.listUsers.useQuery({
@@ -25,12 +27,29 @@ export default function AdminUsersPage() {
 		onSuccess: () => utils.admin.listUsers.invalidate(),
 	});
 
+	const adminDeleteAccount = trpc.user.adminDeleteAccount.useMutation({
+		onSuccess: () => {
+			utils.admin.listUsers.invalidate();
+			setConfirmDelete(null);
+		},
+	});
+
 	async function handleRoleChange(userId: string, role: typeof ROLES[number]) {
 		setUpdatingId(userId);
 		try {
 			await updateRole.mutateAsync({ userId, role });
 		} finally {
 			setUpdatingId(null);
+		}
+	}
+
+	async function handleDeleteConfirm() {
+		if (!confirmDelete) return;
+		setDeletingId(confirmDelete.id);
+		try {
+			await adminDeleteAccount.mutateAsync({ userId: confirmDelete.id });
+		} finally {
+			setDeletingId(null);
 		}
 	}
 
@@ -52,7 +71,7 @@ export default function AdminUsersPage() {
 				<table style={{ width: "100%", borderCollapse: "collapse" }}>
 					<thead>
 						<tr style={{ borderBottom: "2px solid #eee" }}>
-							{["Name", "Email", "Role", "KYC", "Seller", "Joined"].map((h) => (
+							{["Name", "Email", "Role", "KYC", "Seller", "Joined", ""].map((h) => (
 								<th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 13, color: "#666" }}>{h}</th>
 							))}
 						</tr>
@@ -61,10 +80,10 @@ export default function AdminUsersPage() {
 						{data?.users.map((user) => (
 							<tr key={user.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
 								<td style={{ padding: "12px" }}>
-									<strong>{user.name}</strong>
-									<div style={{ fontSize: 12, color: "#999" }}>@{user.username}</div>
+									<div style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{user.name}</div>
+									<div style={{ fontSize: 12, color: "#555" }}>@{user.username}</div>
 								</td>
-								<td style={{ padding: "12px", fontSize: 14 }}>{user.email}</td>
+								<td style={{ padding: "12px", fontSize: 14, color: "#1a1a1a" }}>{user.email}</td>
 								<td style={{ padding: "12px" }}>
 									<select
 										disabled={updatingId === user.id}
@@ -82,15 +101,64 @@ export default function AdminUsersPage() {
 										))}
 									</select>
 								</td>
-								<td style={{ padding: "12px", fontSize: 13 }}>{user.kycStatus}</td>
-								<td style={{ padding: "12px", fontSize: 13 }}>{user.isVerifiedSeller ? "✓" : "—"}</td>
-								<td style={{ padding: "12px", fontSize: 13, color: "#666" }}>
+								<td style={{ padding: "12px", fontSize: 13, color: "#1a1a1a", fontWeight: 500 }}>{user.kycStatus}</td>
+								<td style={{ padding: "12px", fontSize: 13, color: "#1a1a1a" }}>{user.isVerifiedSeller ? "✓" : "—"}</td>
+								<td style={{ padding: "12px", fontSize: 13, color: "#444" }}>
 									{new Date(user.createdAt).toLocaleDateString()}
+								</td>
+								<td style={{ padding: "12px" }}>
+									<button
+										onClick={() => setConfirmDelete({ id: user.id, name: user.name })}
+										style={{
+											padding: "4px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+											border: "1px solid #fca5a5", background: "#fff1f2", color: "#b91c1c",
+											cursor: "pointer",
+										}}
+									>
+										Delete
+									</button>
 								</td>
 							</tr>
 						))}
 					</tbody>
 				</table>
+			)}
+
+			{/* Confirm delete dialog */}
+			{confirmDelete && (
+				<div style={{
+					position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex",
+					alignItems: "center", justifyContent: "center", zIndex: 1000,
+				}}>
+					<div style={{
+						background: "#fff", borderRadius: 12, padding: 28, maxWidth: 400, width: "90%",
+						boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+					}}>
+						<h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "#b91c1c" }}>Delete Account</h2>
+						<p style={{ fontSize: 14, color: "#555", marginBottom: 20 }}>
+							Permanently delete <strong>{confirmDelete.name}</strong>? This removes all their data, listings, and order history and cannot be undone.
+						</p>
+						<div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+							<button
+								onClick={() => setConfirmDelete(null)}
+								style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #ddd", background: "#f9f9f9", fontSize: 13, cursor: "pointer" }}
+							>
+								Cancel
+							</button>
+							<button
+								onClick={handleDeleteConfirm}
+								disabled={deletingId === confirmDelete.id}
+								style={{
+									padding: "8px 16px", borderRadius: 8, border: "none",
+									background: "#b91c1c", color: "#fff", fontSize: 13, fontWeight: 600,
+									cursor: "pointer", opacity: deletingId === confirmDelete.id ? 0.6 : 1,
+								}}
+							>
+								{deletingId === confirmDelete.id ? "Deleting..." : "Delete Account"}
+							</button>
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);

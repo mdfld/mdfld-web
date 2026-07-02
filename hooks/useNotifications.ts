@@ -12,44 +12,63 @@ export function useNotificationSubscription() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const ws = new WebSocket(
-      `ws://localhost:3001/notifications/${session.user.id}`,
-    );
+    let ws: WebSocket | null = null;
+    let cancelled = false;
 
-    ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
+    const connect = async () => {
+      // The websocket server requires a short-lived token issued to the
+      // authenticated session; the notification stream is bound to it.
+      const res = await fetch("/api/ws-token?type=notifications");
+      if (!res.ok || cancelled) return;
+      const { token } = await res.json();
+      if (cancelled) return;
 
-      if (data.type === "NEW_NOTIFICATION") {
-        // Invalidate notification queries to refetch
-        utils.notification.list.invalidate();
-        utils.notification.unreadCount.invalidate();
+      const wsBase = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
+      ws = new WebSocket(
+        `${wsBase}/notifications/${session.user.id}?token=${encodeURIComponent(token)}`,
+      );
 
-        // Show toast notification
-        const notification = data.notification;
-        toast(notification.title || "New notification", {
-          description: notification.content,
-          action: notification.metadata?.conversationId
-            ? {
-                label: "View",
-                onClick: () => {
-                  window.location.href = `/dashboard/inbox?conversation=${notification.metadata.conversationId}`;
-                },
-              }
-            : undefined,
-        });
+      ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
 
-        // Show browser notification if permission granted
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(notification.title || "New notification", {
-            body: notification.content,
-            icon: "/icon.png",
+        if (data.type === "NEW_NOTIFICATION") {
+          // Invalidate notification queries to refetch
+          utils.notification.list.invalidate();
+          utils.notification.unreadCount.invalidate();
+
+          // Show toast notification
+          const notification = data.notification;
+          toast(notification.title || "New notification", {
+            description: notification.content,
+            action: notification.metadata?.conversationId
+              ? {
+                  label: "View",
+                  onClick: () => {
+                    window.location.href = `/dashboard/inbox?conversation=${notification.metadata.conversationId}`;
+                  },
+                }
+              : undefined,
           });
+
+          // Show browser notification if permission granted
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(notification.title || "New notification", {
+              body: notification.content,
+              icon: "/icon.png",
+            });
+          }
         }
-      }
+      };
     };
 
+    connect();
+
     return () => {
-      ws.close();
+      cancelled = true;
+      ws?.close();
     };
   }, [session?.user?.id, utils]);
 

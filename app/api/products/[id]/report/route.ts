@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { Resend } from "resend";
+import { resend } from "@/lib/resend";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -10,7 +10,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { id: productId } = await params;
     const { reason } = await request.json();
@@ -45,7 +44,7 @@ export async function POST(
 
     // Send notification email (non-blocking)
     resend.emails.send({
-      from: "Midfield Co <onboarding@resend.dev>",
+      from: "noreply@mdfld.co",
       to: ["ayoola@mdfld.co"],
       subject: `[REPORT] Product flagged: ${product.title}`,
       html: `

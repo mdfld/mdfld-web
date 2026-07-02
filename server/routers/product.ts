@@ -6,9 +6,12 @@ import {
   VariantType,
   SizeSystem,
   ProductCondition,
+  ProductCategory,
   ProductTier,
   SoleplateType,
   PlayerVersion,
+  ProductVerificationStatus,
+  BallGrade,
 } from "@prisma/client";
 import { getScoringWeights } from "@/lib/scoring/getScoringWeights";
 import { applyScoring } from "@/lib/scoring/searchScoring";
@@ -69,6 +72,25 @@ const createProductSchema = z.object({
 
   // Variants array
   variants: z.array(productVariantSchema).optional(),
+
+  // Shipping fields
+  shippingTerms: z.enum(["CALCULATED", "INCLUDED_DDP"]).default("CALCULATED"),
+  shippingCarrier: z.string().optional(),
+  estimatedDeliveryDays: z.number().int().positive().optional(),
+  shipsFromCountry: z.string().optional(),
+  tradeEnabled: z.boolean().default(false),
+
+  // Collectible fields
+  collectibleCode: z.string().optional(),
+  setName: z.string().optional(),
+  collectiblePublisher: z.string().optional(),
+  collectiblePlayerName: z.string().optional(),
+  collectibleTeam: z.string().optional(),
+  isPeeled: z.boolean().optional(),
+
+  // Football fields
+  ballSize: z.number().int().min(1).max(5).optional(),
+  ballGrade: z.nativeEnum(BallGrade).optional(),
 });
 
 export { PRODUCT_CATEGORIES };
@@ -104,39 +126,6 @@ export const productRouter = createTRPCRouter({
         });
       }
 
-      // Create Stripe product if seller has Stripe account
-      let stripeProductId: string | undefined;
-      let stripePriceId: string | undefined;
-
-      if (sellerProfile.stripeAccountId && sellerProfile.stripeChargesEnabled) {
-        try {
-          // Create product in Stripe
-          const stripeProduct = await stripe.products.create({
-            name: input.title,
-            description: input.description || undefined,
-            images: input.images.slice(0, 8), // Stripe allows max 8 images
-            metadata: {
-              sellerProfileId: input.sellerProfileId,
-              organizationId: input.organizationId || "",
-            },
-          });
-
-          stripeProductId = stripeProduct.id;
-
-          // Create price in Stripe
-          const stripePrice = await stripe.prices.create({
-            product: stripeProductId,
-            unit_amount: formatAmountForStripe(input.price),
-            currency: "usd",
-          });
-
-          stripePriceId = stripePrice.id;
-        } catch (error) {
-          // Error creating Stripe product
-          // Continue without Stripe - can be added later
-        }
-      }
-
       // Create product in database
       const product = await ctx.prisma.product.create({
         data: {
@@ -166,44 +155,23 @@ export const productRouter = createTRPCRouter({
           material: input.material,
           soleplateType: input.soleplateType,
           playerVersion: input.playerVersion,
-          stripeProductId,
-          stripePriceId,
-          // Create variants if provided
+          shippingTerms: input.shippingTerms as any,
+          shippingCarrier: input.shippingCarrier,
+          estimatedDeliveryDays: input.estimatedDeliveryDays,
+          shipsFromCountry: input.shipsFromCountry,
+          tradeEnabled: input.tradeEnabled,
+          collectibleCode: input.collectibleCode,
+          setName: input.setName,
+          collectiblePublisher: input.collectiblePublisher,
+          collectiblePlayerName: input.collectiblePlayerName,
+          collectibleTeam: input.collectibleTeam,
+          isPeeled: input.isPeeled,
+          ballSize: input.ballSize,
+          ballGrade: input.ballGrade,
           variants:
             input.variants && input.hasVariants
               ? {
-                  create: await Promise.all(
-                    input.variants.map(async (variant) => {
-                      // Create Stripe price for each variant if seller has Stripe
-                      let variantStripePriceId: string | undefined;
-
-                      if (
-                        sellerProfile.stripeAccountId &&
-                        sellerProfile.stripeChargesEnabled &&
-                        stripeProductId
-                      ) {
-                        try {
-                          const stripePrice = await stripe.prices.create({
-                            product: stripeProductId,
-                            unit_amount: formatAmountForStripe(variant.price),
-                            currency: "usd",
-                            metadata: {
-                              size: variant.sizeValue,
-                              color: variant.color || "",
-                            },
-                          });
-                          variantStripePriceId = stripePrice.id;
-                        } catch (error) {
-                          // Error creating Stripe price for variant
-                        }
-                      }
-
-                      return {
-                        ...variant,
-                        stripePriceId: variantStripePriceId,
-                      };
-                    }),
-                  ),
+                  create: input.variants.map((variant) => ({ ...variant })),
                 }
               : undefined,
         },
@@ -408,6 +376,7 @@ export const productRouter = createTRPCRouter({
           seller: {
             select: {
               id: true,
+              userId: true,
               storeName: true,
               storeDescription: true,
               averageRating: true,
@@ -420,6 +389,10 @@ export const productRouter = createTRPCRouter({
                   name: true,
                   slug: true,
                   logo: true,
+                  shipsFromCountry: true,
+                  members: {
+                    select: { userId: true, role: true },
+                  },
                 },
               },
             },
@@ -431,24 +404,6 @@ export const productRouter = createTRPCRouter({
             orderBy: [{ sizeValue: "asc" }, { color: "asc" }],
           },
           sizeChart: true,
-          reviews: {
-            take: 5,
-            orderBy: {
-              createdAt: "desc",
-            },
-            include: {
-              buyer: {
-                select: {
-                  user: {
-                    select: {
-                      name: true,
-                      image: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
         },
       });
 
@@ -472,6 +427,18 @@ export const productRouter = createTRPCRouter({
         maxPrice: z.number().optional(),
         tags: z.array(z.string()).optional(),
         featured: z.boolean().optional(),
+        tradeEnabled: z.boolean().optional(),
+        verificationStatuses: z.array(z.nativeEnum(ProductVerificationStatus)).optional(),
+        subcategory: z.string().optional(),
+        collectibleCode: z.string().optional(),
+        setName: z.string().optional(),
+        collectiblePublisher: z.string().optional(),
+        collectiblePlayerName: z.string().optional(),
+        collectibleTeam: z.string().optional(),
+        isPeeled: z.boolean().optional(),
+        ballSize: z.number().int().min(1).max(5).optional(),
+        ballGrade: z.nativeEnum(BallGrade).optional(),
+        conditions: z.array(z.string()).optional(),
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().optional(),
       }),
@@ -479,22 +446,89 @@ export const productRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const where: any = {
         isActive: true,
+        inventory: { gt: 0 },
       };
 
       if (input.featured !== undefined) {
         where.featured = input.featured;
       }
 
+      if (input.tradeEnabled) {
+        where.tradeEnabled = true;
+      }
+
+      if (input.verificationStatuses && input.verificationStatuses.length > 0) {
+        where.verificationStatus = { in: input.verificationStatuses };
+      }
+
       if (input.query) {
+        const q = input.query;
+        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+
+        const matchedCategories = Object.values(ProductCategory).filter((cat) =>
+          cat.replace(/_/g, " ").toLowerCase().includes(q.toLowerCase()),
+        );
+        const matchedConditions = Object.values(ProductCondition).filter((cond) =>
+          cond.replace(/_/g, " ").toLowerCase().includes(q.toLowerCase()),
+        );
+
         where.OR = [
-          { title: { contains: input.query, mode: "insensitive" } },
-          { description: { contains: input.query, mode: "insensitive" } },
-          { brand: { contains: input.query, mode: "insensitive" } },
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { brand: { contains: q, mode: "insensitive" } },
+          { material: { contains: q, mode: "insensitive" } },
+          { season: { contains: q, mode: "insensitive" } },
+          { tags: { hasSome: words } },
+          ...(matchedCategories.length > 0 ? [{ category: { in: matchedCategories } }] : []),
+          ...(matchedConditions.length > 0 ? [{ condition: { in: matchedConditions } }] : []),
+          {
+            variants: {
+              some: {
+                OR: [
+                  { sizeValue: { contains: q, mode: "insensitive" } },
+                  { sizeDisplay: { contains: q, mode: "insensitive" } },
+                  { color: { contains: q, mode: "insensitive" } },
+                ],
+              },
+            },
+          },
         ];
       }
 
       if (input.category) {
         where.category = input.category as any;
+      }
+
+      if (input.subcategory) {
+        where.subcategory = input.subcategory as any;
+      }
+      if (input.collectibleCode) {
+        where.collectibleCode = { contains: input.collectibleCode, mode: 'insensitive' };
+      }
+      if (input.setName) {
+        where.setName = { contains: input.setName, mode: 'insensitive' };
+      }
+      if (input.collectiblePublisher) {
+        where.collectiblePublisher = { contains: input.collectiblePublisher, mode: 'insensitive' };
+      }
+      if (input.collectiblePlayerName) {
+        where.collectiblePlayerName = { contains: input.collectiblePlayerName, mode: 'insensitive' };
+      }
+      if (input.collectibleTeam) {
+        where.collectibleTeam = { contains: input.collectibleTeam, mode: 'insensitive' };
+      }
+      if (input.isPeeled !== undefined) {
+        where.isPeeled = input.isPeeled;
+      }
+      if (input.ballSize !== undefined) {
+        where.ballSize = input.ballSize;
+      }
+      if (input.ballGrade) {
+        where.ballGrade = input.ballGrade;
+      }
+
+      if (input.conditions && input.conditions.length > 0) {
+        where.condition = { in: input.conditions as any };
       }
 
       if (input.minPrice !== undefined || input.maxPrice !== undefined) {
@@ -552,15 +586,9 @@ export const productRouter = createTRPCRouter({
       };
     }),
 
-  // Get categories
-  getCategories: publicProcedure.query(async ({ ctx }) => {
-    const categories = await ctx.prisma.product.findMany({
-      where: { isActive: true },
-      select: { category: true },
-      distinct: ["category"],
-    });
-
-    return categories.map((c) => c.category);
+  // Get categories — return statically from enum, no DB scan needed
+  getCategories: publicProcedure.query(() => {
+    return Object.keys(PRODUCT_CATEGORIES);
   }),
 
   // Create product variant
@@ -770,4 +798,15 @@ export const productRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  getMyListings: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.product.findMany({
+      where: {
+        seller: { userId: ctx.user.id },
+        isActive: true,
+      },
+      select: { id: true, title: true, price: true, images: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }),
 });

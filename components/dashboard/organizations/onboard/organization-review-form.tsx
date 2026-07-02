@@ -65,27 +65,23 @@ const OrganizationReviewForm = React.forwardRef<
             </div>
           )}
 
-          {/* Legal Info */}
-          {(data.taxId || data.businessLicense || data.website) && (
+          {/* Website */}
+          {data.website && (
             <div className="space-y-2">
-              {data.taxId && (
-                <div className="text-sm">
-                  <span className="text-gray-500">Tax ID:</span>{" "}
-                  <span className="text-gray-300">{data.taxId}</span>
-                </div>
-              )}
-              {data.businessLicense && (
-                <div className="text-sm">
-                  <span className="text-gray-500">License:</span>{" "}
-                  <span className="text-gray-300">{data.businessLicense}</span>
-                </div>
-              )}
-              {data.website && (
-                <div className="text-sm">
-                  <span className="text-gray-500">Website:</span>{" "}
-                  <span className="text-gray-300">{data.website}</span>
-                </div>
-              )}
+              <div className="text-sm">
+                <span className="text-gray-500">Website:</span>{" "}
+                <span className="text-gray-300">{data.website}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Ships From */}
+          {data.shipsFromCountry && (
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="text-gray-500">Ships from:</span>{" "}
+                <span className="text-gray-300">{data.shipsFromCountry}</span>
+              </div>
             </div>
           )}
 
