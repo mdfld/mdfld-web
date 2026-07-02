@@ -14,11 +14,7 @@ const PERKS = [
   "Members-only pricing",
 ];
 
-interface SignUpFormFramelessProps {
-  onSuccess?: () => void;
-}
-
-export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessProps = {}) {
+export default function SignUpFormFrameless() {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -26,7 +22,6 @@ export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessPr
   const [focus, setFocus] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -34,7 +29,6 @@ export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessPr
 
   const handleSignup = async () => {
     setError("");
-    setSuccess("");
     if (form.password !== form.confirm) { setError("Passwords do not match"); return; }
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
     if (!agreed) { setError("You must agree to the Terms and Privacy Policy"); return; }
@@ -44,9 +38,7 @@ export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessPr
         { name: form.name, email: form.email, password: form.password, username: form.username },
         {
           onSuccess: () => {
-            setSuccess("Account created! Check your email to verify before signing in.");
-            onSuccess?.();
-            setTimeout(() => router.push("/auth/login"), 3000);
+            router.push("/dashboard");
           },
           onError: (ctx) => {
             const msg = ctx.error.message || "An error occurred";
@@ -165,7 +157,6 @@ export default function SignUpFormFrameless({ onSuccess }: SignUpFormFramelessPr
           </div>
 
           {error && (<div className="su-err su-a1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>{error}</div>)}
-          {success && (<div className="su-ok su-a1">✓ {success}</div>)}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Name */}

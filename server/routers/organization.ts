@@ -2,8 +2,10 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
+import { stripe } from "@/lib/stripe";
 import { AES256E2EE } from "@/lib/aes-e2ee";
 import { publishMessage, cacheMessage } from "@/lib/redis";
+import { getAvailableBalance } from "@/lib/seller-balance";
 
 export const organizationRouter = createTRPCRouter({
   create: protectedProcedure
@@ -37,6 +39,16 @@ export const organizationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      const existingOrg = await prisma.organizationMember.findFirst({
+        where: { userId, role: "owner" },
+      });
+      if (existingOrg) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You already have a store. Only one store is allowed per account.",
+        });
+      }
 
       // Find all existing slugs that start with the requested slug in one query
       const conflicting = await prisma.organization.findMany({
@@ -1387,9 +1399,13 @@ export const organizationRouter = createTRPCRouter({
       select: {
         id: true,
         pendingBalance: true,
+        lockedBalance: true,
         settledBalance: true,
         totalSales: true,
-        bankAccount: true,
+        payoutMethod: true,
+        stripeBankLast4: true,
+        paypalEmail: true,
+        payoutSetupAt: true,
         commissionRate: true,
       },
     });
@@ -1402,44 +1418,45 @@ export const organizationRouter = createTRPCRouter({
       select: { id: true, type: true, amount: true, status: true, createdAt: true, netAmount: true },
     });
 
+    const displayDetail = seller.payoutMethod === "STRIPE_BANK"
+      ? `••••${seller.stripeBankLast4}`
+      : seller.payoutMethod === "PAYPAL"
+      ? seller.paypalEmail ?? ""
+      : null;
+
     return {
       pendingBalance: Number(seller.pendingBalance),
+      lockedBalance: Number(seller.lockedBalance),
+      availableBalance: getAvailableBalance(seller),
       settledBalance: Number(seller.settledBalance),
       totalSales: seller.totalSales,
-      bankAccount: seller.bankAccount,
+      payoutMethod: seller.payoutMethod,
+      displayDetail,
+      payoutSetupAt: seller.payoutSetupAt,
       commissionRate: seller.commissionRate,
       transactions,
     };
   }),
-
-  updateBankAccount: protectedProcedure
-    .input(z.object({ bankAccount: z.string().min(5) }))
-    .mutation(async ({ ctx, input }) => {
-      const seller = await ctx.prisma.sellerProfile.findUnique({
-        where: { userId: ctx.user.id },
-      });
-      if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller profile not found" });
-      await ctx.prisma.sellerProfile.update({
-        where: { userId: ctx.user.id },
-        data: { bankAccount: input.bankAccount },
-      });
-      return { success: true };
-    }),
 
   requestPayout: protectedProcedure
     .input(z.object({ amount: z.number().positive(), notes: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const seller = await ctx.prisma.sellerProfile.findUnique({
         where: { userId: ctx.user.id },
-        select: { id: true, pendingBalance: true, bankAccount: true, storeName: true },
+        select: { id: true, pendingBalance: true, lockedBalance: true, payoutMethod: true, storeName: true },
       });
       if (!seller) throw new TRPCError({ code: "NOT_FOUND" });
-      if (!seller.bankAccount) {
-        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Please add a bank account before requesting a payout" });
+      if (!seller.payoutMethod) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Set up a payout method before requesting a payout" });
       }
-      if (input.amount > Number(seller.pendingBalance)) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Amount exceeds your pending balance" });
+      if (input.amount > getAvailableBalance(seller)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Amount exceeds your available balance" });
       }
+
+      await ctx.prisma.sellerProfile.update({
+        where: { userId: ctx.user.id },
+        data: { payoutRequestedAt: new Date() },
+      });
 
       await ctx.prisma.auditLog.create({
         data: {
@@ -1447,10 +1464,98 @@ export const organizationRouter = createTRPCRouter({
           action: "PAYOUT_REQUESTED",
           entityType: "SellerProfile",
           entityId: seller.id,
-          newValues: { amount: input.amount, notes: input.notes, storeName: seller.storeName, bankAccount: seller.bankAccount },
+          newValues: { amount: input.amount, notes: input.notes, storeName: seller.storeName },
         },
       });
 
       return { success: true };
+    }),
+
+  setupStripePayout: protectedProcedure
+    .input(z.object({
+      routingNumber: z.string().regex(/^\d{9}$/, "Routing number must be 9 digits"),
+      accountNumber: z.string().min(4).max(17),
+      accountHolderName: z.string().min(2),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const seller = await ctx.prisma.sellerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { id: true, stripeAccountId: true },
+      });
+      if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller profile not found" });
+
+      let stripeAccountId = seller.stripeAccountId;
+      if (!stripeAccountId) {
+        const account = await stripe.accounts.create({
+          type: "custom",
+          country: "US",
+          capabilities: { transfers: { requested: true } },
+          tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: "127.0.0.1" },
+        });
+        stripeAccountId = account.id;
+      }
+
+      const externalAccount = await stripe.accounts.createExternalAccount(stripeAccountId, {
+        external_account: {
+          object: "bank_account",
+          country: "US",
+          currency: "usd",
+          routing_number: input.routingNumber,
+          account_number: input.accountNumber,
+          account_holder_name: input.accountHolderName,
+          account_holder_type: "individual",
+        },
+      }) as any;
+
+      const last4 = externalAccount.last4 as string;
+
+      await ctx.prisma.sellerProfile.update({
+        where: { userId: ctx.user.id },
+        data: {
+          stripeAccountId,
+          stripeBankLast4: last4,
+          payoutMethod: "STRIPE_BANK",
+          payoutSetupAt: new Date(),
+        },
+      });
+
+      return { last4 };
+    }),
+
+  setupPaypalPayout: protectedProcedure
+    .input(z.object({ paypalEmail: z.string().email("Invalid PayPal email") }))
+    .mutation(async ({ ctx, input }) => {
+      const seller = await ctx.prisma.sellerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { id: true },
+      });
+      if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller profile not found" });
+
+      await ctx.prisma.sellerProfile.update({
+        where: { userId: ctx.user.id },
+        data: {
+          paypalEmail: input.paypalEmail,
+          payoutMethod: "PAYPAL",
+          payoutSetupAt: new Date(),
+        },
+      });
+
+      return { paypalEmail: input.paypalEmail };
+    }),
+
+  getPayoutSetup: protectedProcedure
+    .query(async ({ ctx }) => {
+      const seller = await ctx.prisma.sellerProfile.findUnique({
+        where: { userId: ctx.user.id },
+        select: { payoutMethod: true, stripeBankLast4: true, paypalEmail: true },
+      });
+      if (!seller || !seller.payoutMethod) return null;
+
+      const displayDetail =
+        seller.payoutMethod === "STRIPE_BANK"
+          ? `••••${seller.stripeBankLast4}`
+          : seller.paypalEmail ?? "";
+
+      return { payoutMethod: seller.payoutMethod, displayDetail };
     }),
 });

@@ -145,7 +145,7 @@ export default function OrganizationListingsLayout() {
       (sum: any, product: any) => sum + product.inventory,
       0,
     ),
-    totalRevenue: 0, // Would need orders data
+    totalRevenue: Number(sellerProfileData?.pendingBalance ?? 0),
   };
 
   if (isLoading) {

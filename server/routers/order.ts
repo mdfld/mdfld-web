@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { stripe } from "@/lib/stripe";
 import { createOrGetTracking } from "@/lib/aftership";
+import { buyShippingLabel } from "@/lib/easypost";
 
 export const orderRouter = createTRPCRouter({
   // Get user's orders
@@ -53,7 +54,11 @@ export const orderRouter = createTRPCRouter({
           orderNumber: true,
           status: true,
           paymentStatus: true,
+          subtotal: true,
+          shipping: true,
+          tax: true,
           total: true,
+          shippingAddress: true,
           createdAt: true,
           seller: {
             select: {
@@ -360,17 +365,19 @@ export const orderRouter = createTRPCRouter({
           },
         }),
         Promise.all(
-          order.items.map((item) =>
-            item.variantId
-              ? ctx.prisma.productVariant.update({
-                  where: { id: item.variantId },
-                  data: { inventory: { increment: item.quantity } },
-                })
-              : ctx.prisma.product.update({
-                  where: { id: item.productId },
-                  data: { inventory: { increment: item.quantity } },
-                }),
-          ),
+          order.items.map(async (item) => {
+            if (item.variantId) {
+              return ctx.prisma.productVariant.update({
+                where: { id: item.variantId },
+                data: { inventory: { increment: item.quantity } },
+              });
+            }
+            const updated = await ctx.prisma.product.update({
+              where: { id: item.productId },
+              data: { inventory: { increment: item.quantity }, isActive: true },
+            });
+            return updated;
+          }),
         ),
         notifyUserId
           ? ctx.prisma.notification.create({
@@ -451,6 +458,8 @@ export const orderRouter = createTRPCRouter({
 
       const carrierConfirmedAt = carrierConfirmed ? now : order.carrierConfirmedAt;
 
+      const justConfirmed = carrierConfirmed && !order.carrierConfirmedAt;
+
       await Promise.all([
         ctx.prisma.order.update({
           where: { id: input.orderId },
@@ -476,6 +485,18 @@ export const orderRouter = createTRPCRouter({
             },
           },
         }),
+        ...(justConfirmed
+          ? [
+              ctx.prisma.sellerProfile.update({
+                where: { id: order.sellerProfileId },
+                data: {
+                  lockedBalance: {
+                    decrement: Number(order.subtotal) - Number(order.applicationFeeAmount ?? 0),
+                  },
+                },
+              }),
+            ]
+          : []),
       ]);
 
       return {
@@ -486,24 +507,27 @@ export const orderRouter = createTRPCRouter({
         carrierConfirmedAt: carrierConfirmedAt?.toISOString() ?? null,
         carrierConfirmed,
         message: carrierConfirmed
-          ? "Tracking confirmed. You can now request a withdrawal."
-          : "Tracking saved. Withdrawal will unlock once the carrier confirms pickup.",
+          ? "Tracking confirmed. Your earnings for this order are now available for withdrawal."
+          : "Tracking saved. Earnings for this order will become available once the carrier confirms pickup.",
       };
     }),
 
-  requestWithdrawal: protectedProcedure
+  buyLabel: protectedProcedure
     .input(z.object({ orderId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
       const order = await ctx.prisma.order.findUnique({
         where: { id: input.orderId },
-        include: { seller: true },
+        include: {
+          seller: true,
+          buyer: true,
+          organization: true,
+          items: { include: { product: { select: { weight: true, dimensions: true } } } },
+        },
       });
 
-      if (!order) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
-      }
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
 
       const isSeller =
         (order.seller.userId && order.seller.userId === userId) ||
@@ -516,30 +540,92 @@ export const orderRouter = createTRPCRouter({
             },
           })));
 
-      if (!isSeller) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only sellers can request withdrawals",
-        });
+      if (!isSeller) throw new TRPCError({ code: "FORBIDDEN", message: "Only the seller can buy a label" });
+
+      if (!["CONFIRMED", "PROCESSING"].includes(order.status)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Order must be CONFIRMED or PROCESSING to buy a label" });
       }
 
-      if (!order.carrierConfirmedAt) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Withdrawal is only available after the carrier confirms pickup",
-        });
+      if (order.labelUrl) {
+        return {
+          labelUrl: order.labelUrl,
+          labelTrackingNumber: order.labelTrackingNumber,
+          labelCarrier: order.labelCarrier,
+        };
       }
 
-      if (order.withdrawalRequestedAt) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Withdrawal already requested for this order",
-        });
+      const fromAddress = {
+        street:  order.organization?.addressStreet  ?? "",
+        city:    order.organization?.addressCity    ?? "",
+        state:   order.organization?.addressState   ?? "",
+        zip:     order.organization?.addressZip     ?? "",
+        country: order.organization?.addressCountry ?? "US",
+      };
+
+      if (!fromAddress.street || !fromAddress.city || !fromAddress.state || !fromAddress.zip) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Seller address is incomplete. Update your organization address before buying a label." });
       }
 
-      return ctx.prisma.order.update({
-        where: { id: input.orderId },
-        data: { withdrawalRequestedAt: new Date() },
+      const ship = order.shippingAddress as any;
+      const toAddress = {
+        name:    ship.name    ?? "",
+        street:  ship.street  ?? ship.street1 ?? "",
+        city:    ship.city    ?? "",
+        state:   ship.state   ?? "",
+        zip:     ship.zip     ?? ship.postalCode ?? "",
+        country: ship.country ?? "US",
+      };
+
+      if (!toAddress.zip) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Buyer shipping address is missing a zip code." });
+      }
+
+      let totalWeightOz = 0;
+      let maxLength = 0, maxWidth = 0, maxHeight = 0;
+      let hasDimensions = false;
+
+      for (const item of order.items) {
+        const p = item.product;
+        if (p.weight) totalWeightOz += p.weight * item.quantity;
+        const dims = p.dimensions as any;
+        if (dims?.length && dims?.width && dims?.height) {
+          hasDimensions = true;
+          maxLength = Math.max(maxLength, dims.length);
+          maxWidth  = Math.max(maxWidth,  dims.width);
+          maxHeight = Math.max(maxHeight, dims.height);
+        }
+      }
+
+      const parcel = (totalWeightOz > 0 && hasDimensions)
+        ? { weightOz: totalWeightOz, length: maxLength, width: maxWidth, height: maxHeight }
+        : null;
+
+      const label = await buyShippingLabel({
+        fromAddress,
+        toAddress,
+        parcel,
+        reference: order.orderNumber,
       });
+
+      await ctx.prisma.order.update({
+        where: { id: input.orderId },
+        data: {
+          easypostShipmentId:  label.shipmentId,
+          labelUrl:            label.labelUrl,
+          labelTrackingNumber: label.trackingNumber,
+          labelCarrier:        label.carrier,
+          labelBoughtAt:       new Date(),
+          trackingNumber:      label.trackingNumber,
+          trackingCarrier:     label.carrier,
+        },
+      });
+
+      await createOrGetTracking(label.trackingNumber, label.carrier);
+
+      return {
+        labelUrl: label.labelUrl,
+        labelTrackingNumber: label.trackingNumber,
+        labelCarrier: label.carrier,
+      };
     }),
 });

@@ -162,6 +162,7 @@ export default function MainNavbar() {
   const [cartOpen, setCartOpen]           = useState(false);
   const [dropdownLocked, setDropdownLocked] = useState(false);
   const [searchVal, setSearchVal]         = useState('');
+  const [debouncedVal, setDebouncedVal] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname  = usePathname();
   const router    = useRouter();
@@ -178,6 +179,17 @@ export default function MainNavbar() {
   const { data: wishlistData } = trpc.user.getWishlist.useQuery(undefined, { enabled: !!authUser });
   const cartCount  = authUser ? (cartData?.itemCount ?? 0) : 0;
   const wishCount  = authUser ? (wishlistData?.length ?? 0) : 0;
+
+  const { data: userResults = [], isFetching: userFetching } = trpc.user.publicSearch.useQuery(
+    { query: debouncedVal },
+    { enabled: debouncedVal.length >= 2 }
+  );
+
+  const { data: productSearchData, isFetching: productFetching } = trpc.product.search.useQuery(
+    { query: debouncedVal, limit: 4 },
+    { enabled: debouncedVal.length >= 2 }
+  );
+  const productResults = productSearchData?.items ?? [];
 
   // ── Mobile detection ──────────────────────────────────────
   const [isMobile, setIsMobile] = useState(false);
@@ -204,7 +216,7 @@ export default function MainNavbar() {
   }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownLocked(false); setSearchVal(''); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -219,6 +231,11 @@ export default function MainNavbar() {
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [dropdownLocked]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedVal(searchVal), 300);
+    return () => clearTimeout(t);
+  }, [searchVal]);
 
   // ── Logout ────────────────────────────────────────────────
   const handleLogout = async () => {
@@ -531,7 +548,7 @@ export default function MainNavbar() {
 
       {/* ═══ SEARCH OVERLAY ═══ */}
       {searchOpen && (
-        <div className="nb-search-overlay" onClick={() => setSearchOpen(false)}>
+        <div className="nb-search-overlay" onClick={() => { setSearchOpen(false); setSearchVal(''); }}>
           <div className="nb-search-box" onClick={e => e.stopPropagation()}>
             <form onSubmit={handleSearch}>
               <div className="nb-search-input-wrap">
@@ -543,11 +560,129 @@ export default function MainNavbar() {
                   value={searchVal}
                   onChange={e => setSearchVal(e.target.value)}
                 />
-                <button type="button" className="nb-icon" style={{ flexShrink: 0, width: 44, height: 44 }} onClick={() => setSearchOpen(false)}>
+                <button type="button" className="nb-icon" style={{ flexShrink: 0, width: 44, height: 44 }} onClick={() => { setSearchOpen(false); setSearchVal(''); }}>
                   <X size={22} />
                 </button>
               </div>
             </form>
+            {/* ── Live product results ── */}
+            {debouncedVal.length >= 2 && (productFetching || productResults.length > 0) && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+                    Products
+                  </span>
+                  {productFetching && (
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>
+                      Searching...
+                    </span>
+                  )}
+                </div>
+                {productResults.map((p: any) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      router.push(`/products/${p.id}`);
+                      setSearchOpen(false);
+                      setSearchVal('');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      width: '100%', background: 'transparent', border: 'none',
+                      padding: '8px 0', cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, flexShrink: 0,
+                      background: 'rgba(255,255,255,0.05)',
+                      overflow: 'hidden',
+                    }}>
+                      {p.images?.[0] ? (
+                        <img src={p.images[0]} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)' }} />
+                      )}
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 11, color: ACCENT, marginTop: 2 }}>
+                        ${Number(p.price).toFixed(2)}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {!productFetching && productResults.length > 0 && (
+                  <button
+                    onClick={() => { router.push(`/shop?q=${encodeURIComponent(debouncedVal)}`); setSearchOpen(false); setSearchVal(''); }}
+                    style={{ marginTop: 8, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.35)', fontFamily: "'Barlow',sans-serif", fontSize: 11, letterSpacing: '0.08em', cursor: 'pointer', padding: '4px 0', textDecoration: 'underline' }}
+                  >
+                    See all results for &ldquo;{debouncedVal}&rdquo;
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ── Live people results ── */}
+            {debouncedVal.length >= 2 && (userFetching || userResults.length > 0) && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>
+                    People
+                  </span>
+                  {userFetching && (
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>
+                      Searching...
+                    </span>
+                  )}
+                </div>
+                {userResults.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => {
+                      if (!u.username) return;
+                      router.push(`/users/${u.username}`);
+                      setSearchOpen(false);
+                      setSearchVal('');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      width: '100%', background: 'transparent', border: 'none',
+                      padding: '8px 0', cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                      background: 'rgba(0,212,182,0.15)',
+                      border: '1px solid rgba(0,212,182,0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}>
+                      {u.image ? (
+                        <img src={u.image} alt={u.name ?? ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 900, color: ACCENT }}>
+                          {(u.name ?? u.username ?? '?')[0].toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 13, fontWeight: 600, color: '#fff' }}>
+                        {u.name ?? u.username}
+                      </div>
+                      {u.username && (
+                        <div style={{ fontFamily: "'Barlow',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em' }}>
+                          @{u.username}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Popular</span>
               {['Mercurial', 'Predator', 'Copa Pure', 'Phantom GX', 'Dri-FIT Kit'].map(t => (

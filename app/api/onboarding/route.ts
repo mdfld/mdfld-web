@@ -23,10 +23,22 @@ export async function GET(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { onboardingState: true },
+    select: { onboardingState: true, emailVerified: true },
   });
 
-  return NextResponse.json(parseState(user?.onboardingState));
+  const state = parseState(user?.onboardingState);
+
+  // Auto-complete verify-email for users whose email is already verified
+  // (Google OAuth users, or users who verified via the link)
+  if (user?.emailVerified && !state.buyer.includes("verify-email")) {
+    state.buyer = [...state.buyer, "verify-email"];
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { onboardingState: state as any },
+    });
+  }
+
+  return NextResponse.json(state);
 }
 
 export async function PATCH(request: NextRequest) {

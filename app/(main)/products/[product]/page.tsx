@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useParams } from "next/navigation";
 import { BreadcrumbItem, Breadcrumbs, Spinner } from "@heroui/react";
 import ProductViewInfo from "@/components/product-layout/product-view-item";
 import { trpc } from "@/lib/trpc-client";
-import { useOnboarding } from "@/contexts/onboarding-context";
+import {
+  getCategoryGroup,
+  FOOTBALL_CONDITION_LABELS,
+  BALL_SIZE_LABELS,
+  BALL_GRADES,
+} from "@/lib/constants/product-categories";
 
 function buildShippingItems(product: any): string[] {
   const items: string[] = [];
@@ -45,13 +50,6 @@ export default function ProductPage() {
     id: productId,
   });
 
-  const { completeStep, state } = useOnboarding();
-
-  useEffect(() => {
-    if (!state.buyer.includes("understand-auth")) {
-      completeStep("understand-auth", "buyer");
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -71,6 +69,38 @@ export default function ProductPage() {
 
   // tRPC type inference drops relation fields at this depth — cast once here
   const p: any = product;
+
+  const categoryGroup = getCategoryGroup(p.category);
+
+  const conditionLabel =
+    categoryGroup === 'FOOTBALL'
+      ? (FOOTBALL_CONDITION_LABELS[p.condition] ?? p.condition.replace(/_/g, ' ').toLowerCase())
+      : p.condition?.replace(/_/g, ' ').toLowerCase() ?? 'New';
+
+  const attributes: string[] = [
+    `Category: ${p.category.replace(/_/g, ' ').toLowerCase()}`,
+    `Condition: ${conditionLabel}`,
+    `Brand: ${p.brand || 'Generic'}`,
+  ];
+
+  if (categoryGroup === 'COLLECTIBLE') {
+    if (p.setName) attributes.push(`Set: ${p.setName}`);
+    if (p.collectibleCode) attributes.push(`Code: ${p.collectibleCode}`);
+    if (p.collectiblePublisher) attributes.push(`Publisher: ${p.collectiblePublisher}`);
+    if (p.collectiblePlayerName) attributes.push(`Player: ${p.collectiblePlayerName}`);
+    if (p.collectibleTeam) attributes.push(`Team: ${p.collectibleTeam}`);
+  } else if (categoryGroup === 'FOOTBALL') {
+    if (p.ballSize) attributes.push(`Size: ${p.ballSize} - ${BALL_SIZE_LABELS[p.ballSize]}`);
+    if (p.ballGrade) {
+      const gradeLabel = BALL_GRADES.find(g => g.key === p.ballGrade)?.label ?? p.ballGrade;
+      attributes.push(`Grade: ${gradeLabel}`);
+    }
+  } else {
+    // Wearable-specific attributes
+    if (p.tier) attributes.push(`Tier: ${p.tier}`);
+    if (p.year) attributes.push(`Year: ${p.year}`);
+    if (p.season) attributes.push(`Season: ${p.season}`);
+  }
 
   // Transform variants data
   const sizes: string[] =
@@ -132,21 +162,13 @@ export default function ProductPage() {
     hasVariants: p.hasVariants,
     variants: p.variants,
     seller: p.seller,
+    sellerId: p.seller?.userId ?? p.seller?.organization?.members?.[0]?.userId,
+    tradeEnabled: p.tradeEnabled ?? false,
+    verificationStatus: p.verificationStatus,
     details: [
       {
         title: "Product Details",
-        items: [
-          `Category: ${p.category.replace(/_/g, " ").toLowerCase()}`,
-          `Condition: ${p.condition?.replace(/_/g, " ").toLowerCase() || "New"}`,
-          `Brand: ${p.brand || "Generic"}`,
-          `SKU: ${p.sku || p.id}`,
-          ...(p.year ? [`Year: ${p.year}`] : []),
-          ...(p.soleplateType
-            ? [`Soleplate: ${p.soleplateType}`]
-            : []),
-          ...(p.tier ? [`Tier: ${p.tier}`] : []),
-          ...(p.material ? [`Material: ${p.material}`] : []),
-        ].filter(Boolean),
+        items: attributes,
       },
       {
         title: "Seller Information",
@@ -184,6 +206,11 @@ export default function ProductPage() {
           <BreadcrumbItem>{p.title}</BreadcrumbItem>
         </Breadcrumbs>
       </nav>
+      {categoryGroup === 'COLLECTIBLE' && p.isPeeled && (
+        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+          Peeled
+        </span>
+      )}
       <ProductViewInfo {...productViewItem} />
     </div>
   );

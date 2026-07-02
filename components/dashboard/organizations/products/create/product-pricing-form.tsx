@@ -2,9 +2,10 @@
 
 import type { InputProps } from "@heroui/react";
 import React from "react";
-import { Input, Card, CardBody, RadioGroup, Radio, Select, SelectItem } from "@heroui/react";
+import { Input, Card, CardBody, RadioGroup, Radio, Select, SelectItem, Switch } from "@heroui/react";
 import { ProductFormData } from "./product-creation";
 import countries from "../../onboard/countries";
+import { trpc } from "@/lib/trpc-client";
 
 const CARRIERS = [
   { value: "UPS", label: "UPS" },
@@ -25,7 +26,8 @@ export default function ProductPricingForm({
   onUpdate,
   storeShipsFromCountry,
 }: ProductPricingFormProps) {
-  const platformFee = 0.1;
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
+  const platformFee = fees?.sellerCommissionPct ?? 0;
   const sellerReceives = data.price ? data.price * (1 - platformFee) : 0;
 
   const shippingTerms = data.shippingTerms || "CALCULATED";
@@ -71,12 +73,14 @@ export default function ProductPricingForm({
         {data.price && data.price > 0 && (
           <Card className="col-span-12 bg-default-50 dark:bg-default-100/50">
             <CardBody className="gap-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-default-600">Platform Fee (10%)</span>
-                <span className="text-default-600">
-                  ${(data.price * platformFee).toFixed(2)}
-                </span>
-              </div>
+              {platformFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-default-600">Platform Fee ({(platformFee * 100).toFixed(0)}%)</span>
+                  <span className="text-default-600">
+                    ${(data.price * platformFee).toFixed(2)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between font-medium">
                 <span className="text-default-800">You&apos;ll receive</span>
                 <span className="text-success">${sellerReceives.toFixed(2)}</span>
@@ -107,6 +111,74 @@ export default function ProductPricingForm({
           description="Optional: Your internal product identifier"
           {...inputProps}
         />
+
+        {/* Shipping dimensions — required for rate calculation */}
+        <div className="col-span-12 space-y-4 border-t border-zinc-700 pt-4">
+          <div>
+            <p className="text-sm font-medium text-default-700">Shipping Details</p>
+            <p className="text-xs text-default-400 mt-0.5">Required for calculating shipping rates at checkout</p>
+          </div>
+
+          <Input
+            label="Weight (kg)"
+            placeholder="e.g., 0.5"
+            type="number"
+            min="0.01"
+            step="0.01"
+            isRequired
+            value={data.weight ? String(data.weight) : ""}
+            onValueChange={(v) => onUpdate({ weight: parseFloat(v) || 0 })}
+            description="Total item weight including packaging"
+            isInvalid={!data.weight || data.weight <= 0}
+            errorMessage={!data.weight || data.weight <= 0 ? "Weight is required" : undefined}
+            {...inputProps}
+          />
+
+          <div>
+            <p className="text-sm font-medium text-default-700 mb-2">Dimensions (cm) <span className="text-danger">*</span></p>
+            <div className="grid grid-cols-3 gap-3">
+              <Input
+                label="Length"
+                placeholder="e.g., 30"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.length ? String(data.dimensions.length) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: parseFloat(v) || 0, width: data.dimensions?.width || 0, height: data.dimensions?.height || 0 } })
+                }
+                isInvalid={!data.dimensions?.length || data.dimensions.length <= 0}
+                {...inputProps}
+              />
+              <Input
+                label="Width"
+                placeholder="e.g., 20"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.width ? String(data.dimensions.width) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: data.dimensions?.length || 0, width: parseFloat(v) || 0, height: data.dimensions?.height || 0 } })
+                }
+                isInvalid={!data.dimensions?.width || data.dimensions.width <= 0}
+                {...inputProps}
+              />
+              <Input
+                label="Height"
+                placeholder="e.g., 10"
+                type="number"
+                min="1"
+                isRequired
+                value={data.dimensions?.height ? String(data.dimensions.height) : ""}
+                onValueChange={(v) =>
+                  onUpdate({ dimensions: { ...data.dimensions, length: data.dimensions?.length || 0, width: data.dimensions?.width || 0, height: parseFloat(v) || 0 } })
+                }
+                isInvalid={!data.dimensions?.height || data.dimensions.height <= 0}
+                {...inputProps}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Shipping divider */}
         <div className="col-span-12 border-t border-zinc-700 pt-2">
@@ -196,6 +268,22 @@ export default function ProductPricingForm({
               <SelectItem key={country.code}>{country.name}</SelectItem>
             )}
           </Select>
+        </div>
+
+        <div className="col-span-12 border-t border-zinc-700 pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-small font-medium text-default-700">Accept trade offers</p>
+              <p className="text-xs text-default-400 mt-0.5">
+                Allow buyers to propose item swaps or cash offers for this listing
+              </p>
+            </div>
+            <Switch
+              isSelected={data.tradeEnabled ?? false}
+              onValueChange={(val) => onUpdate({ tradeEnabled: val })}
+              size="sm"
+            />
+          </div>
         </div>
 
       </form>

@@ -59,6 +59,8 @@ const AccountSetting = React.forwardRef<
     session?.user?.displayUsername || "",
   );
   const [username, setUsername] = React.useState(session?.user?.username || "");
+  const [newEmail, setNewEmail] = React.useState("");
+  const [isEmailLoading, setIsEmailLoading] = React.useState(false);
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -68,6 +70,7 @@ const AccountSetting = React.forwardRef<
       setFullName(session.user.name || "");
       setDisplayUsername(session.user.displayUsername || "");
       setUsername(session.user.username || "");
+      setNewEmail("");
     }
   }, [session]);
 
@@ -103,6 +106,59 @@ const AccountSetting = React.forwardRef<
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!session?.user) return;
+
+    if (!newEmail || !newEmail.includes("@")) {
+      addToast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        color: "warning",
+      });
+      return;
+    }
+
+    if (newEmail === session.user.email) {
+      addToast({
+        title: "Validation Error",
+        description: "New email must be different from your current email",
+        color: "warning",
+      });
+      return;
+    }
+
+    setIsEmailLoading(true);
+    try {
+      const { error } = await authClient.changeEmail({
+        newEmail,
+        callbackURL: "/dashboard/settings",
+      });
+
+      if (error) {
+        addToast({
+          title: "Email Update Failed",
+          description: error.message || "Failed to update email",
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: "Verification Email Sent",
+          description: `A confirmation link has been sent to ${newEmail}. Click it to complete the change.`,
+          color: "success",
+        });
+        setNewEmail("");
+      }
+    } catch (err: any) {
+      addToast({
+        title: "Email Update Failed",
+        description: err.message || "Failed to update email",
+        color: "danger",
+      });
+    } finally {
+      setIsEmailLoading(false);
     }
   };
 
@@ -219,19 +275,31 @@ const AccountSetting = React.forwardRef<
       </div>
       <Spacer y={2} />
 
-      {/* Email Address - Read Only */}
+      {/* Email Address */}
       <div>
         <p className="text-default-700 text-base font-medium">Email Address</p>
         <p className="text-default-400 mt-1 text-sm font-normal">
-          The email address associated with your account (cannot be changed
-          here).
+          Current: <span className="text-default-600">{session?.user?.email}</span>
         </p>
         <Input
           className="mt-2"
-          value={session?.user?.email || ""}
-          isReadOnly
-          variant="flat"
+          type="email"
+          placeholder="Enter new email address"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
         />
+        <Button
+          className="mt-2"
+          size="sm"
+          variant="flat"
+          onPress={handleChangeEmail}
+          isLoading={isEmailLoading}
+        >
+          Update Email
+        </Button>
+        <p className="text-default-400 mt-1 text-xs">
+          A confirmation link will be sent to the new address.
+        </p>
       </div>
       <Spacer y={2} />
 

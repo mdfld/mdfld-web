@@ -57,6 +57,8 @@ model User {
   conversations        ConversationParticipant[]
   messages             Message[]
   messageReceipts      MessageReceipt[]
+  tradeOffersProposed TradeOffer[] @relation("TradeProposer")
+  tradeOffersReceived TradeOffer[] @relation("TradeRecipient")
 
   @@map("user")
 }
@@ -194,7 +196,11 @@ model SellerProfile {
   businessEmail    String
   businessPhone    String?
   taxNumber        String?
-  bankAccount      String?
+  payoutMethod      PayoutMethod?
+  paypalEmail       String?
+  stripeBankLast4   String?
+  payoutSetupAt     DateTime?
+  payoutRequestedAt DateTime?
   shippingPolicy   String?
   returnPolicy     String?
   averageRating    Float   @default(0.0)
@@ -216,6 +222,7 @@ model SellerProfile {
   commissionRate          Float     @default(0.10) // 10% default commission
   pendingBalance          Decimal   @default(0.00)
   settledBalance          Decimal   @default(0.00)
+  lockedBalance           Decimal   @default(0.00)
 
   // Fraud detection metrics
   fraudScore              Float     @default(0.0)
@@ -286,6 +293,7 @@ model Product {
   tags            String[]
   isActive        Boolean  @default(true)
   featured        Boolean  @default(false)
+  verificationStatus ProductVerificationStatus @default(UNVERIFIED)
 
   // Variant support
   hasVariants      Boolean  @default(false)
@@ -301,7 +309,19 @@ model Product {
   material         String?
   soleplateType    SoleplateType?
   playerVersion    PlayerVersion?
-  
+
+  // Collectible fields (COLLECTIBLES category only)
+  collectibleCode       String?
+  setName               String?
+  collectiblePublisher  String?
+  collectiblePlayerName String?
+  collectibleTeam       String?
+  isPeeled              Boolean?
+
+  // Football fields (FOOTBALLS category only)
+  ballSize              Int?
+  ballGrade             BallGrade?
+
   // Stripe fields
   stripePriceId   String?  // Stripe Price object ID for this product
   stripeProductId String?  // Stripe Product object ID
@@ -311,6 +331,7 @@ model Product {
   lastPriceChange      DateTime?
   reportCount          Int       @default(0)
   isHighRisk           Boolean   @default(false)
+  tradeEnabled             Boolean   @default(false)
 
   // Shipping fields
   shippingTerms        ShippingTerms @default(CALCULATED)
@@ -329,6 +350,8 @@ model Product {
   fraudReports FraudReport[]
   variants     ProductVariant[]
   sizeChart    SizeChart?
+  tradeOfferRequests  TradeOffer[] @relation("RequestedProduct")
+  tradeOffersMade     TradeOffer[] @relation("OfferedProduct")
 
   @@index([sellerProfileId])
   @@index([organizationId])
@@ -420,13 +443,21 @@ model Order {
   shippingAddress Json
   billingAddress  Json
   notes           String?
+  shippingMarkup   Decimal  @default(0)
+  shippingService  String?
 
   // Tracking fields
   trackingNumber      String?
   trackingCarrier     String?
   trackingStatus      String?    // AfterShip tag: InfoReceived, InTransit, Delivered, etc.
-  carrierConfirmedAt  DateTime?  // Set when carrier confirms pickup — unlocks withdrawal
-  withdrawalRequestedAt DateTime? // Set when seller clicks Request Withdrawal
+  carrierConfirmedAt  DateTime?  // Set when carrier confirms pickup — unlocks the order's share of pendingBalance
+
+  // EasyPost label fields
+  easypostShipmentId  String?
+  labelUrl            String?
+  labelTrackingNumber String?
+  labelCarrier        String?
+  labelBoughtAt       DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -477,6 +508,8 @@ model Transaction {
 
   // Stripe fields
   stripeTransactionId String?  // Could be charge ID, refund ID, transfer ID, etc.
+  stripeTransferId  String?
+  paypalPayoutId    String?
   stripePaymentMethod String?  // Payment method ID used
   stripeFeeAmount     Decimal? // Stripe's processing fee
   netAmount           Decimal? // Amount after fees
@@ -752,6 +785,11 @@ enum PaymentMethod {
   STRIPE
 }
 
+enum PayoutMethod {
+  STRIPE_BANK
+  PAYPAL
+}
+
 enum PaymentStatus {
   PENDING
   AUTHORIZED
@@ -845,6 +883,13 @@ enum NotificationType {
   SYSTEM_ANNOUNCEMENT
   NEW_MESSAGE
   MESSAGE_READ
+  TRADE_OFFER_RECEIVED
+  TRADE_OFFER_ACCEPTED
+  TRADE_OFFER_DECLINED
+  TRADE_OFFER_COUNTERED
+  TRADE_OFFER_SHIPPED
+  TRADE_OFFER_COMPLETED
+  PAYOUT_COMPLETED
 }
 
 // Chat Models
@@ -860,6 +905,7 @@ model Conversation {
   participants    ConversationParticipant[]
   messages        Message[]
   orgConversation OrgConversation?
+  tradeOffer      TradeOffer?
 
   @@map("conversation")
 }
@@ -926,6 +972,7 @@ enum ConversationType {
   SUPPORT
   ORDER
   ORGANIZATION
+  TRADE
 }
 
 enum MessageType {
@@ -952,11 +999,11 @@ enum ProductCategory {
   JERSEYS
   BOOTS
   FOOTBALLS
-  TRADING_CARDS
   GOALKEEPER_GLOVES
   SHIN_GUARDS
   TRAINING_EQUIPMENT
   ACCESSORIES
+  COLLECTIBLES
 }
 
 enum ProductSubcategory {
@@ -1007,6 +1054,10 @@ enum ProductSubcategory {
   EQUIPMENT_BAGS
   FIRST_AID
   COACHING_EQUIPMENT
+
+  // Collectibles
+  STICKERS
+  TRADING_CARDS
 }
 
 enum ShippingTerms {
@@ -1044,6 +1095,12 @@ enum ProductCondition {
   USED_LIKE_NEW
   USED_GOOD
   USED_FAIR
+  MINT
+  NEAR_MINT
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
 }
 
 enum ProductTier {
@@ -1051,6 +1108,13 @@ enum ProductTier {
   PRO
   ACADEMY
   CLUB
+}
+
+enum ProductVerificationStatus {
+  UNVERIFIED
+  FAN_MADE
+  VERIFIED_AUTHENTIC
+  VERIFIED_REPLICA
 }
 
 enum SoleplateType {
@@ -1068,6 +1132,15 @@ enum PlayerVersion {
   REPLICA
   STADIUM
   MATCH
+}
+
+enum BallGrade {
+  PRO_MATCH
+  COMPETITION
+  LEAGUE
+  TRAINING
+  CLUB
+  MINI_SKILLS
 }
 
 enum ReturnStatus {
@@ -1126,6 +1199,59 @@ enum ConversationPriority {
   URGENT
 }
 
+enum TradeOfferStatus {
+  PENDING
+  COUNTERED
+  AWAITING_PAYMENT
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  SHIPPING
+  COMPLETED
+  EXPIRED
+  DISPUTED
+}
+
+model TradeOffer {
+  id                      String           @id @default(cuid())
+  conversationId          String           @unique
+  proposerId              String
+  recipientId             String
+  requestedProductId      String
+  offeredProductId        String?
+  cashAmount              Decimal?
+  cashFromProposer        Boolean          @default(true)
+  cashStripeSessionId     String?
+  status                  TradeOfferStatus @default(PENDING)
+  counterCashAmount       Decimal?
+  counterById             String?
+
+  proposerTrackingNumber  String?
+  recipientTrackingNumber String?
+  proposerShippedAt       DateTime?
+  recipientShippedAt      DateTime?
+
+  expiresAt               DateTime?
+  completedAt             DateTime?
+  cancelledAt             DateTime?
+
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  conversation            Conversation     @relation(fields: [conversationId], references: [id])
+  proposer                User             @relation("TradeProposer", fields: [proposerId], references: [id])
+  recipient               User             @relation("TradeRecipient", fields: [recipientId], references: [id])
+  requestedProduct        Product          @relation("RequestedProduct", fields: [requestedProductId], references: [id])
+  offeredProduct          Product?         @relation("OfferedProduct", fields: [offeredProductId], references: [id])
+
+  @@index([proposerId])
+  @@index([recipientId])
+  @@index([status])
+  @@index([requestedProductId])
+  @@index([status, expiresAt])
+  @@map("trade_offer")
+}
+
 enum OrgConversationStatus {
   OPEN
   IN_PROGRESS
@@ -1137,9 +1263,11 @@ enum OrgConversationStatus {
 
 model PlatformSettings {
   id                  String   @id @default("singleton")
-  sellerCommissionPct Float    @default(0.10)
-  buyerMarketplaceFee Float    @default(0.00)
-  updatedAt           DateTime @updatedAt
+  sellerCommissionPct   Float    @default(0.10)
+  buyerMarketplaceFee   Float    @default(0.00)
+  shippingMarkupPct     Float    @default(0.15)
+  shippingFlatRateCents Int      @default(899)
+  updatedAt             DateTime @updatedAt
   updatedById         String?
 }
 
