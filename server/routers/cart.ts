@@ -394,45 +394,46 @@ export const cartRouter = createTRPCRouter({
         });
       }
 
+      // Batch-load all products and existing cart items before the loop
+      const productIds = input.guestItems.map((i) => i.productId);
+      const variantIds = input.guestItems.map((i) => i.variantId).filter(Boolean) as string[];
+
+      const [products, variants, existingCartItems] = await Promise.all([
+        ctx.prisma.product.findMany({
+          where: { id: { in: productIds }, isActive: true },
+          include: { variants: true },
+        }),
+        variantIds.length > 0
+          ? ctx.prisma.productVariant.findMany({ where: { id: { in: variantIds } } })
+          : Promise.resolve([]),
+        ctx.prisma.cartItem.findMany({
+          where: { buyerProfileId: buyerProfile.id, productId: { in: productIds } },
+        }),
+      ]);
+
+      const productMap = new Map(products.map((p) => [p.id, p]));
+      const variantMap = new Map(variants.map((v) => [v.id, v]));
+      const cartMap = new Map(
+        existingCartItems.map((c) => [`${c.productId}:${c.variantId ?? ""}`, c]),
+      );
+
       // Process each guest cart item
       for (const guestItem of input.guestItems) {
         try {
-          // Verify product exists
-          const product = await ctx.prisma.product.findUnique({
-            where: { id: guestItem.productId },
-            include: { variants: true },
-          });
+          const product = productMap.get(guestItem.productId);
+          if (!product) continue;
 
-          if (!product || !product.isActive) {
-            continue; // Skip invalid products
+          const variant = guestItem.variantId ? variantMap.get(guestItem.variantId) : null;
+          if (guestItem.variantId && (!variant || variant.productId !== guestItem.productId)) {
+            continue;
           }
 
-          // Verify variant if provided
-          let variant = null;
-          if (guestItem.variantId) {
-            variant = await ctx.prisma.productVariant.findUnique({
-              where: { id: guestItem.variantId },
-            });
-
-            if (!variant || variant.productId !== guestItem.productId) {
-              continue; // Skip invalid variants
-            }
-          }
-
-          // Check if item already in cart
-          const existingItem = await ctx.prisma.cartItem.findFirst({
-            where: {
-              buyerProfileId: buyerProfile.id,
-              productId: guestItem.productId,
-              variantId: guestItem.variantId || null,
-            },
-          });
+          const cartKey = `${guestItem.productId}:${guestItem.variantId ?? ""}`;
+          const existingItem = cartMap.get(cartKey);
+          const availableInventory = variant?.inventory ?? product.inventory;
 
           if (existingItem) {
-            // Update quantity
             const newQuantity = existingItem.quantity + guestItem.quantity;
-            const availableInventory = variant?.inventory || product.inventory;
-
             if (newQuantity <= availableInventory) {
               await ctx.prisma.cartItem.update({
                 where: { id: existingItem.id },
@@ -440,8 +441,6 @@ export const cartRouter = createTRPCRouter({
               });
             }
           } else {
-            // Create new cart item
-            const availableInventory = variant?.inventory || product.inventory;
             if (guestItem.quantity <= availableInventory) {
               await ctx.prisma.cartItem.create({
                 data: {
@@ -454,7 +453,6 @@ export const cartRouter = createTRPCRouter({
             }
           }
         } catch (error) {
-          // Log error but continue processing other items
           console.error("Error merging guest cart item:", error);
         }
       }

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 import { useOnboarding } from "@/contexts/onboarding-context";
 import { BUYER_CHECKLIST, SELLER_CHECKLIST } from "@/types/onboarding";
 import type { ChecklistStep } from "@/types/onboarding";
@@ -21,11 +22,11 @@ export function ChecklistPanel({ type }: ChecklistPanelProps) {
   function isUnlocked(stepId: string): boolean {
     if (type === "buyer") return true;
     if (stepId === "org-name-bio" || stepId === "org-logo") return true;
-    if (stepId === "payout-method" || stepId === "return-policy") {
+    if (stepId === "payout-details" || stepId === "return-policy") {
       return completed.includes("org-name-bio");
     }
     if (stepId === "list-product") {
-      return completed.includes("payout-method") && completed.includes("return-policy");
+      return completed.includes("payout-details") && completed.includes("return-policy");
     }
     return true;
   }
@@ -40,7 +41,7 @@ export function ChecklistPanel({ type }: ChecklistPanelProps) {
 
   return (
     <div
-      className="bg-content1 border border-divider rounded-xl p-4 mb-6"
+      className="bg-content1 border border-divider rounded-xl p-4 mb-4"
       data-onboarding="checklist-panel"
     >
       <div className="flex items-center justify-between mb-3">
@@ -78,19 +79,29 @@ export function ChecklistPanel({ type }: ChecklistPanelProps) {
             return (
               <li
                 key={step.id}
-                className={`flex items-center gap-2 text-sm ${!unlocked ? "opacity-40" : ""}`}
+                className={`flex items-center justify-between text-sm ${!unlocked ? "opacity-40" : ""}`}
               >
-                <Icon
-                  icon={done ? "lucide:check-circle" : unlocked ? "lucide:circle" : "lucide:lock"}
-                  className={done ? "text-success" : "text-default-400"}
-                  width={16}
-                />
-                <span className={done ? "line-through text-default-400" : ""}>
-                  {step.label}
-                  {step.optional && (
-                    <span className="ml-1 text-xs text-default-400">(bonus)</span>
-                  )}
+                <span className="flex items-center gap-2">
+                  <Icon
+                    icon={done ? "lucide:check-circle" : unlocked ? "lucide:circle" : "lucide:lock"}
+                    className={done ? "text-success" : "text-default-400"}
+                    width={16}
+                  />
+                  <span className={done ? "line-through text-default-400" : ""}>
+                    {step.label}
+                    {step.optional && (
+                      <span className="ml-1 text-xs text-default-400">(bonus)</span>
+                    )}
+                  </span>
                 </span>
+                {!done && unlocked && step.href && (
+                  <Link
+                    href={step.href}
+                    className="text-xs text-primary hover:underline shrink-0"
+                  >
+                    Go →
+                  </Link>
+                )}
               </li>
             );
           })}

@@ -93,7 +93,8 @@ export default function SidebarWrapper({
   const isCompact = useMediaQuery("(max-width: 768px)");
   const pathname = usePathname();
   const router = useRouter();
-  const { isPending } = useSession();
+  const { data: session, isPending } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
   // Get user organizations
   const { data: organizations, isLoading: isLoadingOrgs } =
@@ -229,43 +230,45 @@ export default function SidebarWrapper({
             "items-center": isCompact,
           })}
         >
-          <Tooltip
-            content="Admin Access"
-            isDisabled={!isCompact}
-            placement="right"
-          >
-            <Button
-              fullWidth
-              className={cn(
-                "text-default-600 data-[hover=true]:text-foreground justify-start truncate text-sm font-medium antialiased",
-                {
-                  "justify-center": isCompact,
-                },
-              )}
-              isIconOnly={isCompact}
-              startContent={
-                isCompact ? null : (
+          {isAdmin && (
+            <Tooltip
+              content="Admin Access"
+              isDisabled={!isCompact}
+              placement="right"
+            >
+              <Button
+                fullWidth
+                className={cn(
+                  "text-default-600 data-[hover=true]:text-foreground justify-start truncate text-sm font-medium antialiased",
+                  {
+                    "justify-center": isCompact,
+                  },
+                )}
+                isIconOnly={isCompact}
+                startContent={
+                  isCompact ? null : (
+                    <Icon
+                      className="text-default-600 flex-none"
+                      icon="solar:shield-user-line-duotone"
+                      width={24}
+                    />
+                  )
+                }
+                variant="light"
+                onPress={() => router.push("/admin")}
+              >
+                {isCompact ? (
                   <Icon
-                    className="text-default-600 flex-none"
-                    icon="solar:info-circle-line-duotone"
+                    className="text-default-600"
+                    icon="solar:shield-user-line-duotone"
                     width={24}
                   />
-                )
-              }
-              variant="light"
-              onPress={() => router.push("/admin")}
-            >
-              {isCompact ? (
-                <Icon
-                  className="text-default-600"
-                  icon="solar:info-circle-line-duotone"
-                  width={24}
-                />
-              ) : (
-                "Admin Access"
-              )}
-            </Button>
-          </Tooltip>
+                ) : (
+                  "Admin Access"
+                )}
+              </Button>
+            </Tooltip>
+          )}
           <Tooltip
             content="Help & Feedback"
             isDisabled={!isCompact}
@@ -290,6 +293,7 @@ export default function SidebarWrapper({
                 )
               }
               variant="light"
+              onPress={() => router.push("/help")}
             >
               {isCompact ? (
                 <Icon

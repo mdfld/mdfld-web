@@ -17,8 +17,26 @@ import { useSession } from "@/lib/auth-client";
 import MessagingChatMessage from "./messaging-chat-message";
 import MessagingChatInput from "./messaging-chat-input";
 import MessagingChatHeader from "./messaging-chat-header";
+import TradeOfferCard from "./trade-offer-card";
 import { useChat } from "@/hooks/useChat";
 import { trpc } from "@/lib/trpc-client";
+
+function TradeOfferWindowLoader({
+  conversationId,
+  currentUserId,
+}: {
+  conversationId: string;
+  currentUserId: string;
+}) {
+  const { data: offer } = trpc.trade.getOfferByConversation.useQuery(
+    { conversationId },
+    { enabled: !!conversationId },
+  );
+
+  if (!offer) return null;
+
+  return <TradeOfferCard offer={offer as any} currentUserId={currentUserId} />;
+}
 
 export type MessagingChatWindowProps = React.HTMLAttributes<HTMLDivElement> & {
   paginate?: (page: number) => void;
@@ -175,6 +193,12 @@ const MessagingChatWindow = React.forwardRef<
             </Dropdown>
           </div>
         </div>
+        {currentConversation?.type === "TRADE" && conversationId && (
+          <TradeOfferWindowLoader
+            conversationId={conversationId}
+            currentUserId={currentUserId || ""}
+          />
+        )}
         <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollShadow
             ref={scrollRef}

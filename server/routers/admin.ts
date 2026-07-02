@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure, superAdminProcedure, publicProcedure } from "../trpc";
+import { transferToSeller } from "@/lib/stripe-payouts";
+import { sendPaypalPayout } from "@/lib/paypal-payouts";
+import { getAvailableBalance } from "@/lib/seller-balance";
 
 export const adminRouter = createTRPCRouter({
-  analytics: protectedProcedure.query(async ({ ctx }) => {
-    // TODO: Add proper admin role check
-    // For now, allow all authenticated users
-
+  analytics: adminProcedure.query(async ({ ctx }) => {
     // Get total user count
     const userCount = await ctx.prisma.user.count();
 
@@ -279,7 +279,39 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  deleteProduct: adminProcedure
+  setProductVerification: superAdminProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        verificationStatus: z.enum(["UNVERIFIED", "FAN_MADE", "VERIFIED_AUTHENTIC", "VERIFIED_REPLICA"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const previous = await ctx.prisma.product.findUnique({
+        where: { id: input.productId },
+      });
+
+      const updated = await ctx.prisma.product.update({
+        where: { id: input.productId },
+        data: { verificationStatus: input.verificationStatus },
+        select: { id: true, verificationStatus: true },
+      });
+
+      await ctx.prisma.auditLog.create({
+        data: {
+          userId: ctx.user.id,
+          action: "PRODUCT_VERIFICATION_UPDATED",
+          entityType: "Product",
+          entityId: input.productId,
+          oldValues: { verificationStatus: previous?.verificationStatus },
+          newValues: { verificationStatus: input.verificationStatus },
+        },
+      });
+
+      return updated;
+    }),
+
+  deleteProduct: superAdminProcedure
     .input(z.object({ productId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.auditLog.create({
@@ -294,7 +326,7 @@ export const adminRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  updateProduct: adminProcedure
+  updateProduct: superAdminProcedure
     .input(
       z.object({
         productId: z.string(),
@@ -309,6 +341,7 @@ export const adminRouter = createTRPCRouter({
             "BOOTS",
             "FOOTBALLS",
             "TRADING_CARDS",
+            "STICKERS",
             "GOALKEEPER_GLOVES",
             "SHIN_GUARDS",
             "TRAINING_EQUIPMENT",
@@ -443,14 +476,23 @@ export const adminRouter = createTRPCRouter({
           storeName: true,
           businessEmail: true,
           pendingBalance: true,
+          lockedBalance: true,
           settledBalance: true,
-          bankAccount: true,
+          payoutMethod:     true,
+          stripeBankLast4:  true,
+          paypalEmail:      true,
+          payoutSetupAt:    true,
+          payoutRequestedAt: true,
           user: { select: { name: true, email: true } },
         },
       });
       let nextCursor: string | undefined;
       if (sellers.length > input.limit) nextCursor = sellers.pop()!.id;
-      return { sellers, nextCursor };
+      const sellersWithAvailable = sellers.map((seller) => ({
+        ...seller,
+        availableBalance: getAvailableBalance(seller),
+      }));
+      return { sellers: sellersWithAvailable, nextCursor };
     }),
 
   getPublicFees: publicProcedure.query(async ({ ctx }) => {
@@ -458,9 +500,12 @@ export const adminRouter = createTRPCRouter({
       where: { id: "singleton" },
       create: { id: "singleton" },
       update: {},
-      select: { buyerMarketplaceFee: true },
+      select: { buyerMarketplaceFee: true, sellerCommissionPct: true },
     });
-    return { buyerMarketplaceFee: settings.buyerMarketplaceFee };
+    return {
+      buyerMarketplaceFee: settings.buyerMarketplaceFee,
+      sellerCommissionPct: settings.sellerCommissionPct,
+    };
   }),
 
   getPlatformSettings: adminProcedure.query(async ({ ctx }) => {
@@ -473,8 +518,10 @@ export const adminRouter = createTRPCRouter({
 
   updatePlatformSettings: adminProcedure
     .input(z.object({
-      sellerCommissionPct: z.number().min(0).max(1),
-      buyerMarketplaceFee: z.number().min(0).max(1),
+      sellerCommissionPct:   z.number().min(0).max(1),
+      buyerMarketplaceFee:   z.number().min(0).max(1),
+      shippingMarkupPct:     z.number().min(0).max(2),
+      shippingFlatRateCents: z.number().int().min(0),
     }))
     .mutation(async ({ ctx, input }) => {
       const settings = await ctx.prisma.platformSettings.upsert({
@@ -495,65 +542,130 @@ export const adminRouter = createTRPCRouter({
     }),
 
   triggerPayout: adminProcedure
-    .input(
-      z.object({
-        sellerProfileId: z.string(),
-        amount: z.number().positive(),
-        notes: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      sellerProfileId: z.string(),
+      amount:          z.number().positive(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const seller = await ctx.prisma.sellerProfile.findUnique({
-        where: { id: input.sellerProfileId },
+        where:   { id: input.sellerProfileId },
         include: { user: true },
       });
 
       if (!seller) throw new TRPCError({ code: "NOT_FOUND", message: "Seller not found" });
-      if (!seller.bankAccount) {
+
+      if (!seller.payoutMethod) {
         throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Seller has not provided bank account details",
+          code:    "PRECONDITION_FAILED",
+          message: "Seller has not set up a payout method",
         });
       }
 
-      const amountCents = Math.round(input.amount * 100);
-      const pendingCents = Math.round(Number(seller.pendingBalance) * 100);
-      if (amountCents > pendingCents) {
+      const availableBalance = getAvailableBalance(seller);
+      const availableCents   = Math.round(availableBalance * 100);
+      const amountCents      = Math.round(input.amount * 100);
+      if (amountCents > availableCents) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Payout amount exceeds pending balance ($${seller.pendingBalance})`,
+          code:    "BAD_REQUEST",
+          message: `Payout amount exceeds available balance ($${availableBalance.toFixed(2)})`,
         });
       }
 
-      const transaction = await ctx.prisma.transaction.create({
-        data: {
-          userId: seller.userId!,
-          type: "PAYOUT",
-          amount: input.amount,
-          status: "COMPLETED",
-          paymentMethod: "STRIPE",
-          netAmount: input.amount,
-        },
+      // Stable across retries of the same trigger (payoutRequestedAt only
+      // changes when the seller submits a new payout request), so a
+      // double-click or retry within Stripe's idempotency window reuses
+      // the same transfer instead of double-paying. When there's no
+      // payoutRequestedAt (a manual payout), fall back to a random value
+      // so two distinct manual payouts don't collide on the same Stripe
+      // idempotency key.
+      const idempotencyKey = `payout-${input.sellerProfileId}-${amountCents}-${
+        seller.payoutRequestedAt ? seller.payoutRequestedAt.getTime() : `manual-${crypto.randomUUID()}`
+      }`;
+
+      // Execute the real payout - must succeed before touching the DB
+      let transferId: string;
+      let destination: string;
+
+      if (seller.payoutMethod === "STRIPE_BANK") {
+        if (!seller.stripeAccountId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Seller Stripe account not found" });
+        }
+        const { transferId: tid } = await transferToSeller({
+          stripeAccountId: seller.stripeAccountId,
+          amountCents,
+          reference:       input.sellerProfileId,
+          idempotencyKey,
+        });
+        transferId  = tid;
+        destination = `••••${seller.stripeBankLast4}`;
+      } else {
+        if (!seller.paypalEmail) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Seller PayPal email not found" });
+        }
+        // PayPal payouts are processed asynchronously: a successful response
+        // here means the batch was accepted (status PENDING), not that funds
+        // have settled. Individual items can still fail after submission.
+        const { payoutBatchId } = await sendPaypalPayout({
+          paypalEmail:  seller.paypalEmail,
+          amountUsd:    input.amount.toFixed(2),
+          senderItemId: `${input.sellerProfileId}-${Date.now()}`,
+        });
+        transferId  = payoutBatchId;
+        destination = seller.paypalEmail;
+      }
+
+      // Payout succeeded - record atomically
+      await ctx.prisma.$transaction(async (tx) => {
+        await tx.transaction.create({
+          data: {
+            userId:          seller.userId!,
+            type:            "PAYOUT",
+            amount:          input.amount,
+            status:          "COMPLETED",
+            paymentMethod:   seller.payoutMethod === "STRIPE_BANK" ? "STRIPE" : "PAYPAL",
+            netAmount:       input.amount,
+            stripeTransferId: seller.payoutMethod === "STRIPE_BANK" ? transferId : null,
+            paypalPayoutId:   seller.payoutMethod === "PAYPAL"       ? transferId : null,
+          },
+        });
+
+        await tx.sellerProfile.update({
+          where: { id: input.sellerProfileId },
+          data: {
+            pendingBalance:    { decrement: input.amount },
+            settledBalance:    { increment: input.amount },
+            payoutRequestedAt: null,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId:     ctx.user.id,
+            action:     "PAYOUT_TRIGGERED",
+            entityType: "SellerProfile",
+            entityId:   input.sellerProfileId,
+            newValues:  { amount: input.amount, transferId, method: seller.payoutMethod },
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId:  seller.userId!,
+            type:    "PAYOUT_COMPLETED",
+            title:   "Payment sent",
+            content: `$${input.amount.toFixed(2)} has been sent to your ${seller.payoutMethod === "STRIPE_BANK" ? "bank account" : "PayPal"} and should arrive within 1 to 2 business days.`,
+            metadata: { transferId, amount: input.amount, method: seller.payoutMethod },
+          },
+        });
       });
 
-      await ctx.prisma.sellerProfile.update({
-        where: { id: input.sellerProfileId },
-        data: {
-          pendingBalance: { decrement: input.amount },
-          settledBalance: { increment: input.amount },
-        },
-      });
-
-      await ctx.prisma.auditLog.create({
-        data: {
-          userId: ctx.user.id,
-          action: "PAYOUT_TRIGGERED",
-          entityType: "SellerProfile",
-          entityId: input.sellerProfileId,
-          newValues: { amount: input.amount, transactionId: transaction.id, notes: input.notes },
-        },
-      });
-
-      return { success: true, transactionId: transaction.id };
+      return {
+        sellerName:  seller.storeName,
+        amount:      input.amount,
+        method:      seller.payoutMethod,
+        destination,
+        transferId,
+        timestamp:   new Date(),
+      };
     }),
 });

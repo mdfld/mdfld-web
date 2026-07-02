@@ -93,7 +93,7 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
                 isBordered
                 src={session?.user.image}
                 name={session?.user.name || "MD"}
-                radius="lg"
+                radius="full"
                 className="mx-1 transition-transform"
                 size="md"
               />
@@ -158,14 +158,16 @@ export default function UserSwitcher({ isCompact = false }: UserSwitcherProps) {
                       {org.name}
                     </DropdownItem>
                   ))}
-                  <DropdownItem
-                    key="create-org"
-                    onClick={handleCreateOrganization}
-                    startContent={<PlusIcon className="text-default-500" />}
-                    className="text-primary"
-                  >
-                    Create Store
-                  </DropdownItem>
+                  {!organizations.some((org: any) => org.role === "owner") && (
+                    <DropdownItem
+                      key="create-org"
+                      onClick={handleCreateOrganization}
+                      startContent={<PlusIcon className="text-default-500" />}
+                      className="text-primary"
+                    >
+                      Create Store
+                    </DropdownItem>
+                  )}
                 </>
               ) : (
                 <DropdownItem

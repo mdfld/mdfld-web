@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { cn } from "@heroui/react";
@@ -48,6 +48,12 @@ const MultiStepSidebar = React.forwardRef<
     },
     ref,
   ) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      scrollRef.current?.scrollTo({ top: 0 });
+    }, [currentPage]);
+
     return (
       <div
         ref={ref}
@@ -87,12 +93,12 @@ const MultiStepSidebar = React.forwardRef<
                 description: "Name and description",
               },
               {
-                title: "Company Details",
-                description: "Business type and industry",
+                title: "Store Details",
+                description: "Optional info about your store",
               },
               {
-                title: "Business Address",
-                description: "Your official location",
+                title: "Location & Shipping",
+                description: "Where you ship from",
               },
               {
                 title: "Review & Create",
@@ -114,10 +120,10 @@ const MultiStepSidebar = React.forwardRef<
                     title: "Basic Info",
                   },
                   {
-                    title: "Details",
+                    title: "Store Info",
                   },
                   {
-                    title: "Address",
+                    title: "Location",
                   },
                   {
                     title: "Review",
@@ -127,7 +133,7 @@ const MultiStepSidebar = React.forwardRef<
               />
             </div>
           </div>
-          <div className="h-full w-full overflow-y-auto p-4 sm:max-w-md md:max-w-lg">
+          <div ref={scrollRef} className="h-full w-full overflow-y-auto p-4 sm:max-w-md md:max-w-lg">
             {children}
             <MultistepNavigationButtons
               backButtonProps={{ isDisabled: currentPage === 0 }}

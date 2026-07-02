@@ -1,82 +1,72 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  Image,
-  Spinner,
+  Button, Card, CardBody, Divider, Input, Select, SelectItem,
+  RadioGroup, Radio, Spinner, Image,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { useGuestCart } from "@/hooks/use-guest-cart";
-import { SpotlightTour } from "@/components/onboarding/spotlight-tour";
-import { TourTrigger } from "@/components/onboarding/tour-trigger";
 import { useOnboarding } from "@/contexts/onboarding-context";
-import { getTour } from "@/lib/onboarding-tours.config";
+
+type Address = {
+  name: string; street: string; apt: string;
+  city: string; state: string; zip: string; country: string;
+};
+
+type RateOption = {
+  easypostRateId: string; carrier: string; service: string;
+  rateCents: number; totalCents: number; deliveryDays: number | null;
+};
+
+type Shipment = {
+  sellerId: string; sellerName: string;
+  standard: RateOption; express: RateOption | null;
+};
+
+type ShippingSelection = {
+  sellerId: string; tier: "standard" | "express";
+  rate: RateOption;
+};
+
+const COUNTRIES = [
+  { key: "US", label: "United States" },
+  { key: "CA", label: "Canada" },
+  { key: "GB", label: "United Kingdom" },
+  { key: "AU", label: "Australia" },
+];
+
+function fmt(cents: number) {
+  return cents === 0 ? "Free" : `$${(cents / 100).toFixed(2)}`;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const { completeStep } = useOnboarding();
   const guestCart = useGuestCart();
-  const { shouldShowTour, markTourSeen, completeStep } = useOnboarding();
-  const [tourActive, setTourActive] = React.useState(false);
-  const tour = getTour("checkout");
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
 
-  useEffect(() => {
-    if (shouldShowTour("checkout")) setTourActive(true);
-  }, [shouldShowTour]);
+  const { data: authCartData, isLoading: cartLoading } = trpc.cart.get.useQuery(
+    undefined, { enabled: !!session?.user }
+  );
 
-  const handleTourEnd = async () => {
-    setTourActive(false);
-    await markTourSeen("checkout");
-  };
-
-  // Merge cart mutation
-  const mergeCart = trpc.cart.mergeGuestCart.useMutation();
-
-  // Get cart data
-  const { data: authCartData, isLoading: authLoading } = trpc.cart.get.useQuery(undefined, {
-    enabled: !!session?.user,
-  });
-
-  const isLoading = session?.user ? authLoading || !guestCart.isLoaded : !guestCart.isLoaded;
   const cartData = session?.user ? authCartData : guestCart.getCartData();
+  const isLoading = isPending || (!!session?.user && cartLoading);
 
-  // Merge guest cart when user logs in
-  useEffect(() => {
-    if (session?.user && guestCart.guestCart.length > 0 && !isPending) {
-      // User just logged in and has guest cart items
-      const guestItems = guestCart.guestCart.map(item => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        quantity: item.quantity,
-      }));
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [address, setAddress] = useState<Address>({
+    name: "", street: "", apt: "", city: "", state: "", zip: "", country: "US",
+  });
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [selections, setSelections] = useState<Record<string, ShippingSelection>>({});
+  const [fetchingRates, setFetchingRates] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-      mergeCart.mutate(
-        { guestItems },
-        {
-          onSuccess: () => {
-            // Clear guest cart after successful merge
-            guestCart.clearCart();
-            toast.success("Cart items merged successfully");
-          },
-          onError: () => {
-            toast.error("Failed to merge cart items");
-          },
-        }
-      );
-    }
-  }, [session?.user, isPending]);
-
-  // Redirect if not logged in
   useEffect(() => {
     if (!isPending && !session?.user) {
       toast.error("Please log in to continue with checkout");
@@ -84,16 +74,81 @@ export default function CheckoutPage() {
     }
   }, [session, isPending, router]);
 
-  const handleCheckout = async () => {
-    if (!cartData?.items.length) {
-      toast.error("Your bag is empty");
-      return;
-    }
+  if (isPending || isLoading) {
+    return <div className="flex items-center justify-center min-h-[60vh]"><Spinner size="lg" /></div>;
+  }
+  if (!session?.user) return null;
 
+  if (!cartData?.items?.length) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <Card className="max-w-md mx-auto"><CardBody className="text-center py-12">
+          <Icon icon="solar:bag-4-linear" className="w-16 h-16 mx-auto mb-4 text-default-400" />
+          <h2 className="text-xl font-medium mb-2">Your bag is empty</h2>
+          <Button color="primary" onPress={() => router.push("/products")}>Continue Shopping</Button>
+        </CardBody></Card>
+      </div>
+    );
+  }
+
+  const subtotal: number = cartData?.subtotal || 0;
+  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
+  const shippingTotal = Object.values(selections).reduce((sum, s) => sum + s.rate.totalCents, 0) / 100;
+  const total = subtotal + marketplaceFee + shippingTotal;
+
+  const addressValid =
+    address.name.trim() && address.street.trim() && address.city.trim() &&
+    address.state.trim() && address.zip.trim() && address.country.trim();
+
+  const allSelected = shipments.length > 0 && shipments.every((s) => selections[s.sellerId]);
+
+  const handleFetchRates = async () => {
+    if (!addressValid) return;
+    setFetchingRates(true);
+    try {
+      const res = await fetch("/api/shipping/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toAddress: { street: address.street + (address.apt ? ` ${address.apt}` : ""), city: address.city, state: address.state, zip: address.zip, country: address.country },
+          items: cartData.items.map((item: any) => ({
+            productId: item.product.id,
+            variantId: item.variant?.id,
+            quantity: item.quantity,
+            sellerId: item.product.seller?.id,
+          })),
+        }),
+      });
+      if (!res.ok) throw new Error("Rate fetch failed");
+      const { shipments: fetched } = await res.json();
+      setShipments(fetched);
+      const defaults: Record<string, ShippingSelection> = {};
+      for (const s of fetched) {
+        defaults[s.sellerId] = { sellerId: s.sellerId, tier: "standard", rate: s.standard };
+      }
+      setSelections(defaults);
+      setStep(2);
+    } catch {
+      toast.error("Failed to calculate shipping rates. Please try again.");
+    } finally {
+      setFetchingRates(false);
+    }
+  };
+
+  const handleCheckout = async () => {
     setIsProcessing(true);
     try {
-      // Create Stripe checkout session
-      const response = await fetch("/api/stripe/create-checkout-session", {
+      const shippingSelections = Object.values(selections).map((s) => ({
+        sellerId: s.sellerId,
+        easypostRateId: s.rate.easypostRateId,
+        carrier: s.rate.carrier,
+        service: s.rate.service,
+        rateCents: s.rate.rateCents,
+        totalCents: s.rate.totalCents,
+        deliveryDays: s.rate.deliveryDays,
+      }));
+
+      const res = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,274 +159,187 @@ export default function CheckoutPage() {
             price: item.variant?.price || item.product.price,
             name: item.product.title,
             image: item.product.images?.[0],
-            sellerId: item.product.seller.id,
+            sellerId: item.product.seller?.id,
+            sellerName: item.product.seller?.storeName,
           })),
+          shippingSelections,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create checkout session");
-      }
-
-      const { url } = await response.json();
-
-      // Complete onboarding steps before redirecting
-      await completeStep("understand-auth", "buyer");
+      if (!res.ok) throw new Error("Failed to create checkout session");
+      const { url } = await res.json();
       await completeStep("place-order", "buyer");
-
-      // Redirect to Stripe Checkout
       window.location.href = url;
-    } catch (error) {
-      console.error("Checkout error:", error);
+    } catch {
       toast.error("Failed to process checkout");
       setIsProcessing(false);
     }
   };
 
-  if (isPending || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    return null; // Will redirect in useEffect
-  }
-
-  if (!cartData?.items.length) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-8">Checkout</h1>
-        <Card className="max-w-md mx-auto">
-          <CardBody className="text-center py-12">
-            <Icon
-              icon="solar:bag-4-linear"
-              className="w-16 h-16 mx-auto mb-4 text-default-400"
-            />
-            <h2 className="text-xl font-medium mb-2">Your bag is empty</h2>
-            <p className="text-default-500 mb-6">
-              Add items to your bag before checking out
-            </p>
-            <Button color="primary" onPress={() => router.push("/products")}>
-              Continue Shopping
-            </Button>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
-
-  const { data: fees } = trpc.admin.getPublicFees.useQuery();
-  const subtotal: number = cartData?.subtotal || 0;
-  const shipping: number = 0;
-  const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);
-  const total: number = subtotal + shipping + marketplaceFee;
+  const OrderSummary = () => (
+    <Card>
+      <CardBody className="gap-4">
+        <p className="text-sm font-medium">Order Summary</p>
+        <div className="space-y-3 max-h-[260px] overflow-y-auto">
+          {cartData.items.map((item: any) => (
+            <div key={item.id} className="flex gap-3">
+              <div className="relative flex-shrink-0">
+                <Image src={item.product.images?.[0] || "/placeholder-product.jpg"} alt={item.product.title} className="w-14 h-14 object-cover rounded-lg" />
+                <div className="absolute -top-1.5 -right-1.5 bg-default-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">{item.quantity}</div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{item.product.title}</p>
+                <p className="text-sm text-default-500">${Number(item.variant?.price || item.product.price).toFixed(2)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Divider />
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between"><span className="text-default-500">Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+          <div className="flex justify-between">
+            <span className="text-default-500">Shipping</span>
+            <span>{step === 1 ? "Calculated next" : fmt(Object.values(selections).reduce((s, sel) => s + sel.rate.totalCents, 0))}</span>
+          </div>
+          {marketplaceFee > 0 && <div className="flex justify-between"><span className="text-default-500">Marketplace Fee</span><span>${marketplaceFee.toFixed(2)}</span></div>}
+        </div>
+        <Divider />
+        <div className="flex justify-between font-semibold"><span>Total</span><span>${step === 1 ? (subtotal + marketplaceFee).toFixed(2) : total.toFixed(2)}</span></div>
+      </CardBody>
+    </Card>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Button
-          variant="light"
-          startContent={<Icon icon="solar:arrow-left-linear" />}
-          onPress={() => router.push("/bag")}
-        >
-          Back to Bag
+      <div className="mb-6">
+        <Button variant="light" startContent={<Icon icon="solar:arrow-left-linear" />}
+          onPress={() => step === 1 ? router.push("/bag") : setStep((s) => (s - 1) as 1 | 2 | 3)}>
+          {step === 1 ? "Back to Bag" : "Back"}
         </Button>
       </div>
 
-      <h1 className="text-2xl font-semibold mb-8">Checkout</h1>
+      <div className="flex items-center gap-2 mb-8 text-sm">
+        {(["Delivery", "Shipping", "Review"] as const).map((label, i) => (
+          <React.Fragment key={label}>
+            <span className={step === i + 1 ? "font-semibold text-primary" : "text-default-400"}>{i + 1}. {label}</span>
+            {i < 2 && <Icon icon="solar:arrow-right-linear" className="text-default-300 w-3 h-3" />}
+          </React.Fragment>
+        ))}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Checkout Information */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Secure Checkout Notice */}
-          <Card className="bg-default-50 border-2 border-primary">
-            <CardBody className="py-6">
-              <div className="flex items-start gap-4">
-                <Icon
-                  icon="solar:shield-check-bold"
-                  className="text-3xl text-primary flex-shrink-0 mt-1"
-                />
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">
-                    Secure Stripe Checkout
-                  </h2>
-                  <p className="text-default-600 mb-3">
-                    You'll be redirected to Stripe's secure payment page to
-                    complete your purchase. Your payment information is never
-                    stored on our servers.
-                  </p>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <Icon icon="logos:visa" className="h-8" />
-                    <Icon icon="logos:mastercard" className="h-8" />
-                    <Icon icon="logos:amex" className="h-8" />
-                    <Icon icon="logos:discover" className="h-8" />
-                  </div>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
 
-          {/* What to Expect */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold">What to Expect</h2>
-            </CardHeader>
-            <Divider />
-            <CardBody className="gap-3">
-              <div className="flex items-start gap-3">
-                <div className="bg-primary/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-primary font-semibold">1</span>
+          {step === 1 && (
+            <Card>
+              <CardBody className="space-y-4 p-6">
+                <h2 className="text-lg font-medium">Delivery Address</h2>
+                <Input label="Full Name" isRequired value={address.name} onValueChange={(v) => setAddress((a) => ({ ...a, name: v }))} />
+                <Input label="Street Address" isRequired value={address.street} onValueChange={(v) => setAddress((a) => ({ ...a, street: v }))} />
+                <Input label="Apt, Suite, Unit (optional)" value={address.apt} onValueChange={(v) => setAddress((a) => ({ ...a, apt: v }))} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="City" isRequired value={address.city} onValueChange={(v) => setAddress((a) => ({ ...a, city: v }))} />
+                  <Input label="State / Province" isRequired value={address.state} onValueChange={(v) => setAddress((a) => ({ ...a, state: v }))} />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="Zip / Postal Code" isRequired value={address.zip} onValueChange={(v) => setAddress((a) => ({ ...a, zip: v }))} />
+                  <Select label="Country" isRequired selectedKeys={[address.country]} onSelectionChange={(k) => setAddress((a) => ({ ...a, country: Array.from(k)[0] as string }))}>
+                    {COUNTRIES.map((c) => <SelectItem key={c.key}>{c.label}</SelectItem>)}
+                  </Select>
+                </div>
+                <Button fullWidth color="primary" size="lg" isDisabled={!addressValid} isLoading={fetchingRates} onPress={handleFetchRates}
+                  startContent={!fetchingRates && <Icon icon="solar:box-linear" />}>
+                  Continue to Shipping
+                </Button>
+              </CardBody>
+            </Card>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium">Select Shipping</h2>
+              {shipments.map((shipment) => (
+                <Card key={shipment.sellerId}>
+                  <CardBody className="p-5">
+                    <p className="text-sm font-medium mb-3">{shipment.sellerName}</p>
+                    {shipment.standard.service === "DDP" ? (
+                      <p className="text-sm text-success">Shipping included in price</p>
+                    ) : shipment.express === null ? (
+                      <div className="flex justify-between text-sm">
+                        <span>{shipment.standard.carrier} {shipment.standard.service} {shipment.standard.deliveryDays ? `· ${shipment.standard.deliveryDays} days` : ""}</span>
+                        <span className="font-medium">{fmt(shipment.standard.totalCents)}</span>
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={selections[shipment.sellerId]?.tier ?? "standard"}
+                        onValueChange={(v) => setSelections((prev) => ({
+                          ...prev,
+                          [shipment.sellerId]: { sellerId: shipment.sellerId, tier: v as "standard" | "express", rate: v === "express" ? shipment.express! : shipment.standard },
+                        }))}
+                      >
+                        <Radio value="standard" description={`${shipment.standard.carrier} ${shipment.standard.service}${shipment.standard.deliveryDays ? ` · ${shipment.standard.deliveryDays} days` : ""}`}>
+                          <span className="font-medium">{fmt(shipment.standard.totalCents)}</span> <span className="text-default-500 text-xs ml-1">Standard</span>
+                        </Radio>
+                        <Radio value="express" description={`${shipment.express.carrier} ${shipment.express.service}${shipment.express.deliveryDays ? ` · ${shipment.express.deliveryDays} days` : ""}`}>
+                          <span className="font-medium">{fmt(shipment.express.totalCents)}</span> <span className="text-default-500 text-xs ml-1">Express</span>
+                        </Radio>
+                      </RadioGroup>
+                    )}
+                  </CardBody>
+                </Card>
+              ))}
+              <Button fullWidth color="primary" size="lg" isDisabled={!allSelected} onPress={() => setStep(3)}
+                startContent={<Icon icon="solar:checklist-minimalistic-outline" />}>
+                Continue to Review
+              </Button>
+            </div>
+          )}
+
+          {step === 3 && (
+            <Card>
+              <CardBody className="space-y-5 p-6">
+                <h2 className="text-lg font-medium">Review & Pay</h2>
+
                 <div>
-                  <p className="font-medium">Secure Payment</p>
-                  <p className="text-sm text-default-500">
-                    Enter your payment and shipping details on Stripe's secure
-                    checkout page
-                  </p>
+                  <p className="text-xs text-default-400 uppercase tracking-wide mb-1">Delivering to</p>
+                  <p className="text-sm">{address.name}</p>
+                  <p className="text-sm text-default-500">{address.street}{address.apt ? `, ${address.apt}` : ""}, {address.city}, {address.state} {address.zip}</p>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="bg-primary/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-primary font-semibold">2</span>
-                </div>
+
+                <Divider />
+
                 <div>
-                  <p className="font-medium">Order Confirmation</p>
-                  <p className="text-sm text-default-500">
-                    Receive instant confirmation and email receipt
-                  </p>
+                  <p className="text-xs text-default-400 uppercase tracking-wide mb-2">Shipping</p>
+                  {shipments.map((s) => {
+                    const sel = selections[s.sellerId];
+                    if (!sel) return null;
+                    return (
+                      <div key={s.sellerId} className="flex justify-between text-sm mb-1">
+                        <span>{s.sellerName} — {sel.rate.carrier} {sel.rate.service}</span>
+                        <span>{fmt(sel.rate.totalCents)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="bg-primary/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-primary font-semibold">3</span>
-                </div>
-                <div>
-                  <p className="font-medium">Fast Shipping</p>
-                  <p className="text-sm text-default-500">
-                    Your items will be prepared and shipped within 1-2 business
-                    days
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+
+                <Divider />
+
+                <Button fullWidth color="primary" size="lg" isLoading={isProcessing} onPress={handleCheckout}
+                  startContent={!isProcessing && <Icon icon="solar:lock-keyhole-bold" />}>
+                  {isProcessing ? "Redirecting to Stripe..." : `Pay $${total.toFixed(2)}`}
+                </Button>
+                <p className="text-xs text-center text-default-400 flex items-center justify-center gap-1">
+                  <Icon icon="solar:shield-check-linear" /> Secure checkout powered by Stripe
+                </p>
+              </CardBody>
+            </Card>
+          )}
         </div>
 
-        {/* Order Summary */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold">Order Summary</h2>
-            </CardHeader>
-            <Divider />
-            <CardBody className="gap-4">
-              {/* Cart Items */}
-              <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                {cartData.items.map((item: any) => (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="relative">
-                      <Image
-                        src={
-                          item.product.images?.[0] || "/placeholder-product.jpg"
-                        }
-                        alt={item.product.title}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                      <div className="absolute -top-2 -right-2 bg-default-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                        {item.quantity}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {item.product.title}
-                      </p>
-                      {item.variant && (
-                        <p className="text-xs text-default-500">
-                          {item.variant.sizeDisplay && (
-                            <span>Size: {item.variant.sizeDisplay}</span>
-                          )}
-                          {item.variant.color && (
-                            <span className="ml-2">
-                              Color: {item.variant.color}
-                            </span>
-                          )}
-                        </p>
-                      )}
-                      <p className="text-sm font-medium mt-1">
-                        $
-                        {(
-                          Number(item.variant?.price || item.product.price) *
-                          item.quantity
-                        ).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Divider />
-
-              {/* Price Breakdown */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-default-600">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-default-600">Shipping</span>
-                  <span>
-                    {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
-                  </span>
-                </div>
-                {marketplaceFee > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-default-600">Marketplace Fee</span>
-                    <span>${marketplaceFee.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-
-              <Divider />
-
-              <div className="flex justify-between font-semibold text-lg">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-
-              <Button
-                fullWidth
-                color="primary"
-                size="lg"
-                onPress={handleCheckout}
-                isLoading={isProcessing}
-                startContent={
-                  !isProcessing && <Icon icon="solar:lock-keyhole-bold" />
-                }
-              >
-                {isProcessing
-                  ? "Redirecting to Stripe..."
-                  : "Continue to Payment"}
-              </Button>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-default-500">
-                <Icon icon="solar:shield-check-linear" />
-                <span>Secure checkout powered by Stripe</span>
-              </div>
-            </CardBody>
-          </Card>
+          <OrderSummary />
         </div>
       </div>
-      {tourActive && tour && (
-        <SpotlightTour
-          steps={tour.steps}
-          onComplete={handleTourEnd}
-          onSkip={handleTourEnd}
-        />
-      )}
-      <TourTrigger onTrigger={() => setTourActive(true)} />
     </div>
   );
 }

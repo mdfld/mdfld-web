@@ -155,12 +155,14 @@ function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 // ── Main Navbar ──────────────────────────────────────────────
 export default function MainNavbar() {
-  const navRef    = useRef<HTMLElement>(null);
-  const [scrolled, setScrolled]       = useState(false);
-  const [mobileOpen, setMobileOpen]   = useState(false);
-  const [searchOpen, setSearchOpen]   = useState(false);
-  const [cartOpen, setCartOpen]       = useState(false);
-  const [searchVal, setSearchVal]     = useState('');
+  const navRef         = useRef<HTMLElement>(null);
+  const avatarWrapRef  = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled]           = useState(false);
+  const [mobileOpen, setMobileOpen]       = useState(false);
+  const [searchOpen, setSearchOpen]       = useState(false);
+  const [cartOpen, setCartOpen]           = useState(false);
+  const [dropdownOpen, setDropdownOpen]   = useState(false);
+  const [searchVal, setSearchVal]         = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname  = usePathname();
   const router    = useRouter();
@@ -203,10 +205,21 @@ export default function MainNavbar() {
   }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); setDropdownOpen(false); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (avatarWrapRef.current && !avatarWrapRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [dropdownOpen]);
 
   // ── Logout ────────────────────────────────────────────────
   const handleLogout = async () => {
@@ -307,7 +320,7 @@ export default function MainNavbar() {
           box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 20px rgba(0,212,182,0.1);
           display: none; pointer-events: none;
         }
-        .nb-avatar-wrap:hover .nb-dropdown { display: block; pointer-events: auto; }
+        .nb-avatar-wrap.open .nb-dropdown { display: block; pointer-events: auto; }
         .nb-dropdown-header {
           padding: 10px 16px 8px;
           border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -477,8 +490,8 @@ export default function MainNavbar() {
                 {isPending ? (
                   <div className="nb-auth-skeleton" />
                 ) : authUser ? (
-                  <div className="nb-avatar-wrap">
-                    <div className="nb-avatar">{initials}</div>
+                  <div className={`nb-avatar-wrap${dropdownOpen ? ' open' : ''}`} ref={avatarWrapRef}>
+                    <div className="nb-avatar" onClick={() => setDropdownOpen(prev => !prev)}>{initials}</div>
                     <div className="nb-dropdown">
                       <div className="nb-dropdown-header">
                         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: "'Barlow',sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
@@ -488,10 +501,10 @@ export default function MainNavbar() {
                           {authUser.email}
                         </p>
                       </div>
-                      <Link href="/dashboard">Dashboard</Link>
-                      <Link href="/dashboard/orders">My Orders</Link>
-                      <Link href="/dashboard/settings">Settings</Link>
-                      <button className="logout" onClick={handleLogout}>Log Out</button>
+                      <Link href="/dashboard" onClick={() => setDropdownOpen(false)}>Dashboard</Link>
+                      <Link href="/dashboard/orders" onClick={() => setDropdownOpen(false)}>My Orders</Link>
+                      <Link href="/dashboard/settings" onClick={() => setDropdownOpen(false)}>Settings</Link>
+                      <button className="logout" onClick={() => { setDropdownOpen(false); handleLogout(); }}>Log Out</button>
                     </div>
                   </div>
                 ) : (

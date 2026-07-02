@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc-client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import ScoreDebugOverlay from "@/components/score-debug-overlay";
+import { getVerificationBadge } from "@/lib/verification-badge";
 
 export type ProductCardProps = Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -24,6 +25,8 @@ export type ProductCardProps = Omit<
     category: string;
     condition: string;
     isActive: boolean;
+    tradeEnabled?: boolean;
+    verificationStatus?: string;
     seller?: {
       id: string;
       storeName: string;
@@ -126,6 +129,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
     const isProcessing =
       addToWishlist.isPending || removeFromWishlist.isPending;
     const isAddingToBag = addToCart.isPending;
+    const verificationBadge = getVerificationBadge(product.verificationStatus);
 
     const [debugScore, setDebugScore] = React.useState<number | undefined>(undefined);
     React.useEffect(() => {
@@ -148,6 +152,28 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       >
         {process.env.NODE_ENV === "development" && (
           <ScoreDebugOverlay score={debugScore} />
+        )}
+        {(verificationBadge || product.tradeEnabled) && (
+          <div className="absolute top-3 left-3 z-20 flex flex-col items-start gap-1">
+            {verificationBadge && (
+              <div className="flex items-center gap-1 rounded-full bg-background/60 px-2 py-1 backdrop-blur-md backdrop-saturate-150">
+                <Icon
+                  icon={verificationBadge.icon}
+                  width={12}
+                  className={verificationBadge.textClassName}
+                />
+                <span className={`text-[10px] font-medium leading-none ${verificationBadge.textClassName}`}>
+                  {verificationBadge.label}
+                </span>
+              </div>
+            )}
+            {product.tradeEnabled && (
+              <div className="flex items-center gap-1 rounded-full bg-background/60 px-2 py-1 backdrop-blur-md backdrop-saturate-150">
+                <Icon icon="solar:transfer-horizontal-linear" width={12} className="text-primary" />
+                <span className="text-[10px] font-medium text-primary leading-none">Trade</span>
+              </div>
+            )}
+          </div>
         )}
         <Button
           isIconOnly

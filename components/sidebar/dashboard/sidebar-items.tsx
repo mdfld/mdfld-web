@@ -99,6 +99,12 @@ export const sectionItems: SidebarItem[] = [
 				title: "Inbox",
 			},
 			{
+				key: "trades",
+				href: "/dashboard/trades",
+				icon: "solar:transfer-horizontal-linear",
+				title: "Trades",
+			},
+			{
 				key: "wishlist",
 				href: "/dashboard/wishlist",
 				icon: "solar:heart-outline",

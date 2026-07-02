@@ -103,6 +103,20 @@ export const chatRouter = createTRPCRouter({
       orgConversations.map((oc: any) => [oc.conversationId, oc]),
     );
 
+    // Fetch trade offers for TRADE conversations
+    const tradeConvIds = conversations
+      .filter((c: any) => c.type === "TRADE")
+      .map((c: any) => c.id);
+
+    const tradeOffers = tradeConvIds.length > 0
+      ? await ctx.prisma.tradeOffer.findMany({
+          where: { conversationId: { in: tradeConvIds } },
+          select: { conversationId: true, status: true, id: true },
+        })
+      : [];
+
+    const tradeOfferMap = new Map(tradeOffers.map((o: any) => [o.conversationId, o]));
+
     // Decrypt last messages for display and add org data
     const conversationsWithDecrypted = conversations.map((conversation) => {
       let result: any = { ...conversation };
@@ -111,6 +125,11 @@ export const chatRouter = createTRPCRouter({
       const orgConv = orgConvMap.get(conversation.id);
       if (orgConv) {
         result.orgConversation = orgConv;
+      }
+
+      const tradeOffer = tradeOfferMap.get(conversation.id);
+      if (tradeOffer) {
+        result.tradeOffer = tradeOffer;
       }
 
       if (conversation.messages.length > 0) {

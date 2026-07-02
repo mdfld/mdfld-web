@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const ACCENT = '#00d4b6';
 
@@ -10,29 +11,33 @@ interface Category {
   img: string;
   tag: string;
   span: 'large' | 'small';
+  href: string;
 }
 
-const CATEGORIES: Category[] = [
+export const CATEGORIES: Category[] = [
   {
     id: 0,
     label: 'Football Boots',
     img: '/categories/boots.jpg',
     tag: 'Most Popular',
     span: 'large',
+    href: '/shop?category=BOOTS',
   },
   {
     id: 1,
-    label: 'Match Kits',
+    label: 'Jerseys',
     img: '/categories/kits-v2.jpeg',
     tag: 'New Season',
     span: 'small',
+    href: '/shop?category=JERSEYS',
   },
   {
     id: 2,
-    label: 'Goalkeeper',
-    img: '/categories/goalkeeper.webp',
-    tag: 'Pro Grade',
+    label: 'Stickers',
+    img: '/hero-stickers.webp',
+    tag: 'World Cup 2026',
     span: 'small',
+    href: '/shop?category=STICKERS',
   },
   {
     id: 3,
@@ -40,6 +45,7 @@ const CATEGORIES: Category[] = [
     img: '/training-gear.webp',
     tag: 'Trending',
     span: 'small',
+    href: '/shop?category=TRAINING_EQUIPMENT',
   },
   {
     id: 4,
@@ -47,6 +53,7 @@ const CATEGORIES: Category[] = [
     img: '/categories/accessories.jpg',
     tag: 'Essentials',
     span: 'small',
+    href: '/shop?category=ACCESSORIES',
   },
 ];
 
@@ -57,11 +64,13 @@ interface CategoryCardProps {
 
 function CategoryCard({ cat, large }: CategoryCardProps) {
   const [hovered, setHovered] = useState(false);
-  
+  const router = useRouter();
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => router.push(cat.href)}
       style={{
         position: 'relative',
         overflow: 'hidden',

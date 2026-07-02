@@ -3,7 +3,7 @@
 import { useSession } from "@/lib/auth-client";
 import { Spinner } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import SidebarWrapper from "@/components/sidebar/dashboard/app";
 import { trpc } from "@/lib/trpc-client";
 import { useOrganizationStore } from "@/lib/stores/organization";
@@ -19,6 +19,14 @@ export const dynamic = "force-dynamic";
 type ImportStage = "landing" | "review" | "success";
 
 export default function ImportPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner size="lg" /></div>}>
+      <ImportPageInner />
+    </Suspense>
+  );
+}
+
+function ImportPageInner() {
   const { data: session, isPending: sessionPending } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();

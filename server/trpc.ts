@@ -19,11 +19,6 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
       headers: req.headers as any,
     });
 
-    // Debug logging
-    if (!session && process.env.NODE_ENV === "development") {
-      console.log("No session found, headers:", Object.keys(req.headers));
-    }
-
     return {
       req,
       res,
@@ -61,11 +56,6 @@ export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.session || !ctx.user) {
-    console.error("Authentication failed in TRPC:", {
-      hasSession: !!ctx.session,
-      hasUser: !!ctx.user,
-      userId: ctx.user?.id,
-    });
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in to access this resource",

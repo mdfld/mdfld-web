@@ -11,6 +11,7 @@ function parseState(raw: unknown): OnboardingState {
     buyer: Array.isArray(s.buyer) ? s.buyer : [],
     seller: Array.isArray(s.seller) ? s.seller : [],
     tours: Array.isArray(s.tours) ? s.tours : [],
+    sellerOptIn: typeof s.sellerOptIn === "boolean" ? s.sellerOptIn : false,
   };
 }
 
@@ -22,10 +23,22 @@ export async function GET(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { onboardingState: true },
+    select: { onboardingState: true, emailVerified: true },
   });
 
-  return NextResponse.json(parseState(user?.onboardingState));
+  const state = parseState(user?.onboardingState);
+
+  // Auto-complete verify-email for users whose email is already verified
+  // (Google OAuth users, or users who verified via the link)
+  if (user?.emailVerified && !state.buyer.includes("verify-email")) {
+    state.buyer = [...state.buyer, "verify-email"];
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { onboardingState: state as any },
+    });
+  }
+
+  return NextResponse.json(state);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -35,10 +48,11 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { step, stepType, tour } = body as {
+  const { step, stepType, tour, sellerOptIn } = body as {
     step?: string;
     stepType?: "buyer" | "seller";
     tour?: string;
+    sellerOptIn?: boolean;
   };
 
   const user = await prisma.user.findUnique({
@@ -56,6 +70,9 @@ export async function PATCH(request: NextRequest) {
   }
   if (tour && !state.tours.includes(tour as any)) {
     state.tours = [...state.tours, tour as any];
+  }
+  if (sellerOptIn === true) {
+    state.sellerOptIn = true;
   }
 
   await prisma.user.update({

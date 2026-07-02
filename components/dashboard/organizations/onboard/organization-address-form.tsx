@@ -17,6 +17,9 @@ const OrganizationAddressForm = React.forwardRef<
   HTMLFormElement,
   OrganizationAddressFormProps
 >(({ className, data, onUpdate, ...props }, ref) => {
+  const [shipsFromCountry, setShipsFromCountry] = React.useState(
+    data.shipsFromCountry || "",
+  );
   const [street, setStreet] = React.useState(data.address?.street || "");
   const [city, setCity] = React.useState(data.address?.city || "");
   const [state, setState] = React.useState(data.address?.state || "");
@@ -42,35 +45,70 @@ const OrganizationAddressForm = React.forwardRef<
   };
 
   useEffect(() => {
+    const update: Partial<OrganizationFormData> = {
+      shipsFromCountry: shipsFromCountry || undefined,
+    };
     if (street || city || state || postalCode || country) {
-      onUpdate({
-        address: {
-          street,
-          city,
-          state,
-          postalCode,
-          country,
-        },
-      });
+      update.address = { street, city, state, postalCode, country };
     }
-  }, [street, city, state, postalCode, country]);
+    onUpdate(update);
+  }, [shipsFromCountry, street, city, state, postalCode, country]);
 
   return (
     <>
       <div className="text-default-foreground text-2xl leading-8 font-medium text-left">
-        Business Address
+        Location & Shipping
       </div>
       <div className="text-sm text-default-500 py-1 text-left">
-        Your organization's official location
+        All fields on this step are optional
       </div>
-      <div className="text-default-500 py-4">
-        Where is your organization located? (Optional)
-      </div>
+
       <form
         ref={ref}
         className={cn("flex grid grid-cols-12 flex-col gap-4 py-8", className)}
         {...props}
       >
+        {/* Ships From */}
+        <div className="col-span-12">
+          <p className="text-small font-medium text-default-700 mb-1">
+            Where do you ship from?
+          </p>
+          <p className="text-xs text-default-400 mb-2">
+            This is shown to buyers so they know where their order ships from.
+            You can update this anytime in your store settings.
+          </p>
+          <Select
+            items={countries}
+            label=""
+            aria-label="Ships from country"
+            name="ships-from-country"
+            placeholder="Select country"
+            selectedKeys={shipsFromCountry ? [shipsFromCountry] : []}
+            onSelectionChange={(keys) =>
+              setShipsFromCountry(Array.from(keys)[0] as string)
+            }
+            labelPlacement="outside"
+            classNames={{
+              label:
+                "text-small font-medium text-default-700 group-data-[filled=true]:text-default-700",
+            }}
+          >
+            {(country) => (
+              <SelectItem key={country.code}>{country.name}</SelectItem>
+            )}
+          </Select>
+        </div>
+
+        {/* Divider */}
+        <div className="col-span-12 border-t border-zinc-700 pt-4">
+          <p className="text-small font-medium text-default-600 mb-1">
+            Business Address
+          </p>
+          <p className="text-xs text-default-400 mb-4">
+            Your official business location for legal and tax purposes.
+          </p>
+        </div>
+
         <Input
           className="col-span-12"
           label="Street Address"

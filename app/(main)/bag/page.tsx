@@ -47,6 +47,8 @@ export default function BagPage() {
   // Guest cart
   const guestCart = useGuestCart();
 
+  const { data: fees } = trpc.admin.getPublicFees.useQuery();
+
   // Authenticated cart
   const { data: authCartData, isLoading: authCartLoading, refetch } = trpc.cart.get.useQuery(
     undefined,
@@ -186,7 +188,6 @@ export default function BagPage() {
     );
   }
 
-  const { data: fees } = trpc.admin.getPublicFees.useQuery();
   const subtotal: number = cartData?.subtotal || 0;
   const shipping: number = 0;
   const marketplaceFee: number = subtotal * (fees?.buyerMarketplaceFee ?? 0);

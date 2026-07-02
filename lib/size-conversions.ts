@@ -238,7 +238,7 @@ export function getConditionalFields(category: ProductCategory): string[] {
     case ProductCategory.TRAINING_EQUIPMENT:
       fields.push("material", "season");
       break;
-    case ProductCategory.TRADING_CARDS:
+    case ProductCategory.COLLECTIBLES:
       fields.push("year", "tier");
       break;
     default:

@@ -1,22 +1,35 @@
 "use client";
 
 import React from "react";
+import { Icon } from "@iconify/react";
 import {
   Accordion,
   AccordionItem,
   Button,
   Checkbox,
   CheckboxGroup,
+  Input,
   Slider,
+  Switch,
 } from "@heroui/react";
 import {
   FOOTBALL_BRANDS,
   FOOTBALL_TEAMS,
 } from "@/lib/constants/football-attributes";
+import {
+  getCategoryGroup,
+  WEARABLE_CONDITIONS,
+  COLLECTIBLE_CONDITIONS,
+  FOOTBALL_CONDITIONS,
+  BALL_GRADES,
+  COLLECTIBLE_SUBCATEGORIES,
+} from "@/lib/constants/product-categories";
 
 export type ProductFiltersProps = {
+  initialCategories?: string[];
   onFiltersChange?: (filters: any) => void;
   onReset?: () => void;
+  initialTradeEnabled?: boolean;
 };
 
 const CONDITIONS = [
@@ -26,12 +39,19 @@ const CONDITIONS = [
   { value: "USED_GOOD", label: "Used - Good" },
 ];
 
+const VERIFICATION_OPTIONS = [
+  { value: "VERIFIED_AUTHENTIC", label: "Verified Authentic" },
+  { value: "VERIFIED_REPLICA", label: "Verified Replica" },
+  { value: "FAN_MADE", label: "Fan-Made" },
+  { value: "UNVERIFIED", label: "Unverified" },
+];
+
 // Using exact categories from database enum
 const FOOTBALL_CATEGORIES = [
   { value: "JERSEYS", label: "Jerseys" },
   { value: "BOOTS", label: "Boots" },
+  { value: "COLLECTIBLES", label: "Collectibles" },
   { value: "FOOTBALLS", label: "Footballs" },
-  { value: "TRADING_CARDS", label: "Trading Cards" },
   { value: "GOALKEEPER_GLOVES", label: "Goalkeeper Gloves" },
   { value: "SHIN_GUARDS", label: "Shin Guards" },
   { value: "TRAINING_EQUIPMENT", label: "Training Equipment" },
@@ -90,24 +110,17 @@ const JERSEY_TYPES = ["Home", "Away", "Third", "Training", "Vintage"];
 const JERSEY_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 const SEASONS = ["2024/25", "2023/24", "2022/23", "2021/22", "Retro"];
 
-// Card-specific filters
-const CARD_TYPES = [
-  "Base",
-  "Rare",
-  "Ultra Rare",
-  "Limited Edition",
-  "Autographed",
-];
-const CARD_YEARS = ["2024", "2023", "2022", "2021", "2020"];
-
 export default function ProductFilters({
+  initialCategories,
   onFiltersChange,
   onReset,
+  initialTradeEnabled,
 }: ProductFiltersProps) {
   const [filters, setFilters] = React.useState({
-    categories: [] as string[],
+    categories: initialCategories ?? ([] as string[]),
     priceRange: [0, 5000] as number[],
     conditions: [] as string[],
+    verificationStatuses: [] as string[],
     brands: [] as string[],
     teams: [] as string[],
     bootTypes: [] as string[],
@@ -115,12 +128,32 @@ export default function ProductFilters({
     jerseyTypes: [] as string[],
     jerseySizes: [] as string[],
     seasons: [] as string[],
-    cardTypes: [] as string[],
-    cardYears: [] as string[],
+    tradeEnabled: initialTradeEnabled ?? false,
+    subcategory: '',
+    collectibleCode: '',
+    setName: '',
+    collectiblePublisher: '',
+    collectiblePlayerName: '',
+    collectibleTeam: '',
+    isPeeled: undefined as boolean | undefined,
+    ballSize: undefined as number | undefined,
+    ballGrade: '',
   });
 
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...filters, [key]: value };
+    if (key === 'categories') {
+      newFilters.conditions = [];
+      newFilters.subcategory = '';
+      newFilters.collectibleCode = '';
+      newFilters.setName = '';
+      newFilters.collectiblePublisher = '';
+      newFilters.collectiblePlayerName = '';
+      newFilters.collectibleTeam = '';
+      newFilters.isPeeled = undefined;
+      newFilters.ballSize = undefined;
+      newFilters.ballGrade = '';
+    }
     setFilters(newFilters);
     onFiltersChange?.(newFilters);
   };
@@ -130,6 +163,7 @@ export default function ProductFilters({
       categories: [],
       priceRange: [0, 5000],
       conditions: [],
+      verificationStatuses: [],
       brands: [],
       teams: [],
       bootTypes: [],
@@ -137,8 +171,16 @@ export default function ProductFilters({
       jerseyTypes: [],
       jerseySizes: [],
       seasons: [],
-      cardTypes: [],
-      cardYears: [],
+      tradeEnabled: false,
+      subcategory: '',
+      collectibleCode: '',
+      setName: '',
+      collectiblePublisher: '',
+      collectiblePlayerName: '',
+      collectibleTeam: '',
+      isPeeled: undefined,
+      ballSize: undefined,
+      ballGrade: '',
     };
     setFilters(resetFilters);
     onReset?.();
@@ -148,13 +190,23 @@ export default function ProductFilters({
     if (key === "priceRange" && Array.isArray(value)) {
       return (value[0] as number) > 0 || (value[1] as number) < 5000;
     }
+    if (key === "tradeEnabled") return value === true;
     return Array.isArray(value) && value.length > 0;
   });
 
   // Conditionally show filters based on selected categories
   const showJerseyFilters = filters.categories.includes("JERSEYS");
   const showBootFilters = filters.categories.includes("BOOTS");
-  const showCardFilters = filters.categories.includes("TRADING_CARDS");
+
+  const activeCategory = filters.categories[0] ?? '';
+  const categoryGroup = getCategoryGroup(activeCategory);
+
+  const activeConditions =
+    categoryGroup === 'COLLECTIBLE'
+      ? COLLECTIBLE_CONDITIONS
+      : categoryGroup === 'FOOTBALL'
+      ? FOOTBALL_CONDITIONS
+      : WEARABLE_CONDITIONS;
 
   // Build accordion items array to avoid conditional rendering issues
   const accordionItems = [];
@@ -244,14 +296,44 @@ export default function ProductFilters({
         onValueChange={(value) => updateFilter("conditions", value)}
         classNames={{ wrapper: "gap-1" }}
       >
-        {CONDITIONS.map((condition) => (
+        {activeConditions.map((condition) => (
           <Checkbox
-            key={condition.value}
-            value={condition.value}
+            key={condition.key}
+            value={condition.key}
             size="sm"
             classNames={{ label: "text-sm text-default-600" }}
           >
             {condition.label}
+          </Checkbox>
+        ))}
+      </CheckboxGroup>
+    </AccordionItem>,
+  );
+
+  // Always include verification filter
+  accordionItems.push(
+    <AccordionItem
+      key="verification"
+      aria-label="Verification"
+      title="Verification"
+      classNames={{
+        title: "text-sm font-normal",
+        content: "pt-0 pb-4",
+      }}
+    >
+      <CheckboxGroup
+        value={filters.verificationStatuses}
+        onValueChange={(value) => updateFilter("verificationStatuses", value)}
+        classNames={{ wrapper: "gap-1" }}
+      >
+        {VERIFICATION_OPTIONS.map((option) => (
+          <Checkbox
+            key={option.value}
+            value={option.value}
+            size="sm"
+            classNames={{ label: "text-sm text-default-600" }}
+          >
+            {option.label}
           </Checkbox>
         ))}
       </CheckboxGroup>
@@ -440,31 +522,31 @@ export default function ProductFilters({
     );
   }
 
-  // Conditionally add card filters
-  if (showCardFilters) {
+  // Conditionally add collectible filters
+  if (categoryGroup === 'COLLECTIBLE') {
     accordionItems.push(
       <AccordionItem
-        key="cardType"
-        aria-label="Card Type"
-        title="Card Type"
+        key="collectible-type"
+        aria-label="Type"
+        title="Type"
         classNames={{
           title: "text-sm font-normal",
           content: "pt-0 pb-4",
         }}
       >
         <CheckboxGroup
-          value={filters.cardTypes}
-          onValueChange={(value) => updateFilter("cardTypes", value)}
+          value={filters.subcategory ? [filters.subcategory] : []}
+          onValueChange={(v) => updateFilter('subcategory', v[0] ?? '')}
           classNames={{ wrapper: "gap-1" }}
         >
-          {CARD_TYPES.map((type) => (
+          {COLLECTIBLE_SUBCATEGORIES.map((s) => (
             <Checkbox
-              key={type}
-              value={type}
+              key={s.key}
+              value={s.key}
               size="sm"
               classNames={{ label: "text-sm text-default-600" }}
             >
-              {type}
+              {s.label}
             </Checkbox>
           ))}
         </CheckboxGroup>
@@ -473,27 +555,119 @@ export default function ProductFilters({
 
     accordionItems.push(
       <AccordionItem
-        key="cardYear"
-        aria-label="Card Year"
-        title="Year"
+        key="collectible-details"
+        aria-label="Details"
+        title="Details"
+        classNames={{
+          title: "text-sm font-normal",
+          content: "pt-0 pb-4",
+        }}
+      >
+        <div className="flex flex-col gap-3">
+          <Input
+            size="sm"
+            label="Code"
+            placeholder="e.g. KOR14"
+            value={filters.collectibleCode}
+            onValueChange={(v) => updateFilter('collectibleCode', v)}
+          />
+          <Input
+            size="sm"
+            label="Set / Series"
+            placeholder="e.g. FIFA World Cup 2026"
+            value={filters.setName}
+            onValueChange={(v) => updateFilter('setName', v)}
+          />
+          <Input
+            size="sm"
+            label="Publisher"
+            placeholder="e.g. Panini"
+            value={filters.collectiblePublisher}
+            onValueChange={(v) => updateFilter('collectiblePublisher', v)}
+          />
+          <Input
+            size="sm"
+            label="Player"
+            placeholder="e.g. Son Heung-min"
+            value={filters.collectiblePlayerName}
+            onValueChange={(v) => updateFilter('collectiblePlayerName', v)}
+          />
+          <Input
+            size="sm"
+            label="Team / Country"
+            placeholder="e.g. South Korea"
+            value={filters.collectibleTeam}
+            onValueChange={(v) => updateFilter('collectibleTeam', v)}
+          />
+          {filters.subcategory === 'STICKERS' && (
+            <div className="flex items-center gap-2">
+              <Switch
+                size="sm"
+                isSelected={filters.isPeeled ?? false}
+                onValueChange={(v) => updateFilter('isPeeled', v)}
+              />
+              <span className="text-small text-default-500">Peeled only</span>
+            </div>
+          )}
+        </div>
+      </AccordionItem>,
+    );
+  }
+
+  // Conditionally add football filters
+  if (categoryGroup === 'FOOTBALL') {
+    accordionItems.push(
+      <AccordionItem
+        key="football-size"
+        aria-label="Ball Size"
+        title="Ball Size"
         classNames={{
           title: "text-sm font-normal",
           content: "pt-0 pb-4",
         }}
       >
         <CheckboxGroup
-          value={filters.cardYears}
-          onValueChange={(value) => updateFilter("cardYears", value)}
+          value={filters.ballSize !== undefined ? [String(filters.ballSize)] : []}
+          onValueChange={(v) => updateFilter('ballSize', v.length > 0 ? Number(v[v.length - 1]) : undefined)}
           classNames={{ wrapper: "gap-1" }}
         >
-          {CARD_YEARS.map((year) => (
+          {[1, 2, 3, 4, 5].map((n) => (
             <Checkbox
-              key={year}
-              value={year}
+              key={String(n)}
+              value={String(n)}
               size="sm"
               classNames={{ label: "text-sm text-default-600" }}
             >
-              {year}
+              Size {n}
+            </Checkbox>
+          ))}
+        </CheckboxGroup>
+      </AccordionItem>,
+    );
+
+    accordionItems.push(
+      <AccordionItem
+        key="football-grade"
+        aria-label="Ball Grade"
+        title="Ball Grade"
+        classNames={{
+          title: "text-sm font-normal",
+          content: "pt-0 pb-4",
+        }}
+      >
+        <CheckboxGroup
+          value={filters.ballGrade ? [filters.ballGrade] : []}
+          onValueChange={(v) => updateFilter('ballGrade', v[0] ?? '')}
+          classNames={{ wrapper: "gap-1" }}
+        >
+          {BALL_GRADES.map((g) => (
+            <Checkbox
+              key={g.key}
+              value={g.key}
+              size="sm"
+              classNames={{ label: "text-sm text-default-600" }}
+            >
+              {g.label}
             </Checkbox>
           ))}
         </CheckboxGroup>
@@ -516,6 +690,18 @@ export default function ProductFilters({
             Clear all
           </Button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between py-2 border-b border-divider mb-1">
+        <div className="flex items-center gap-1.5">
+          <Icon icon="solar:transfer-horizontal-linear" width={14} className="text-default-500" />
+          <span className="text-sm text-default-600">Trades Accepted</span>
+        </div>
+        <Switch
+          isSelected={filters.tradeEnabled}
+          onValueChange={(val) => updateFilter("tradeEnabled", val)}
+          size="sm"
+        />
       </div>
 
       <Accordion
