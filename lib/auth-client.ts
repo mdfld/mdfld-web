@@ -6,8 +6,11 @@ import {
   magicLinkClient,
 } from "better-auth/client/plugins";
 
+const fallbackBaseURL =
+  typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || fallbackBaseURL,
   plugins: [
     usernameClient(),
     emailOTPClient(),
