@@ -1,15 +1,12 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, adminProcedure, superAdminProcedure, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure, superAdminProcedure, publicProcedure } from "../trpc";
 import { transferToSeller } from "@/lib/stripe-payouts";
 import { sendPaypalPayout } from "@/lib/paypal-payouts";
 import { getAvailableBalance } from "@/lib/seller-balance";
 
 export const adminRouter = createTRPCRouter({
-  analytics: protectedProcedure.query(async ({ ctx }) => {
-    // TODO: Add proper admin role check
-    // For now, allow all authenticated users
-
+  analytics: adminProcedure.query(async ({ ctx }) => {
     // Get total user count
     const userCount = await ctx.prisma.user.count();
 

@@ -19,11 +19,6 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
       headers: req.headers as any,
     });
 
-    // Debug logging
-    if (!session && process.env.NODE_ENV === "development") {
-      console.log("No session found, headers:", Object.keys(req.headers));
-    }
-
     return {
       req,
       res,

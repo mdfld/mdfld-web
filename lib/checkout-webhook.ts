@@ -6,7 +6,6 @@ import { handleTradeCashPayment } from "@/lib/trade-webhook";
 export async function handleCheckoutSessionCompleted(
   checkoutSession: Stripe.Checkout.Session,
 ) {
-  console.log("[Webhook] checkout.session.completed:", checkoutSession.id);
 
   const metadata = checkoutSession.metadata || {};
 
@@ -27,7 +26,6 @@ export async function handleCheckoutSessionCompleted(
     where: { stripePaymentIntentId: checkoutSession.payment_intent as string },
   });
   if (existingOrder) {
-    console.log("[Webhook] Order already exists, skipping:", existingOrder.id);
     return;
   }
 
@@ -184,7 +182,6 @@ export async function handleCheckoutSessionCompleted(
     });
 
     createdOrderIds.push(order.id);
-    console.log("[Webhook] Order created:", order.id, "for seller:", sellerId);
 
     // MoR: track seller pending balance (total minus platform commission)
     const commissionRate = sellerProfile.commissionRate ?? 0.10;
@@ -240,7 +237,6 @@ export async function handleCheckoutSessionCompleted(
     const deleted = await prisma.cartItem.deleteMany({
       where: { buyerProfileId: buyerProfile.id },
     });
-    console.log("[Webhook] Cart cleared:", deleted.count, "items removed for buyer:", buyerProfile.id);
 
     // Update buyer stats
     await prisma.buyerProfile.update({

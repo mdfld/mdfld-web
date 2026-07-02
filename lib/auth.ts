@@ -76,7 +76,6 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     sendResetPassword: async ({ user, url }) => {
       try {
-        console.log(`[Auth] Sending password reset email to: ${user.email}`);
         const firstName = user.name?.split(" ")[0] || "there";
         const result = await resend.emails.send({
           from: "noreply@mdfld.co",
@@ -98,8 +97,6 @@ export const auth = betterAuth({
           throw new Error(`Failed to send password reset email: ${JSON.stringify(result.error)}`);
         }
 
-        const emailId = "data" in result && result.data ? result.data.id : result.id;
-        console.log(`[Auth] Password reset email sent successfully! ID: ${emailId}`);
       } catch (error) {
         console.error(`[Auth] Exception sending password reset email:`, error);
         throw error;
@@ -111,7 +108,6 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       try {
-        console.log(`[Auth] Sending verification email to: ${user.email}`);
         const firstName = user.name?.split(" ")[0] || "there";
         const result = await resend.emails.send({
           from: "noreply@mdfld.co",
@@ -163,8 +159,6 @@ export const auth = betterAuth({
           throw new Error(`Failed to send verification email: ${JSON.stringify(result.error)}`);
         }
 
-        const emailId = "data" in result && result.data ? result.data.id : result.id;
-        console.log(`[Auth] Verification email sent successfully! ID: ${emailId}`);
       } catch (error) {
         console.error(`[Auth] Exception sending verification email:`, error);
         throw error;
@@ -180,6 +174,21 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
+  },
+  rateLimit: {
+    // In-memory storage: sufficient for a single server instance. Move to
+    // "secondary-storage" if the app ever runs on multiple instances.
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 60, max: 10 },
+      "/forget-password": { window: 900, max: 5 },
+      "/request-password-reset": { window: 900, max: 5 },
+      "/reset-password": { window: 900, max: 5 },
+      "/change-password": { window: 900, max: 5 },
+    },
   },
   plugins: [username()],
   databaseHooks: {
@@ -221,7 +230,6 @@ export const auth = betterAuth({
       enabled: true,
       sendChangeEmailConfirmation: async ({ user, newEmail, url }: { user: { name?: string | null; email: string }; newEmail: string; url: string; token: string }) => {
         try {
-          console.log(`[Auth] Sending change email confirmation to: ${newEmail}`);
           const firstName = user.name?.split(" ")[0] || "there";
           const result = await resend.emails.send({
             from: "noreply@mdfld.co",
@@ -243,8 +251,6 @@ export const auth = betterAuth({
             throw new Error(`Failed to send change email confirmation: ${JSON.stringify(result.error)}`);
           }
 
-          const emailId = "data" in result && result.data ? result.data.id : result.id;
-          console.log(`[Auth] Change email confirmation sent successfully! ID: ${emailId}`);
         } catch (error) {
           console.error(`[Auth] Exception sending change email confirmation:`, error);
           throw error;

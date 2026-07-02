@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Get the pathname of the request
   const { pathname } = request.nextUrl;
 
@@ -50,9 +50,18 @@ export function middleware(request: NextRequest) {
 
   // Admin route protection
   if (pathname.startsWith("/admin")) {
-    // TODO: Implement role-based access control
-    // For now, all authenticated users can access admin area
-    // In production, check if user has admin role/permissions
+    try {
+      const checkUrl = new URL("/api/auth/admin-check", request.url);
+      const checkRes = await fetch(checkUrl, {
+        headers: { cookie: request.headers.get("cookie") ?? "" },
+      });
+      const { isAdmin } = await checkRes.json();
+      if (!isAdmin) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return NextResponse.next();

@@ -1,6 +1,13 @@
 const WebSocket = require("ws");
 const http = require("http");
 const Redis = require("ioredis");
+const { authorizeWsConnection } = require("./lib/ws-token");
+
+const WS_TOKEN_SECRET = process.env.BETTER_AUTH_SECRET;
+if (!WS_TOKEN_SECRET) {
+  console.error("BETTER_AUTH_SECRET is required to start the websocket server");
+  process.exit(1);
+}
 
 // Create Redis clients
 const redisSubscriber = new Redis({
@@ -21,22 +28,22 @@ wss.on("connection", (ws, req) => {
   const pathParts = url.pathname.split("/").filter(Boolean);
   const connectionType = pathParts[0]; // 'chat' or 'notifications'
   const resourceId = pathParts[1]; // conversationId or userId
-  const userId = url.searchParams.get("userId");
 
-  if (!resourceId) {
-    ws.close(1008, "Missing resource ID");
+  // Tokens are short-lived HMAC credentials issued by /api/ws-token after a
+  // session and (for chat) conversation-membership check.
+  const auth = authorizeWsConnection(
+    url.pathname,
+    url.searchParams.get("token"),
+    WS_TOKEN_SECRET,
+  );
+  if (!auth) {
+    ws.close(1008, "Unauthorized");
     return;
   }
+  const userId = auth.userId;
 
   if (connectionType === "chat") {
     const conversationId = resourceId;
-
-    if (!userId) {
-      ws.close(1008, "Missing user ID");
-      return;
-    }
-
-    // User connected to conversation
 
     // Store connection
     if (!connections.has(conversationId)) {
@@ -48,12 +55,8 @@ wss.on("connection", (ws, req) => {
     const channel = `chat:new_message:${conversationId}`;
     redisSubscriber.subscribe(channel);
   } else if (connectionType === "notifications") {
-    const notificationUserId = resourceId;
-
-    // User connected for notifications
-
     // Store notification connection
-    const notificationKey = `notifications:${notificationUserId}`;
+    const notificationKey = `notifications:${userId}`;
     if (!connections.has(notificationKey)) {
       connections.set(notificationKey, new Map());
     }
@@ -63,35 +66,14 @@ wss.on("connection", (ws, req) => {
     redisSubscriber.subscribe(notificationKey);
   }
 
-  // Handle incoming messages from client
-  ws.on("message", (data) => {
-    try {
-      const message = JSON.parse(data.toString());
-
-      // Broadcast to all users in conversation
-      const conversationConnections = connections.get(conversationId);
-      if (conversationConnections) {
-        conversationConnections.forEach((connection, connUserId) => {
-          if (connection.readyState === WebSocket.OPEN) {
-            connection.send(
-              JSON.stringify({
-                type: message.type,
-                ...message,
-              }),
-            );
-          }
-        });
-      }
-    } catch (error) {
-      // Error processing message
-    }
-  });
+  // Clients never send over this socket: messages, typing indicators, and
+  // read receipts all go through authenticated tRPC procedures which publish
+  // to Redis. Anything a client sends here is ignored.
 
   // Handle disconnect
   ws.on("close", () => {
     if (connectionType === "chat") {
       const conversationId = resourceId;
-      // User disconnected from conversation
 
       const conversationConnections = connections.get(conversationId);
       if (conversationConnections) {
@@ -102,10 +84,7 @@ wss.on("connection", (ws, req) => {
         }
       }
     } else if (connectionType === "notifications") {
-      const notificationUserId = resourceId;
-      // User disconnected from notifications
-
-      const notificationKey = `notifications:${notificationUserId}`;
+      const notificationKey = `notifications:${userId}`;
       connections.delete(notificationKey);
       redisSubscriber.unsubscribe(notificationKey);
     }
@@ -117,7 +96,7 @@ wss.on("connection", (ws, req) => {
       JSON.stringify({ type: "connected", conversationId: resourceId, userId }),
     );
   } else if (connectionType === "notifications") {
-    ws.send(JSON.stringify({ type: "connected", userId: resourceId }));
+    ws.send(JSON.stringify({ type: "connected", userId }));
   }
 });
 

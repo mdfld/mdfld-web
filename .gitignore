@@ -45,3 +45,8 @@ bun.lockb
 /app/generated/prisma
 .worktrees/
 .superpowers/
+
+# Local credentials and scratch files
+cookies.txt
+*.backup
+migration_preview.sql
