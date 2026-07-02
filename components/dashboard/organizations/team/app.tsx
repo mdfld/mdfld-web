@@ -51,8 +51,8 @@ export default function OrganizationTeamLayout({
   );
   const organization = data as any;
 
-  // Invite mutation
-  const inviteMember = trpc.organization.inviteMember.useMutation({
+  // Invite mutation — cast to bypass tRPC type inference depth limit (see daa1490)
+  const inviteMember = (trpc.organization.inviteMember as any).useMutation({
     onSuccess: () => {
       toast.success("Invitation sent successfully");
       refetch();
@@ -60,7 +60,7 @@ export default function OrganizationTeamLayout({
       setInviteRole("member");
       onOpenChange();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to send invitation");
     },
   });
