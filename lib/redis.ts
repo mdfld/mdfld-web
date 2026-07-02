@@ -15,6 +15,7 @@ const redisConfig = {
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
   lazyConnect: true,
+  tls: process.env.REDIS_TLS === "true" ? {} : undefined,
 };
 
 // Create Redis clients
