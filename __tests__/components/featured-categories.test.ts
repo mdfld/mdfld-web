@@ -14,7 +14,7 @@ describe("FeaturedCategories CATEGORIES config", () => {
 
   it("Stickers entry uses the hero-stickers image", () => {
     const stickers = CATEGORIES.find((c) => c.label === "Stickers");
-    expect(stickers?.img).toBe("/hero-stickers.webp");
+    expect(stickers?.img).toBe("/categories/hero-stickers.webp");
   });
 
   it("does not include a Goalkeeper entry", () => {
