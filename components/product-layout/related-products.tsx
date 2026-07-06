@@ -30,11 +30,12 @@ export default function RelatedProducts({ productId }: RelatedProductsProps) {
         </div>
       ) : (
         <ScrollShadow orientation="horizontal" className="w-full snap-x">
-          <div className="flex gap-6 py-4">
+          <div className="flex gap-6 py-2">
             {products.map((product: any) => (
               <ProductCard
                 key={product.id}
                 product={product}
+                disableImageBlur
                 className="w-64 flex-none snap-start sm:w-72"
               />
             ))}
