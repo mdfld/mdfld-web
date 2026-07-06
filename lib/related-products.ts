@@ -4,10 +4,6 @@ import { prisma } from "@/lib/prisma";
 export const DEFAULT_RELATED_PRODUCTS_LIMIT = 8;
 const CANDIDATE_POOL_SIZE = 60;
 
-/**
- * The subset of Product fields the relevance scorer needs. Kept separate from
- * the Prisma model so `scoreRelatedProduct` can be unit tested with plain objects.
- */
 export interface RelatedProductScoringFields {
   id: string;
   category: string;
@@ -18,13 +14,6 @@ export interface RelatedProductScoringFields {
   price: number;
 }
 
-/**
- * Scores how relevant a candidate product is to the product currently being viewed.
- * Higher is more relevant. Same category is the strongest signal since it's what
- * makes a suggestion make sense at all; team and brand matches are strong secondary
- * signals (e.g. two Real Madrid jerseys, or two Nike boots); subcategory, shared
- * tags, and price proximity are tie-breakers.
- */
 export function scoreRelatedProduct(
   candidate: RelatedProductScoringFields,
   source: RelatedProductScoringFields,
@@ -49,12 +38,6 @@ export function scoreRelatedProduct(
   return score;
 }
 
-/**
- * Finds products related to the given product id, ranked by relevance.
- * Candidates are pulled from products sharing category, team, brand, or tags
- * with the source product, then ranked with `scoreRelatedProduct` so the most
- * relevant matches surface first within that pool.
- */
 export async function getRelatedProducts(
   productId: string,
   limit: number = DEFAULT_RELATED_PRODUCTS_LIMIT,
@@ -103,7 +86,6 @@ export async function getRelatedProducts(
       OR: candidateFilters,
     },
     take: CANDIDATE_POOL_SIZE,
-    // Newest-first so equal-score candidates tie-break by recency (sort is stable)
     orderBy: { createdAt: "desc" },
     include: {
       seller: {

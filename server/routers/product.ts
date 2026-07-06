@@ -592,7 +592,6 @@ export const productRouter = createTRPCRouter({
     return Object.keys(PRODUCT_CATEGORIES);
   }),
 
-  // Get related/similar products for a product detail page
   getRelated: publicProcedure
     .input(
       z.object({
