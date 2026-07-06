@@ -35,7 +35,7 @@ export default function RelatedProducts({ productId }: RelatedProductsProps) {
               <ProductCard
                 key={product.id}
                 product={product}
-                className="w-56 flex-none snap-start sm:w-64"
+                className="w-64 flex-none snap-start sm:w-72"
               />
             ))}
           </div>
