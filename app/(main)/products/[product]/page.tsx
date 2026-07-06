@@ -4,6 +4,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { BreadcrumbItem, Breadcrumbs, Spinner } from "@heroui/react";
 import ProductViewInfo from "@/components/product-layout/product-view-item";
+import RelatedProducts from "@/components/product-layout/related-products";
 import { trpc } from "@/lib/trpc-client";
 import {
   getCategoryGroup,
@@ -212,6 +213,7 @@ export default function ProductPage() {
         </span>
       )}
       <ProductViewInfo {...productViewItem} />
+      <RelatedProducts productId={p.id} />
     </div>
   );
 }
