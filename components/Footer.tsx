@@ -24,7 +24,8 @@ const NAV = {
     { label: 'Sign Up', href: '/signup' },
   ],
   Legal: [
-    { label: 'Privacy Policy', href: '/Privacy-Policy' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Contact', href: '/contact' },
   ],
 };
