@@ -57,7 +57,7 @@ export default function LoginFormFrameless() {
   return (
     <div
       style={{
-        fontFamily: "'Oswald', sans-serif",
+        fontFamily: "var(--font-sans)",
         background: "#020606",
         minHeight: "100dvh",
         position: "relative",
@@ -68,7 +68,6 @@ export default function LoginFormFrameless() {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .bg-image { position: absolute; inset: 0; z-index: 0; background-image: url('https://images.unsplash.com/photo-1556056504-5c7696c4c28d?q=80&w=2500&auto=format&fit=crop'); background-size: cover; background-position: center; filter: grayscale(40%) contrast(120%); }
         .bg-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(2,6,6,0.95) 0%, rgba(2,6,6,0.7) 40%, rgba(0,212,182,0.15) 100%); }
@@ -93,7 +92,7 @@ export default function LoginFormFrameless() {
         .input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
         .input-label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: block; transition: color 0.3s; }
         .input-label.active { color: #00d4b6; }
-        .btn-primary { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 18px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 56px; }
+        .btn-primary { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: var(--font-sans); font-size: 16px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 18px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 56px; }
         .btn-primary:hover:not(:disabled) { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,212,182,0.3); }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary .shimmer { animation: shimmer 2.5s ease-in-out infinite; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: rgba(255,255,255,0.3); }
@@ -122,7 +121,7 @@ export default function LoginFormFrameless() {
 
       {/* LEFT PANEL */}
       <div className="left-panel" style={{ flex: "0 0 45%", position: "relative", zIndex: 3, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(32px, 5vw, 64px)" }}>
-        <a href="/" style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, letterSpacing: "0.02em", color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
+        <a href="/" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, letterSpacing: "0.02em", color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
           mdfld<span style={{ color: ACCENT }}>.</span>
         </a>
         <div>
@@ -143,7 +142,7 @@ export default function LoginFormFrameless() {
         <div className="animate-6" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[{ n: "12K+", l: "Members Worldwide" }, { n: "5K+", l: "Exclusive Drops" }].map((s, i) => (
             <div key={i} className="stat-card float-el" style={{ animationDelay: `${i * 0.8}s`, maxWidth: 280 }}>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(22px, 3.5vw, 28px)", fontWeight: 600, color: "#fff", lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(22px, 3.5vw, 28px)", fontWeight: 600, color: "#fff", lineHeight: 1 }}>{s.n}</div>
               <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 6 }}>{s.l}</div>
             </div>
           ))}

@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 import { resend } from "./resend";
 import { betterAuth } from "better-auth";
 import { randomTemplate } from "./profile-templates";
+import { EMAIL_FONT_FACE, EMAIL_FONT_STACK } from "./email-font";
 
 const LOGO_URL = "https://mdfld.co/mdfld-logo-v2.png";
 
@@ -32,8 +33,9 @@ function emailShell({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  ${EMAIL_FONT_FACE}
 </head>
-<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#e8e8e8;">
+<body style="margin:0;padding:0;font-family:${EMAIL_FONT_STACK};background:#e8e8e8;">
   <div style="max-width:600px;margin:40px auto;border-radius:8px;overflow:hidden;">
 
     <div style="background:#0a0a0a;padding:32px 0;text-align:center;border-bottom:2px solid #44cfcf;">

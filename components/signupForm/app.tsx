@@ -60,9 +60,8 @@ export default function SignUpFormFrameless() {
   };
 
   return (
-    <div style={{ fontFamily: "'Oswald', sans-serif", background: "#020606", minHeight: "100dvh", position: "relative", overflow: "hidden", display: "flex", alignItems: "stretch", flexDirection: "row" }}>
+    <div style={{ fontFamily: "var(--font-sans)", background: "#020606", minHeight: "100dvh", position: "relative", overflow: "hidden", display: "flex", alignItems: "stretch", flexDirection: "row" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .bg-su { position: absolute; inset: 0; z-index: 0; background-image: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2500&auto=format&fit=crop'); background-size: cover; background-position: center; filter: grayscale(30%) contrast(110%); }
         .bg-ov-su { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(2,6,6,0.96) 0%, rgba(2,6,6,0.75) 45%, rgba(0,212,182,0.12) 100%); }
@@ -78,7 +77,7 @@ export default function SignUpFormFrameless() {
         .su-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
         .su-label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 7px; display: block; transition: color 0.3s; }
         .su-label.act { color: #00d4b6; }
-        .su-btn { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 16px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 52px; }
+        .su-btn { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: var(--font-sans); font-size: 15px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 16px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 52px; }
         .su-btn:hover:not(:disabled) { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,212,182,0.3); }
         .su-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .su-btn .shim { animation: shimmerSU 2.5s ease-in-out infinite; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: rgba(255,255,255,0.3); }
@@ -105,7 +104,7 @@ export default function SignUpFormFrameless() {
 
       {/* LEFT PANEL */}
       <div className="su-left" style={{ flex: "0 0 42%", position: "relative", zIndex: 3, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(32px, 5vw, 64px)" }}>
-        <a href="/" style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
+        <a href="/" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
           mdfld<span style={{ color: ACCENT }}>.</span>
         </a>
         <div>
@@ -124,7 +123,7 @@ export default function SignUpFormFrameless() {
           </div>
         </div>
         <div className="su-a6" style={{ background: "rgba(0,212,182,0.04)", border: "1px solid rgba(0,212,182,0.12)", borderLeft: `3px solid ${ACCENT}`, padding: "16px 20px", borderRadius: "0 4px 4px 0" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "#fff" }}>50K+</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 700, color: "#fff" }}>50K+</div>
           <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 4 }}>Community Members</div>
         </div>
       </div>

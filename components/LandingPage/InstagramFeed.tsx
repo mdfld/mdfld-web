@@ -61,7 +61,6 @@ export default function EditorialRosterFeed() {
       borderTop: '1px solid rgba(255,255,255,0.05)',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
         /* ── THE ROSTER LIST ITEM ── */
@@ -87,7 +86,7 @@ export default function EditorialRosterFeed() {
         }
 
         .roster-title {
-          font-family: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
+          font-family: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif";
           font-size: clamp(28px, 4.5vw, 64px);
           font-weight: 700;
           letter-spacing: -0.03em;
@@ -153,7 +152,7 @@ export default function EditorialRosterFeed() {
           
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-            style={{ fontFamily: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 'clamp(40px, 5.5vw, 68px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.05 }}
+            style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 'clamp(40px, 5.5vw, 68px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.05 }}
           >
             Join The{' '}
             <span style={{ 
@@ -279,11 +278,11 @@ export default function EditorialRosterFeed() {
                     <div style={{ display: 'flex', gap: 24 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Heart size={16} color={ACCENT} fill={ACCENT} />
-                        <span style={{ fontFamily: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 14, fontWeight: 700, color: '#fff' }}>{activePost.likes}</span>
+                        <span style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 14, fontWeight: 700, color: '#fff' }}>{activePost.likes}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <MessageCircle size={16} color="#fff" />
-                        <span style={{ fontFamily: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 14, fontWeight: 700, color: '#fff' }}>{activePost.comments}</span>
+                        <span style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 14, fontWeight: 700, color: '#fff' }}>{activePost.comments}</span>
                       </div>
                     </div>
                     

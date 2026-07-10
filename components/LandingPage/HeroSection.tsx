@@ -87,7 +87,7 @@ function DesktopView() {
             >
               <div style={{
                 writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                color: '#fff', fontFamily: "'Syncopate', sans-serif",
+                color: '#fff', fontFamily: "var(--font-sans)",
                 fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 700,
                 letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap',
               }}>
@@ -111,7 +111,7 @@ function DesktopView() {
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600 }}>
                     <h2 style={{
-                      color: '#fff', fontFamily: "'Syncopate', sans-serif",
+                      color: '#fff', fontFamily: "var(--font-sans)",
                       fontSize: 'clamp(48px, 6vw, 100px)', fontWeight: 700,
                       lineHeight: 0.9, textTransform: 'uppercase', letterSpacing: '-0.02em', margin: 0,
                     }}>
@@ -125,7 +125,7 @@ function DesktopView() {
                         <ShoppingBag size={18} strokeWidth={2.5} />
                         Explore
                       </button>
-                      <button style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Manrope', sans-serif" }}>
+                      <button style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "var(--font-sans)" }}>
                         View Gallery <ArrowRight size={16} />
                       </button>
                     </div>
@@ -194,7 +194,7 @@ function MobileView() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <span style={{
-                  fontFamily: "'Syncopate', sans-serif", color: '#fff',
+                  fontFamily: "var(--font-sans)", color: '#fff',
                   fontSize: isOpen ? 18 : 15, fontWeight: 700,
                   textTransform: 'uppercase', letterSpacing: '0.06em',
                   transition: 'font-size 0.3s ease',
@@ -226,7 +226,7 @@ function MobileView() {
                   }}
                   onClick={e => e.stopPropagation()}
                 >
-                  <p style={{ fontFamily: "'Manrope', sans-serif", color: 'rgba(255,255,255,0.72)', fontSize: 15, fontWeight: 400, lineHeight: 1.5, margin: 0, maxWidth: 320 }}>
+                  <p style={{ fontFamily: "var(--font-sans)", color: 'rgba(255,255,255,0.72)', fontSize: 15, fontWeight: 400, lineHeight: 1.5, margin: 0, maxWidth: 320 }}>
                     {cat.subtitle}
                   </p>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
@@ -235,7 +235,7 @@ function MobileView() {
                         display: 'inline-flex', alignItems: 'center', gap: 10,
                         background: '#fff', color: '#000',
                         padding: '14px 28px', borderRadius: 4,
-                        fontFamily: "'Manrope', sans-serif",
+                        fontFamily: "var(--font-sans)",
                         fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 13,
                         border: 'none', cursor: 'pointer',
                       }}
@@ -247,7 +247,7 @@ function MobileView() {
                     <button style={{
                       background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 6,
-                      fontFamily: "'Manrope', sans-serif",
+                      fontFamily: "var(--font-sans)",
                       fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em',
                     }}>
                       Gallery <ArrowRight size={14} />
@@ -276,16 +276,15 @@ export default function KineticVaultHero() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif" }}>
+    <div style={{ fontFamily: "var(--font-sans)" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Syncopate:wght@700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { display: none; }
         .vault-btn {
           display: inline-flex; align-items: center; gap: 12px;
           background: #fff; color: #000;
           padding: 16px 32px; border-radius: 4px;
-          font-family: 'Manrope', sans-serif;
+          font-family: var(--font-sans);
           font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
           border: none; cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;

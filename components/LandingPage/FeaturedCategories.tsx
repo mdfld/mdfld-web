@@ -166,7 +166,7 @@ function CategoryCard({ cat, large }: CategoryCardProps) {
       }}>
         {/* Category Label */}
         <div style={{
-          fontFamily: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif",
           fontSize: large ? 'clamp(28px, 4vw, 42px)' : 'clamp(20px, 2.5vw, 26px)', 
           fontWeight: 700,
           letterSpacing: '-0.025em',
@@ -243,7 +243,6 @@ export default function FeaturedCategories() {
     }}>
       {/* Google Fonts Import */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
       `}</style>
 
       {/* Subtle Background Grid */}
@@ -305,7 +304,7 @@ export default function FeaturedCategories() {
 
             {/* Main Heading */}
             <h2 style={{
-              fontFamily: "'Sora', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif",
               fontSize: 'clamp(40px, 5.5vw, 68px)', 
               fontWeight: 700,
               letterSpacing: '-0.03em',
