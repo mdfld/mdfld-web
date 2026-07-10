@@ -15,6 +15,7 @@ import {
 } from "@prisma/client";
 import { getScoringWeights } from "@/lib/scoring/getScoringWeights";
 import { applyScoring } from "@/lib/scoring/searchScoring";
+import { getRelatedProducts, DEFAULT_RELATED_PRODUCTS_LIMIT } from "@/lib/related-products";
 
 import { PRODUCT_CATEGORIES } from "@/lib/constants/product-categories";
 
@@ -590,6 +591,17 @@ export const productRouter = createTRPCRouter({
   getCategories: publicProcedure.query(() => {
     return Object.keys(PRODUCT_CATEGORIES);
   }),
+
+  getRelated: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        limit: z.number().min(1).max(20).default(DEFAULT_RELATED_PRODUCTS_LIMIT),
+      }),
+    )
+    .query(async ({ input }) => {
+      return getRelatedProducts(input.id, input.limit);
+    }),
 
   // Create product variant
   createVariant: protectedProcedure

@@ -34,7 +34,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 2,
     label: 'Stickers',
-    img: '/hero-stickers.webp',
+    img: '/categories/hero-stickers.webp',
     tag: 'World Cup 2026',
     span: 'small',
     href: '/shop?category=STICKERS',
