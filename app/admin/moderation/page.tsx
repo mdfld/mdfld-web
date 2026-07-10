@@ -85,7 +85,7 @@ export default function ModerationPage() {
 								<span style={{
 									minWidth: 18, height: 18, borderRadius: 6,
 									background: "#ef4444", color: "#fff",
-									fontFamily: "'DM Mono', monospace", fontSize: 9, fontWeight: 700,
+									fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700,
 									display: "inline-flex", alignItems: "center", justifyContent: "center",
 									padding: "0 4px",
 								}}>

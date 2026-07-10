@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { resend } from "@/lib/resend";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { EMAIL_FONT_FACE, EMAIL_FONT_STACK } from "@/lib/email-font";
 
 const prisma = new PrismaClient();
 
@@ -48,7 +49,8 @@ export async function POST(
       to: ["ayoola@mdfld.co"],
       subject: `[REPORT] Product flagged: ${product.title}`,
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:28px;border:1px solid #eaeaea;border-radius:8px;">
+        ${EMAIL_FONT_FACE}
+        <div style="font-family:${EMAIL_FONT_STACK};max-width:600px;margin:40px auto;padding:28px;border:1px solid #eaeaea;border-radius:8px;">
           <h2 style="margin:0 0 16px;">Product Flagged</h2>
           <table style="width:100%;border-collapse:collapse;">
             <tr><td style="padding:6px 0;color:#666;font-size:13px;width:120px;">Product ID</td><td style="font-size:13px;">${productId}</td></tr>

@@ -71,12 +71,12 @@ function ProductCard({ product, index }: { product: any; index: number }) {
           {/* Badges */}
           <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8, zIndex: 10 }}>
             {tag && (
-              <span style={{ background: '#fff', color: '#000', fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', borderRadius: 2 }}>
+              <span style={{ background: '#fff', color: '#000', fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', borderRadius: 2 }}>
                 {tag}
               </span>
             )}
             {lowStock && (
-              <span style={{ background: 'transparent', color: '#ff4d4d', fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', border: '1px solid #ff4d4d', borderRadius: 2 }}>
+              <span style={{ background: 'transparent', color: '#ff4d4d', fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '0.1em', border: '1px solid #ff4d4d', borderRadius: 2 }}>
                 LOW STOCK
               </span>
             )}
@@ -113,7 +113,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
                 <Icon icon={badge.icon} width={12} className={badge.textClassName} />
                 <span
                   className={badge.textClassName}
-                  style={{ fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 700, lineHeight: 1 }}
+                  style={{ fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 700, lineHeight: 1 }}
                 >
                   {badge.label}
                 </span>
@@ -129,7 +129,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
                 style={{
                   width: '100%', padding: '12px', background: addedToCart ? ACCENT : 'rgba(255,255,255,0.1)',
                   border: `1px solid ${addedToCart ? ACCENT : 'rgba(255,255,255,0.2)'}`,
-                  color: addedToCart ? '#000' : '#fff', fontFamily: "'Manrope', sans-serif",
+                  color: addedToCart ? '#000' : '#fff', fontFamily: "var(--font-sans)",
                   fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   transition: 'all 0.3s',
@@ -144,21 +144,21 @@ function ProductCard({ product, index }: { product: any; index: number }) {
         {/* Info */}
         <div style={{ paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {product.brand || product.seller?.storeName || 'MDFLD'}
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {comparePrice && comparePrice > price && (
-                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through' }}>
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through' }}>
                   ${comparePrice.toFixed(0)}
                 </span>
               )}
-              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, fontWeight: 800, color: ACCENT }}>
+              <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 800, color: ACCENT }}>
                 ${price.toFixed(0)}
               </span>
             </div>
           </div>
-          <h3 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0, transition: 'color 0.3s' }} className="ec-name">
+          <h3 style={{ fontFamily: "var(--font-sans)", fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0, transition: 'color 0.3s' }} className="ec-name">
             {product.title}
           </h3>
         </div>
@@ -205,7 +205,6 @@ export default function EditorialGrid() {
       position: 'relative',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
         .editorial-card { cursor: pointer; position: relative; }
@@ -219,7 +218,7 @@ export default function EditorialGrid() {
         .ec-name { }
         .editorial-card:hover .ec-name { color: ${ACCENT}; }
 
-        .ed-filter { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; background: transparent; border: none; padding: 12px 0; color: rgba(255,255,255,0.4); cursor: pointer; position: relative; transition: color 0.3s; }
+        .ed-filter { font-family: var(--font-sans); font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; background: transparent; border: none; padding: 12px 0; color: rgba(255,255,255,0.4); cursor: pointer; position: relative; transition: color 0.3s; }
         .ed-filter:hover { color: #fff; }
         .ed-filter.active { color: #fff; }
         .ed-filter::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 2px; background: ${ACCENT}; transition: width 0.3s ease; }
@@ -237,14 +236,14 @@ export default function EditorialGrid() {
             style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}
           >
             <div style={{ width: 48, height: 2, background: ACCENT }} />
-            <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 13, fontWeight: 800, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 800, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
               Featured Drops
             </span>
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-            style={{ fontFamily: "'Manrope', sans-serif", fontSize: 'clamp(48px, 8vw, 100px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', textAlign: 'left', margin: 0, lineHeight: 1.05 }}
+            style={{ fontFamily: "var(--font-sans)", fontSize: 'clamp(48px, 8vw, 100px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', textAlign: 'left', margin: 0, lineHeight: 1.05 }}
           >
             Featured <span style={{ color: ACCENT }}>Drops</span>
           </motion.h2>
@@ -286,7 +285,7 @@ export default function EditorialGrid() {
                     <ProductCard key={product.id} product={product} index={index} />
                   ))
                 : (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontFamily: "'Manrope', sans-serif", fontSize: 16 }}>
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontFamily: "var(--font-sans)", fontSize: 16 }}>
                     No products found. Add products from your dashboard.
                   </div>
                 )
@@ -299,7 +298,7 @@ export default function EditorialGrid() {
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'clamp(80px, 10vw, 120px)' }}>
             <Link href="/shop" style={{
               display: 'inline-flex', alignItems: 'center', gap: 16,
-              fontFamily: "'Manrope', sans-serif", fontSize: 13, fontWeight: 800, letterSpacing: '0.15em',
+              fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 800, letterSpacing: '0.15em',
               color: '#fff', textTransform: 'uppercase', textDecoration: 'none',
               borderBottom: '1px solid #fff', paddingBottom: 8, transition: 'all 0.3s',
             }}

@@ -57,7 +57,7 @@ export default function LoginFormFrameless() {
   return (
     <div
       style={{
-        fontFamily: "'Oswald', sans-serif",
+        fontFamily: "var(--font-sans)",
         background: "#020606",
         minHeight: "100dvh",
         position: "relative",
@@ -68,7 +68,6 @@ export default function LoginFormFrameless() {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .bg-image { position: absolute; inset: 0; z-index: 0; background-image: url('https://images.unsplash.com/photo-1556056504-5c7696c4c28d?q=80&w=2500&auto=format&fit=crop'); background-size: cover; background-position: center; filter: grayscale(40%) contrast(120%); }
         .bg-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(2,6,6,0.95) 0%, rgba(2,6,6,0.7) 40%, rgba(0,212,182,0.15) 100%); }
@@ -89,26 +88,26 @@ export default function LoginFormFrameless() {
         .glass-panel { background: rgba(5, 12, 10, 0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.05); box-shadow: -20px 0 40px rgba(0,0,0,0.5); }
         .input-wrap { position: relative; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); transition: border-color 0.3s, box-shadow 0.3s, background 0.3s; display: flex; align-items: center; border-radius: 4px; }
         .input-wrap.focused { border-color: rgba(0,212,182,0.6); background: rgba(0,212,182,0.05); box-shadow: 0 0 0 1px rgba(0,212,182,0.1), 0 4px 24px rgba(0,212,182,0.08); }
-        .input-wrap input { flex: 1; background: transparent; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; color: #fff; padding: 16px 20px; letter-spacing: 0.01em; caret-color: #00d4b6; }
+        .input-wrap input { flex: 1; background: transparent; border: none; outline: none; font-family: var(--font-sans); font-size: 14px; color: #fff; padding: 16px 20px; letter-spacing: 0.01em; caret-color: #00d4b6; }
         .input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
-        .input-label { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: block; transition: color 0.3s; }
+        .input-label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: block; transition: color 0.3s; }
         .input-label.active { color: #00d4b6; }
-        .btn-primary { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 18px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 56px; }
+        .btn-primary { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: var(--font-sans); font-size: 16px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 18px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 56px; }
         .btn-primary:hover:not(:disabled) { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,212,182,0.3); }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary .shimmer { animation: shimmer 2.5s ease-in-out infinite; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: rgba(255,255,255,0.3); }
-        .btn-google { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; padding: 16px 24px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; backdrop-filter: blur(10px); transition: border-color 0.3s, background 0.3s, color 0.3s, transform 0.2s; min-height: 52px; }
+        .btn-google { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-family: var(--font-sans); font-size: 14px; font-weight: 500; padding: 16px 24px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; backdrop-filter: blur(10px); transition: border-color 0.3s, background 0.3s, color 0.3s, transform 0.2s; min-height: 52px; }
         .btn-google:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; transform: translateY(-1px); }
         .divider { display: flex; align-items: center; gap: 16px; }
         .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
-        .divider-text { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); white-space: nowrap; }
+        .divider-text { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); white-space: nowrap; }
         .stat-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #00d4b6; padding: 16px 20px; border-radius: 0 4px 4px 0; }
         .link-accent { color: #00d4b6; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
         .link-accent:hover { opacity: 0.75; }
-        .forgot-link { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; min-height: 44px; display: inline-flex; align-items: center; }
+        .forgot-link { font-family: var(--font-sans); font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; min-height: 44px; display: inline-flex; align-items: center; }
         .forgot-link:hover { color: #00d4b6; }
         .ghost-text { position: absolute; font-size: clamp(80px, 14vw, 220px); font-weight: 700; letter-spacing: -0.02em; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.03); text-transform: uppercase; user-select: none; pointer-events: none; line-height: 1; z-index: 2; }
-        .error-box { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); border-radius: 4px; padding: 14px 16px; margin-bottom: 24px; font-family: 'Inter', sans-serif; font-size: 13px; color: #ff6b6b; display: flex; align-items: center; gap: 8px; }
+        .error-box { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); border-radius: 4px; padding: 14px 16px; margin-bottom: 24px; font-family: var(--font-sans); font-size: 13px; color: #ff6b6b; display: flex; align-items: center; gap: 8px; }
         @media (max-width: 1024px) { .left-panel { display: none !important; } .glass-panel { border-left: none !important; box-shadow: none !important; background: rgba(2,6,6,0.7) !important; } }
         @media (max-width: 768px) { .input-wrap input { font-size: 16px; padding: 14px 16px; } .btn-primary { font-size: 14px; padding: 16px 24px; } }
         @supports (padding: max(0px)) { .mobile-safe { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(20px, env(safe-area-inset-bottom)); } }
@@ -122,7 +121,7 @@ export default function LoginFormFrameless() {
 
       {/* LEFT PANEL */}
       <div className="left-panel" style={{ flex: "0 0 45%", position: "relative", zIndex: 3, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(32px, 5vw, 64px)" }}>
-        <a href="/" style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, letterSpacing: "0.02em", color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
+        <a href="/" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, letterSpacing: "0.02em", color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
           mdfld<span style={{ color: ACCENT }}>.</span>
         </a>
         <div>
@@ -131,20 +130,20 @@ export default function LoginFormFrameless() {
               <div className="pulse-ring" style={{ position: "absolute", inset: 0, borderRadius: "50%", background: ACCENT, opacity: 0.5 }} />
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: ACCENT, position: "relative", zIndex: 1 }} />
             </div>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: ACCENT }}>Members Only Access</span>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: ACCENT }}>Members Only Access</span>
           </div>
           <h1 className="animate-3" style={{ fontSize: "clamp(48px, 6.5vw, 92px)", fontWeight: 700, lineHeight: 1.1, textTransform: "uppercase", color: "#fff", margin: "0 0 4px" }}>Welcome</h1>
           <h1 className="animate-4" style={{ fontSize: "clamp(48px, 6.5vw, 92px)", fontWeight: 700, lineHeight: 1.1, textTransform: "uppercase", margin: "0 0 clamp(20px, 3vh, 32px)", background: "linear-gradient(135deg, #00d4b6, #008f7a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Back.</h1>
           <div className="animate-4" style={{ height: 3, width: 140, background: "linear-gradient(90deg, #00d4b6, transparent)", boxShadow: "0 0 16px rgba(0,212,182,0.6)", marginBottom: "clamp(20px, 3vh, 32px)", borderRadius: 2 }} />
-          <p className="animate-5" style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(14px, 1.8vw, 15px)", fontWeight: 300, lineHeight: 1.6, color: "rgba(255,255,255,0.6)", maxWidth: 360 }}>
+          <p className="animate-5" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(14px, 1.8vw, 15px)", fontWeight: 300, lineHeight: 1.6, color: "rgba(255,255,255,0.6)", maxWidth: 360 }}>
             Sign in to access exclusive drops, manage your collection, and dominate the midfield.
           </p>
         </div>
         <div className="animate-6" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[{ n: "12K+", l: "Members Worldwide" }, { n: "5K+", l: "Exclusive Drops" }].map((s, i) => (
             <div key={i} className="stat-card float-el" style={{ animationDelay: `${i * 0.8}s`, maxWidth: 280 }}>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(22px, 3.5vw, 28px)", fontWeight: 600, color: "#fff", lineHeight: 1 }}>{s.n}</div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 6 }}>{s.l}</div>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(22px, 3.5vw, 28px)", fontWeight: 600, color: "#fff", lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 6 }}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -155,7 +154,7 @@ export default function LoginFormFrameless() {
         <div className="mobile-safe" style={{ width: "100%", maxWidth: 440 }}>
 
           <h2 className="animate-1" style={{ fontSize: "clamp(28px, 5vw, 36px)", fontWeight: 600, textTransform: "uppercase", color: "#fff", marginBottom: 8 }}>Sign In</h2>
-          <p className="animate-2" style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(13px, 2vw, 14px)", fontWeight: 300, color: "rgba(255,255,255,0.5)", marginBottom: "clamp(28px, 5vh, 40px)" }}>
+          <p className="animate-2" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(13px, 2vw, 14px)", fontWeight: 300, color: "rgba(255,255,255,0.5)", marginBottom: "clamp(28px, 5vh, 40px)" }}>
             Don&apos;t have an account?{" "}
             <a href="/auth/signup" className="link-accent">Create one &rarr;</a>
           </p>
@@ -241,7 +240,7 @@ export default function LoginFormFrameless() {
             </button>
           </div>
 
-          <p className="animate-7" style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(11px, 1.5vw, 12px)", color: "rgba(255,255,255,0.4)", marginTop: "clamp(20px, 3vh, 28px)", lineHeight: 1.6, textAlign: "center" }}>
+          <p className="animate-7" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(11px, 1.5vw, 12px)", color: "rgba(255,255,255,0.4)", marginTop: "clamp(20px, 3vh, 28px)", lineHeight: 1.6, textAlign: "center" }}>
             By signing in you agree to our{" "}
             <a href="/terms" style={{ color: "rgba(0,212,182,0.8)", textDecoration: "none" }}>Terms of Service</a>{" "}
             and{" "}

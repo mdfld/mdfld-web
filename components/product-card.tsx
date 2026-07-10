@@ -35,6 +35,7 @@ export type ProductCardProps = Omit<
   };
   isLoading?: boolean;
   isWishlisted?: boolean;
+  disableImageBlur?: boolean;
   onWishlistChange?: (wishlisted: boolean) => void;
 };
 
@@ -44,6 +45,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       product,
       isLoading,
       isWishlisted: initialWishlisted = false,
+      disableImageBlur = false,
       onWishlistChange,
       className,
       ...props
@@ -203,7 +205,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
         <Link href={`/products/${product.id}`} className="block">
           <Image
-            isBlurred
+            isBlurred={!disableImageBlur}
             isZoomed
             alt={product.title}
             className="aspect-square w-full hover:scale-110"
