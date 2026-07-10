@@ -61,7 +61,7 @@ export default function EditorialRosterFeed() {
       borderTop: '1px solid rgba(255,255,255,0.05)',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
 
         /* ── THE ROSTER LIST ITEM ── */
@@ -146,7 +146,7 @@ export default function EditorialRosterFeed() {
             initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}
           >
-            <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 600, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 600, color: ACCENT, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
               On The Pitch
             </span>
           </motion.div>
@@ -185,7 +185,7 @@ export default function EditorialRosterFeed() {
 
                   {/* Number */}
                   <span style={{ 
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 13, fontWeight: 600, 
+                    fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 13, fontWeight: 600, 
                     opacity: isActive ? 1 : 0.4, transition: 'opacity 0.3s' 
                   }}>
                     {post.id}
@@ -217,7 +217,7 @@ export default function EditorialRosterFeed() {
               <a href="https://discord.gg/pW87DDjZ" target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 12,
                 background: ACCENT, color: '#020606', border: '1px solid transparent',
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                 padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
               }}
               onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
@@ -228,7 +228,7 @@ export default function EditorialRosterFeed() {
               <a href="https://www.instagram.com/mdfldmarketplace/" target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 12,
                 background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
                 padding: '18px 40px', textDecoration: 'none', transition: 'all 0.3s ease'
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
@@ -262,15 +262,15 @@ export default function EditorialRosterFeed() {
                 {/* Top Tag */}
                 <div style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)' }}>
                   <Instagram size={14} color="#fff" />
-                  <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.1em' }}>@MDFLDMARKETPLACE</span>
+                  <span style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.1em' }}>@MDFLDMARKETPLACE</span>
                 </div>
 
                 {/* Bottom Content Tray */}
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '40px 32px' }}>
-                  <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: ACCENT, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>
+                  <span style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 10, fontWeight: 700, color: ACCENT, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>
                     {activePost.date}
                   </span>
-                  <p style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 'clamp(14px, 1.2vw, 16px)', fontWeight: 500, color: '#fff', lineHeight: 1.6, margin: '0 0 24px 0', maxWidth: 400 }}>
+                  <p style={{ fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 'clamp(14px, 1.2vw, 16px)', fontWeight: 500, color: '#fff', lineHeight: 1.6, margin: '0 0 24px 0', maxWidth: 400 }}>
                     {activePost.caption}
                   </p>
                   
@@ -287,7 +287,7 @@ export default function EditorialRosterFeed() {
                       </div>
                     </div>
                     
-                    <a href={activePost.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    <a href={activePost.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', textDecoration: 'none', fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                       View <ArrowUpRight size={14} color={ACCENT} />
                     </a>
                   </div>

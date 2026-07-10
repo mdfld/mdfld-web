@@ -138,7 +138,7 @@ function CategoryCard({ cat, large }: CategoryCardProps) {
         backdropFilter: 'blur(12px)',
         border: hovered ? `1.5px solid ${ACCENT}` : '1px solid rgba(255, 255, 255, 0.08)',
         color: hovered ? '#020606' : 'rgba(255, 255, 255, 0.65)',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif",
         fontSize: 9.5, 
         fontWeight: 700, 
         letterSpacing: '0.12em', 
@@ -243,7 +243,7 @@ export default function FeaturedCategories() {
     }}>
       {/* Google Fonts Import */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
       `}</style>
 
       {/* Subtle Background Grid */}
@@ -292,7 +292,7 @@ export default function FeaturedCategories() {
                 background: `linear-gradient(90deg, ${ACCENT} 0%, transparent 100%)`,
               }} />
               <span style={{
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 
+                fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", 
                 fontSize: 11, 
                 fontWeight: 600,
                 letterSpacing: '0.15em', 
@@ -331,7 +331,7 @@ export default function FeaturedCategories() {
             onMouseEnter={() => setViewAllHovered(true)}
             onMouseLeave={() => setViewAllHovered(false)}
             style={{
-              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", 
+              fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif", 
               fontSize: 11.5, 
               fontWeight: 600,
               letterSpacing: '0.08em', 
