@@ -60,21 +60,21 @@ function LogoMark({ collapsed }: { collapsed: boolean }) {
 					borderRadius: "10px 10px 0 0",
 				}} />
 				<span style={{
-					fontFamily: "'Outfit', sans-serif", fontSize: 16, fontWeight: 900,
+					fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 900,
 					color: "#020a0a", letterSpacing: "-0.05em", position: "relative", lineHeight: 1,
 				}}>M</span>
 			</div>
 			{!collapsed && (
 				<div style={{ overflow: "hidden" }}>
 					<div style={{
-						fontFamily: "'Outfit', sans-serif",
+						fontFamily: "var(--font-sans)",
 						fontSize: 17, fontWeight: 800,
 						color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, whiteSpace: "nowrap",
 					}}>
 						mdfld<span style={{ color: ACCENT }}>.</span>
 					</div>
 					<div style={{
-						fontFamily: "'DM Mono', monospace",
+						fontFamily: "var(--font-mono)",
 						fontSize: 8, letterSpacing: "0.22em", textTransform: "uppercase",
 						color: "rgba(255,255,255,0.28)", marginTop: 2, whiteSpace: "nowrap",
 					}}>
@@ -112,7 +112,7 @@ function NavItems({
 			);
 			rendered.push(
 				<div key={`lbl-${item.group}`} style={{
-					fontFamily: "'DM Mono', monospace", fontSize: 8,
+					fontFamily: "var(--font-mono)", fontSize: 8,
 					letterSpacing: "0.24em", textTransform: "uppercase",
 					color: "rgba(255,255,255,0.2)", padding: "4px 12px 8px",
 				}}>
@@ -143,7 +143,7 @@ function NavItems({
 					border: `1px solid ${isActive ? "rgba(0,212,182,0.25)" : "transparent"}`,
 					color: isActive ? ACCENT : "rgba(255,255,255,0.52)",
 					textDecoration: "none",
-					fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 500,
+					fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500,
 					transition: "all 0.18s", cursor: "pointer",
 					justifyContent: show ? "flex-start" : "center",
 					position: "relative",
@@ -197,20 +197,20 @@ function UserFooter({
 							width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
 							background: `linear-gradient(135deg, ${ACCENT}, #005a52)`,
 							display: "flex", alignItems: "center", justifyContent: "center",
-							fontFamily: "'Outfit', sans-serif", fontSize: 12, fontWeight: 700, color: "#020a0a",
+							fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: "#020a0a",
 						}}>
 							{user?.name?.charAt(0).toUpperCase() ?? "A"}
 						</div>
 						<div style={{ minWidth: 0 }}>
 							<div style={{
-								fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600,
+								fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600,
 								color: "#fff", letterSpacing: "-0.01em",
 								whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
 							}}>
 								{user?.name ?? "Admin"}
 							</div>
 							<div style={{
-								fontFamily: "'DM Mono', monospace", fontSize: 9,
+								fontFamily: "var(--font-mono)", fontSize: 9,
 								color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em",
 								whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
 							}}>
@@ -225,7 +225,7 @@ function UserFooter({
 					}}>
 						<ShieldCheck size={10} color={ACCENT} />
 						<span style={{
-							fontFamily: "'DM Mono', monospace", fontSize: 8,
+							fontFamily: "var(--font-mono)", fontSize: 8,
 							letterSpacing: "0.2em", textTransform: "uppercase", color: ACCENT,
 						}}>Super Admin</span>
 					</div>
@@ -235,7 +235,7 @@ function UserFooter({
 					width: 32, height: 32, borderRadius: "50%",
 					background: `linear-gradient(135deg, ${ACCENT}, #005a52)`,
 					display: "flex", alignItems: "center", justifyContent: "center",
-					fontFamily: "'Outfit', sans-serif", fontSize: 12, fontWeight: 700, color: "#020a0a",
+					fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: "#020a0a",
 					margin: "0 auto 10px",
 				}}>
 					{user?.name?.charAt(0).toUpperCase() ?? "A"}
@@ -251,7 +251,7 @@ function UserFooter({
 					gap: 8, padding: compact ? "10px" : "10px 12px",
 					background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)",
 					borderRadius: 8, color: "rgba(239,100,100,0.8)",
-					fontFamily: "'Outfit', sans-serif", fontSize: 12, fontWeight: 600,
+					fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 600,
 					letterSpacing: "0.04em", cursor: "pointer", transition: "all 0.2s",
 				}}
 				onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.15)"; e.currentTarget.style.color = "#fc8181"; }}
@@ -306,9 +306,9 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 	const navigate = (path: string) => { router.push(path); setDrawerOpen(false); };
 
 	return (
-		<div style={{ fontFamily: "'Outfit', sans-serif", background: "#f7f9f9", minHeight: "100vh", display: "flex" }}>
+		<div style={{ fontFamily: "var(--font-sans)", background: "#f7f9f9", minHeight: "100vh", display: "flex" }}>
 			<style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
         .adm-nav::-webkit-scrollbar { width: 3px; }
         .adm-nav::-webkit-scrollbar-track { background: transparent; }
         .adm-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -392,9 +392,9 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 							<>
 								<div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 6 }}>
 									<div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${ACCENT}, #007a6e)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-										<span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 900, color: "#020a0a" }}>M</span>
+										<span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 900, color: "#020a0a" }}>M</span>
 									</div>
-									<span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 800, color: "#0f1a1a", letterSpacing: "-0.03em" }}>
+									<span style={{ fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 800, color: "#0f1a1a", letterSpacing: "-0.03em" }}>
 										mdfld<span style={{ color: ACCENT }}>.</span>
 									</span>
 								</div>
@@ -402,11 +402,11 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 							</>
 						)}
 						<div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-							<span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 700, color: "#0f1a1a", letterSpacing: "-0.02em" }}>
+							<span style={{ fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700, color: "#0f1a1a", letterSpacing: "-0.02em" }}>
 								{activeLabel}
 							</span>
 							{!isMobile && (
-								<span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(0,0,0,0.3)" }}>
+								<span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(0,0,0,0.3)" }}>
 									mdfld.admin
 								</span>
 							)}
@@ -417,7 +417,7 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 						{/* Live indicator */}
 						<div style={{ display: "flex", alignItems: "center", gap: 6 }}>
 							<div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,0.15)" }} />
-							<span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(0,0,0,0.3)" }}>Live</span>
+							<span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(0,0,0,0.3)" }}>Live</span>
 						</div>
 
 						{/* Keep existing: Notifications bell */}
@@ -439,7 +439,7 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 												position: "absolute", top: -4, right: -4,
 												minWidth: 16, height: 16, borderRadius: 8,
 												background: "#ef4444", color: "#fff",
-												fontFamily: "'DM Mono', monospace", fontSize: 8, fontWeight: 700,
+												fontFamily: "var(--font-mono)", fontSize: 8, fontWeight: 700,
 												display: "flex", alignItems: "center", justifyContent: "center",
 												padding: "0 3px", boxShadow: "0 0 0 2px #fff",
 											}}>
@@ -480,7 +480,7 @@ export default function AdminSidebarWrapper({ children }: { children: React.Reac
 								width: 32, height: 32, borderRadius: "50%",
 								background: `linear-gradient(135deg, ${ACCENT}, #005a52)`,
 								display: "flex", alignItems: "center", justifyContent: "center",
-								fontFamily: "'Outfit', sans-serif", fontSize: 12, fontWeight: 700, color: "#020a0a",
+								fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: "#020a0a",
 								boxShadow: "0 0 0 2px rgba(0,212,182,0.2)",
 							}}>
 								{user?.name?.charAt(0).toUpperCase() ?? "A"}

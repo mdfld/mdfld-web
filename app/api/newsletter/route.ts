@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resend } from "@/lib/resend";
+import { EMAIL_FONT_FACE, EMAIL_FONT_STACK } from "@/lib/email-font";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +17,8 @@ export async function POST(request: NextRequest) {
       html: `
         <!DOCTYPE html>
         <html>
-        <head><meta charset="utf-8"></head>
-        <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+        <head><meta charset="utf-8">${EMAIL_FONT_FACE}</head>
+        <body style="margin:0;padding:0;font-family:${EMAIL_FONT_STACK};background:#f4f4f4;">
           <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:8px;border:1px solid #eaeaea;padding:28px;">
             <h2 style="color:#000;font-size:20px;margin:0 0 20px;">New Newsletter Subscriber</h2>
             <p style="font-size:14px;color:#333;margin:0;">

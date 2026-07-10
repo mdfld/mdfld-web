@@ -60,9 +60,8 @@ export default function SignUpFormFrameless() {
   };
 
   return (
-    <div style={{ fontFamily: "'Oswald', sans-serif", background: "#020606", minHeight: "100dvh", position: "relative", overflow: "hidden", display: "flex", alignItems: "stretch", flexDirection: "row" }}>
+    <div style={{ fontFamily: "var(--font-sans)", background: "#020606", minHeight: "100dvh", position: "relative", overflow: "hidden", display: "flex", alignItems: "stretch", flexDirection: "row" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .bg-su { position: absolute; inset: 0; z-index: 0; background-image: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2500&auto=format&fit=crop'); background-size: cover; background-position: center; filter: grayscale(30%) contrast(110%); }
         .bg-ov-su { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(2,6,6,0.96) 0%, rgba(2,6,6,0.75) 45%, rgba(0,212,182,0.12) 100%); }
@@ -74,23 +73,23 @@ export default function SignUpFormFrameless() {
         .su-glass { background: rgba(5,12,10,0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.05); box-shadow: -20px 0 40px rgba(0,0,0,0.5); }
         .su-input-wrap { position: relative; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); transition: border-color 0.3s, box-shadow 0.3s, background 0.3s; display: flex; align-items: center; border-radius: 4px; }
         .su-input-wrap.focused { border-color: rgba(0,212,182,0.6); background: rgba(0,212,182,0.05); box-shadow: 0 0 0 1px rgba(0,212,182,0.1); }
-        .su-input-wrap input { flex: 1; background: transparent; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; color: #fff; padding: 14px 18px; caret-color: #00d4b6; }
+        .su-input-wrap input { flex: 1; background: transparent; border: none; outline: none; font-family: var(--font-sans); font-size: 14px; color: #fff; padding: 14px 18px; caret-color: #00d4b6; }
         .su-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
-        .su-label { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 7px; display: block; transition: color 0.3s; }
+        .su-label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 7px; display: block; transition: color 0.3s; }
         .su-label.act { color: #00d4b6; }
-        .su-btn { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 16px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 52px; }
+        .su-btn { position: relative; overflow: hidden; background: #00d4b6; border: none; color: #020606; font-family: var(--font-sans); font-size: 15px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 16px 32px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 24px rgba(0,212,182,0.2); min-height: 52px; }
         .su-btn:hover:not(:disabled) { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,212,182,0.3); }
         .su-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .su-btn .shim { animation: shimmerSU 2.5s ease-in-out infinite; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: rgba(255,255,255,0.3); }
-        .su-google { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-family: 'Inter', sans-serif; font-size: 14px; padding: 14px 24px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; min-height: 48px; transition: all 0.2s; }
+        .su-google { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-family: var(--font-sans); font-size: 14px; padding: 14px 24px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; min-height: 48px; transition: all 0.2s; }
         .su-google:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; }
         .su-divider { display: flex; align-items: center; gap: 16px; }
         .su-dline { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
-        .su-dtext { font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+        .su-dtext { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
         .su-link { color: #00d4b6; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
         .su-link:hover { opacity: 0.75; }
-        .su-err { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); border-radius: 4px; padding: 12px 16px; margin-bottom: 20px; font-family: 'Inter', sans-serif; font-size: 13px; color: #ff6b6b; display: flex; align-items: center; gap: 8px; }
-        .su-ok { background: rgba(0,212,182,0.08); border: 1px solid rgba(0,212,182,0.25); border-radius: 4px; padding: 12px 16px; margin-bottom: 20px; font-family: 'Inter', sans-serif; font-size: 13px; color: #00d4b6; }
+        .su-err { background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); border-radius: 4px; padding: 12px 16px; margin-bottom: 20px; font-family: var(--font-sans); font-size: 13px; color: #ff6b6b; display: flex; align-items: center; gap: 8px; }
+        .su-ok { background: rgba(0,212,182,0.08); border: 1px solid rgba(0,212,182,0.25); border-radius: 4px; padding: 12px 16px; margin-bottom: 20px; font-family: var(--font-sans); font-size: 13px; color: #00d4b6; }
         .su-ghost { position: absolute; font-size: clamp(80px, 14vw, 200px); font-weight: 700; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.03); text-transform: uppercase; user-select: none; pointer-events: none; line-height: 1; z-index: 2; }
         .su-perk { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         @media (max-width: 1024px) { .su-left { display: none !important; } .su-glass { border-left: none !important; box-shadow: none !important; background: rgba(2,6,6,0.7) !important; } }
@@ -105,7 +104,7 @@ export default function SignUpFormFrameless() {
 
       {/* LEFT PANEL */}
       <div className="su-left" style={{ flex: "0 0 42%", position: "relative", zIndex: 3, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(32px, 5vw, 64px)" }}>
-        <a href="/" style={{ fontFamily: "'Oswald', sans-serif", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
+        <a href="/" style={{ fontFamily: "var(--font-sans)", fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fff", textDecoration: "none", textTransform: "uppercase" }}>
           mdfld<span style={{ color: ACCENT }}>.</span>
         </a>
         <div>
@@ -118,14 +117,14 @@ export default function SignUpFormFrameless() {
                 <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(0,212,182,0.12)", border: "1px solid rgba(0,212,182,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Check size={11} color={ACCENT} />
                 </div>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{p}</span>
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{p}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="su-a6" style={{ background: "rgba(0,212,182,0.04)", border: "1px solid rgba(0,212,182,0.12)", borderLeft: `3px solid ${ACCENT}`, padding: "16px 20px", borderRadius: "0 4px 4px 0" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, fontWeight: 700, color: "#fff" }}>50K+</div>
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 4 }}>Community Members</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 700, color: "#fff" }}>50K+</div>
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginTop: 4 }}>Community Members</div>
         </div>
       </div>
 
@@ -134,7 +133,7 @@ export default function SignUpFormFrameless() {
         <div className="su-safe" style={{ width: "100%", maxWidth: 420 }}>
 
           <h2 className="su-a1" style={{ fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, textTransform: "uppercase", color: "#fff", marginBottom: 8 }}>Create Account</h2>
-          <p className="su-a2" style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 300, color: "rgba(255,255,255,0.5)", marginBottom: "clamp(24px, 4vh, 36px)" }}>
+          <p className="su-a2" style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 300, color: "rgba(255,255,255,0.5)", marginBottom: "clamp(24px, 4vh, 36px)" }}>
             Already have an account?{" "}
             <a href="/auth/login" className="su-link">Sign in &rarr;</a>
           </p>
@@ -211,7 +210,7 @@ export default function SignUpFormFrameless() {
             <button onClick={() => setAgreed((a) => !a)} style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${agreed ? ACCENT : "rgba(255,255,255,0.2)"}`, background: agreed ? "rgba(0,212,182,0.15)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, transition: "all 0.2s" }}>
               {agreed && <Check size={12} color={ACCENT} />}
             </button>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
               I agree to the{" "}
               <a href="/terms" className="su-link">Terms of Service</a> and{" "}
               <a href="/privacy" className="su-link">Privacy Policy</a>

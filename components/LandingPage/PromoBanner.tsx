@@ -50,7 +50,7 @@ export default function PromoBanner() {
   return (
     <section ref={ref} style={{ position: 'relative', overflow: 'hidden', background: '#060a09' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,900&family=Barlow:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,900&family=Barlow:wght@300;400;600;700&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; }
 
@@ -355,7 +355,7 @@ export default function PromoBanner() {
                   }}>
                     {pad(time.h).split('').map((d, i) => <Digit key={i} val={d} />)}
                   </div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>HRS</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>HRS</div>
                 </div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 900, color: 'rgba(255,255,255,0.2)', lineHeight: 1, paddingBottom: 16 }}>:</div>
                 {/* Minutes */}
@@ -363,7 +363,7 @@ export default function PromoBanner() {
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(44px, 7vw, 64px)', letterSpacing: '-0.04em', color: ACCENT, lineHeight: 1, display: 'flex' }}>
                     {pad(time.m).split('').map((d, i) => <Digit key={i} val={d} />)}
                   </div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>MIN</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>MIN</div>
                 </div>
                 <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 900, color: 'rgba(255,255,255,0.2)', lineHeight: 1, paddingBottom: 16 }}>:</div>
                 {/* Seconds */}
@@ -371,7 +371,7 @@ export default function PromoBanner() {
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'clamp(44px, 7vw, 64px)', letterSpacing: '-0.04em', color: '#fff', lineHeight: 1, display: 'flex' }}>
                     {pad(time.s).split('').map((d, i) => <Digit key={i} val={d} />)}
                   </div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>SEC</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', marginTop: 4 }}>SEC</div>
                 </div>
               </div>
             </motion.div>
